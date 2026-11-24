@@ -62,7 +62,7 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .mbtn:active{transform:translateY(3px)}
 .mbtn:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .mstat{margin:18px 0 0;font-size:14px;opacity:.75}
-.hrow{display:flex;align-items:center;gap:10px}
+.hrow{display:flex;align-items:center;gap:8px;flex:1 1 auto}.hsp{flex:1}#helpBtn{width:44px;padding:0}
 .hbtn{min-height:44px;padding:0 14px;border-radius:999px;border:2px solid var(--line);background:#fff;color:var(--ink);font:16px Jua,sans-serif;cursor:pointer}
 .hbtn:disabled{opacity:.4;cursor:default}
 .chipbtn{cursor:pointer;font:15px Jua,sans-serif;color:var(--org);min-height:36px}
@@ -79,6 +79,32 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .err{min-height:20px;margin:6px 0 0;font-size:13px;color:#d9433a}
 .modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .okbtn{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;cursor:pointer}
+.howto{cursor:pointer}
+.howto-card{width:min(400px,100%)}
+.steps{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:12px;counter-reset:st}
+.steps li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:2px 10px;align-items:start;counter-increment:st}
+.steps li::before{content:counter(st);grid-row:span 2;width:34px;height:34px;border-radius:50%;background:var(--org);color:#fff;font:18px/34px Jua,sans-serif;text-align:center}
+.steps b{font:19px Jua,sans-serif;font-weight:400;color:var(--ink)}
+.steps span{font-size:15px;line-height:1.5;color:#3d5266}
+.steps em{font-style:normal;font-weight:700;color:#e2603f}
+.howto-close{margin:16px 0 0;text-align:center;font-size:13px;color:var(--mute)}
+@media(max-width:600px){
+ .wrap{padding:8px 6px 30px}
+ header{margin-bottom:8px;gap:6px}
+ header h1{font-size:26px}
+ .hbtn{min-height:38px;padding:0 12px;font-size:15px}
+ .chip{padding:4px 9px;font-size:12.5px;flex:none}.chip b{font-size:14px}
+ .chips{flex-wrap:nowrap;overflow-x:auto;width:100%;scrollbar-width:none;padding-bottom:2px}.chips::-webkit-scrollbar{display:none}
+ header{flex-wrap:wrap}
+ .stage{height:max(330px,calc(100vh - 322px));height:max(330px,calc(100dvh - 322px))}
+ .hrow{width:100%}#helpBtn{width:38px}
+ .stage{aspect-ratio:auto;border-width:3px;border-radius:18px}
+ .hud{margin:10px 0 10px;padding:8px 10px;gap:5px;border-radius:16px}
+ .row{font-size:12.5px;grid-template-columns:5em minmax(0,1fr) 3em;gap:8px}
+ .bar{height:14px}
+ #act{height:62px;font-size:26px}
+}
+@media(min-width:601px){.wrap{max-width:1180px}.stage{aspect-ratio:auto;height:min(72vh,calc((100vw - 8vw) * .58));min-height:420px}}
 .hud{display:grid;gap:8px;margin:18px 0 14px;background:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 4px 0 #a9d8f2}
 .row{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.4em;align-items:center;gap:10px;font-size:14px}
 .row span:last-child{text-align:right;font-family:Jua,sans-serif;font-size:16px}
@@ -126,7 +152,7 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .empty{color:var(--mute);font-size:15px}
 .foot{display:flex;justify-content:flex-end;margin-top:14px}
 .ghost{background:#fff;border:2px solid var(--line);color:var(--mute);border-radius:999px;padding:10px 16px;font:14px "Gowun Dodum",sans-serif;cursor:pointer;min-height:44px}
-@media(max-width:600px){.stage{aspect-ratio:4/3.6}#hint{font-size:13px}}
+@media(max-width:600px){#hint{font-size:13px}}
 @media(prefers-reduced-motion:reduce){#act.bite,#res.on,.row.warn .bar{animation:none}}
 </style>
 </head>
@@ -195,14 +221,26 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
   </form>
 </div>
 
+<div id="howto" class="modal howto" hidden>
+  <div class="modal-card howto-card" role="dialog" aria-labelledby="howtoTitle">
+    <h3 id="howtoTitle">게임 방법</h3>
+    <ol class="steps">
+      <li><b>캐스팅</b><span>START를 누르면 게이지가 움직여요. 표시가 <em>금색 칸</em>에 올 때 한 번 더 누르면 퍼펙트! 정확할수록 멀리 던져지고 희귀·전설 어종이 더 자주 물어요.</span></li>
+      <li><b>기다리기</b><span>찌가 살짝 흔들리는 건 탐색 입질이에요. <em>느낌표(!)</em>가 뜨면 바로 챔질하세요.</span></li>
+      <li><b>감기</b><span>챔질 후 버튼을 <em>꾹 누르고 있으면</em> 릴이 감기고, 떼면 게이지가 줄어요.</span></li>
+      <li><b>대물 주의</b><span>2kg 이상은 누르는 동안 줄 장력이 쌓여요. "저항 중!"일 땐 손을 떼서 장력을 낮추세요. 제한 시간은 14초예요.</span></li>
+    </ol>
+    <p class="howto-close">화면을 터치하면 닫혀요</p>
+  </div>
+</div>
+
 <div class="wrap">
   <header>
-    <div class="hrow"><button id="toMenu" class="hbtn" type="button">‹ 메뉴</button><h1>보이흐피힝</h1></div>
+    <div class="hrow"><button id="toMenu" class="hbtn" type="button">‹ 메뉴</button><h1>보이흐피힝</h1><span class="hsp"></span><button id="toShop" class="hbtn" type="button">상점</button><button id="helpBtn" class="hbtn" type="button" aria-label="게임 방법">?</button></div>
     <div class="chips">
       <span class="chip"><b id="nickChip">낚시꾼</b></span>
       <span class="chip">🎣 <b id="rodName">일반 낚시대</b> · 권장 <span id="rodMax">8</span>kg 이하</span>
       <span class="chip">점수 <b id="pts">0</b></span>
-      <button id="toShop" class="chip chipbtn" type="button">상점</button>
     </div>
   </header>
 
@@ -223,7 +261,6 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
   </div>
 
   <button id="act" type="button">START</button>
-  <p class="tip"><b>START</b>를 누르면 캐스팅 게이지가 움직여요. 표시가 <b>금색 칸</b>에 올 때 한 번 더 누르면 퍼펙트! 정확할수록 멀리 던져지고 희귀·전설 어종이 더 자주 물어요. 찌가 살짝 흔들리는 건 탐색 입질이에요. <b>느낌표(!)</b>가 뜰 때 챔질하세요. 챔질 후에는 버튼을 <b>꾹 누르고 있으면</b> 릴이 감기고, 떼면 게이지가 줄어요. 2kg 이상 무거운 고기는 누르는 동안 장력이 쌓이니, 저항할 때는 손을 떼서 장력을 낮추세요. 제한 시간은 14초이고, 키보드는 스페이스바를 누르고 있으면 돼요.</p>
 
   <h2>어종 도감</h2>
   <div class="dex" id="dex"></div>
@@ -868,7 +905,7 @@ function update(dt){
 
 const act=$('act'),hint=$('hint');
 function hud(){
-  {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok}}
+  {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok;$('helpBtn').disabled=!ok}}
   const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
   const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중… (떼면 멈춤)':'꾹 눌러서 감기'}[st];
   if(act.textContent!==lab)act.textContent=lab;
@@ -899,7 +936,7 @@ act.addEventListener('pointerdown',e=>{e.preventDefault();try{act.setPointerCapt
 act.addEventListener('pointerup',up);window.addEventListener('pointerup',up);
 window.addEventListener('blur',up);
 act.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('keydown',e=>{if(!$('menu').hidden||!$('shopScreen').hidden||!$('nickModal').hidden)return;if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();down()}});
+document.addEventListener('keydown',e=>{if(!$('menu').hidden||!$('shopScreen').hidden||!$('nickModal').hidden||!$('howto').hidden)return;if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();down()}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'||e.key==='Enter')up()});
 
 /* ---------- side panels ---------- */
@@ -925,7 +962,11 @@ const nick=()=>save.nick||'낚시꾼';
 const canLeave=()=>st==='idle'||st==='result';
 function openShop(){renderSide();shopEl.hidden=false;shopEl.scrollTop=0}
 function openNick(){$('nickInput').value=save.nick||'';$('nickErr').textContent='';nickEl.hidden=false;setTimeout(()=>{try{$('nickInput').focus()}catch(e){}},50)}
-$('mPlay').addEventListener('click',()=>{menuEl.hidden=true;try{window.scrollTo(0,0)}catch(e){}});
+let howtoShown=false;const howEl=$('howto');
+function openHow(){howEl.hidden=false}
+howEl.addEventListener('pointerdown',e=>{e.preventDefault();howEl.hidden=true});
+$('helpBtn').addEventListener('click',()=>{if(canLeave())openHow()});
+$('mPlay').addEventListener('click',()=>{menuEl.hidden=true;try{window.scrollTo(0,0)}catch(e){}if(!howtoShown){howtoShown=true;openHow()}});
 $('mShop').addEventListener('click',openShop);
 $('mNick').addEventListener('click',openNick);
 $('toShop').addEventListener('click',()=>{if(canLeave())openShop()});
@@ -946,6 +987,7 @@ function renderMenu(){
 }
 /* Android back button: returns true when handled */
 window.appBack=()=>{
+  if(!howEl.hidden){howEl.hidden=true;return true}
   if(!nickEl.hidden){nickEl.hidden=true;return true}
   if(!shopEl.hidden){shopEl.hidden=true;return true}
   if(menuEl.hidden){if(canLeave()){$('res').classList.remove('on');menuEl.hidden=false}return true}
