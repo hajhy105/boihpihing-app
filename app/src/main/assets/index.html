@@ -283,7 +283,16 @@ const FISH=[
  {id:'cd',name:'참돔',min:.8,max:7,rar:6,h:.44,col:'#e0566a',belly:'#ffd6d8',fin:'#d04358',pat:'dots',c:36},
  {id:'ny',name:'농어',min:1,max:8,rar:5,h:.3,col:'#56656f',belly:'#e5eaed',fin:'#46535b',pat:'freck',c:42},
  {id:'by',name:'방어',min:3,max:12,rar:3,h:.3,col:'#2d4d78',belly:'#eaeff4',fin:'#c9a93a',pat:'yline',c:42},
- {id:'bs',name:'부시리',min:4,max:16,rar:1.6,h:.28,col:'#375c7d',belly:'#eef2f5',fin:'#d9b43a',pat:'yline',c:44}
+ {id:'bs',name:'부시리',min:4,max:16,rar:1.6,h:.28,col:'#375c7d',belly:'#eef2f5',fin:'#d9b43a',pat:'yline',c:44},
+ {id:'hk',name:'학꽁치',min:.05,max:.3,rar:14,h:.14,col:'#3f7a86',belly:'#eef4f5',fin:'#7fa7ad',pat:'line2',c:60},
+ {id:'jc',name:'쥐치',min:.1,max:.6,rar:12,h:.52,col:'#8a8270',belly:'#c9c1aa',fin:'#9c8f6a',pat:'freck',c:34},
+ {id:'yg',name:'열기',min:.1,max:.6,rar:12,h:.36,col:'#c9473a',belly:'#f2c2a8',fin:'#c24a3c',pat:'spot',c:37},
+ {id:'dd',name:'도다리',min:.2,max:1.2,rar:9,h:.55,col:'#6e604a',belly:'#b9aa86',fin:'#5e5240',pat:'freck',c:36},
+ {id:'gc',name:'갈치',min:.3,max:2,rar:7,h:.12,col:'#c9d2da',belly:'#f4f7fa',fin:'#d7dfe6',pat:'none',c:95},
+ {id:'bd',name:'벵에돔',min:.3,max:2.5,rar:6,h:.42,col:'#2d3a46',belly:'#5d6b76',fin:'#26313b',pat:'none',c:35},
+ {id:'ss',name:'삼치',min:1,max:6,rar:4,h:.2,col:'#3a5f80',belly:'#eef2f5',fin:'#5d7a92',pat:'dots2',c:48},
+ {id:'dl',name:'돌돔',min:.5,max:4,rar:3.5,h:.48,col:'#8f9398',belly:'#d7dadc',fin:'#3c4146',pat:'bands',c:36},
+ {id:'cs',name:'참다랑어',min:10,max:22,rar:.7,h:.3,col:'#1f3552',belly:'#e7ecf0',fin:'#e0b93a',pat:'tuna',c:45}
 ];
 const LIMIT=14;
 const tier=f=>f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
@@ -312,6 +321,9 @@ function drawFish(c,x,y,L,f,sil){
   if(f.pat==='mack'){c.strokeStyle='#0d2f2e';c.lineWidth=L*.012;for(let i=-4;i<5;i++){c.beginPath();for(let t=0;t<=1;t+=.1)c.lineTo(i*L*.08+Math.sin(t*6)*L*.02,-H/2+t*H*.45);c.stroke()}}
   if(f.pat==='spot'||f.pat==='freck'){c.fillStyle=f.pat==='spot'?'rgba(0,0,0,.28)':'rgba(0,0,0,.5)';for(let i=0;i<14;i++){const a=Math.sin(i*12.9)*.5,b=Math.cos(i*7.3)*.5;c.beginPath();c.arc(a*L*.7,b*H*.6-H*.08,L*(f.pat==='spot'?.035:.012),0,7);c.fill()}}
   if(f.pat==='band'){c.fillStyle='rgba(0,0,0,.18)';for(let i=-2;i<3;i++)c.fillRect(i*L*.13-L*.025,-H,L*.05,H*2)}
+  if(f.pat==='bands'){c.fillStyle='rgba(20,22,26,.85)';for(let i=-3;i<4;i++)c.fillRect(i*L*.12-L*.03,-H,L*.06,H*2)}
+  if(f.pat==='dots2'){c.fillStyle='rgba(20,40,70,.55)';for(let i=0;i<22;i++){c.beginPath();c.arc(Math.sin(i*7.7)*L*.42,-H*.12+Math.cos(i*3.3)*H*.18,L*.014,0,7);c.fill()}}
+  if(f.pat==='tuna'){c.fillStyle='rgba(120,170,220,.35)';c.fillRect(-L*.5,-H*.05,L,H*.08);c.fillStyle='#e0b93a';for(let i=0;i<6;i++){c.beginPath();c.moveTo(-L*.2-i*L*.035,H*.38);c.lineTo(-L*.21-i*L*.035,H*.5);c.lineTo(-L*.19-i*L*.035,H*.5);c.fill();c.beginPath();c.moveTo(-L*.2-i*L*.035,-H*.38);c.lineTo(-L*.21-i*L*.035,-H*.5);c.lineTo(-L*.19-i*L*.035,-H*.5);c.fill()}}
   if(f.pat==='dots'){c.fillStyle='#6fd0ff';for(let i=0;i<12;i++){c.beginPath();c.arc(Math.sin(i*5.1)*L*.3,-H*.22+Math.cos(i*3.7)*H*.12,L*.012,0,7);c.fill()}}
   if(f.pat==='yline'){c.fillStyle='#f2c94c';c.fillRect(-L*.5,-H*.04,L,H*.1)}
   if(f.pat==='line2'){c.fillStyle='rgba(255,230,140,.55)';c.fillRect(-L*.5,-H*.02,L,H*.06)}
@@ -725,6 +737,9 @@ function fishMesh(f){if(fishGeo[f.id])return fishGeo[f.id];const col=hex(f.col),
     if(f.pat==='yline'&&Math.abs(y)<.12)c=yl;if(f.pat==='line2'&&Math.abs(y)<.08)c=mixc(c,yl,.5);
     if(f.pat==='mack'&&y>.15&&Math.sin(x*22+y*6)>.3)c=mixc(c,[.05,.18,.18],.7);
     if(f.pat==='band'&&Math.sin(x*14)>.6)c=mixc(c,[0,0,0],.18);
+    if(f.pat==='bands'&&Math.sin(x*26)>.35)c=mixc(c,[.06,.07,.08],.85);
+    if(f.pat==='dots2'&&y>-.1&&Math.sin(x*45)*Math.sin(z*38+y*20)>.75)c=mixc(c,[.08,.15,.27],.6);
+    if(f.pat==='tuna'&&Math.abs(y+.02)<.05)c=mixc(c,[.47,.67,.86],.4);
     if((f.pat==='spot'||f.pat==='freck')&&Math.sin(x*31)*Math.sin(z*27+y*13)>.55)c=mixc(c,[0,0,0],.3);
     if(f.pat==='dots'&&y>.1&&Math.sin(x*40)*Math.sin(z*40)>.7)c=hex('#6fd0ff');return c});
   return fishGeo[f.id]=upload(g)}
