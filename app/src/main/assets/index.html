@@ -390,12 +390,15 @@ void main(){vec3 n=normalize(vN);vec3 V=normalize(uEye-vW);if(dot(n,V)<0.&&uWate
   col+=vec3(1.,.9,.72)*pow(max(dot(reflect(-SL,n),V),0.),700.)*45.;
   a=mix(uAlpha,1.,F);
  }else{
-  if(uMat>.5){float k=vn(vW*3.1)*.55+vn(vW*9.7)*.3+h3(floor(vW*55.))*.15;float st=vn(vW*.5+3.);base*=.55+.62*k;base*=mix(.62,1.1,smoothstep(.25,.75,st));
+  if(uMat>2.5){base*=.88+.16*vn(vW*90.)+.06*vn(vW*7.);}
+  else if(uMat>1.5){}
+  else if(uMat>.5){float k=vn(vW*3.1)*.55+vn(vW*9.7)*.3+h3(floor(vW*55.))*.15;float st=vn(vW*.5+3.);base*=.55+.62*k;base*=mix(.62,1.1,smoothstep(.25,.75,st));
    base*=mix(.35,1.,smoothstep(-.3,.4,vW.y));}
   float d=max(dot(n,L),0.);vec3 amb=mix(vec3(.10,.095,.09),vec3(.30,.40,.55),n.y*.5+.5);
   col=base*(amb+vec3(1.,.93,.82)*1.75*d*sh);
   if(uSpec>0.){vec3 h=normalize(L+V);col+=pow(max(dot(n,h),0.),uSpec)*.5*sh*vec3(1.,.95,.9);}
   col+=base*pow(1.-max(dot(n,V),0.),3.)*.25;
+  if(uMat>1.5&&uMat<2.5){float w=max((dot(n,L)+.35)/1.35,0.);col=base*(amb*1.05+vec3(1.,.9,.8)*1.6*w*mix(.45,1.,sh))+base*vec3(.35,.1,.06)*pow(1.-max(dot(n,V),0.),2.)*.6;}
  }
  float f=smoothstep(uFogR.x,uFogR.y,length(vW-uEye));col=mix(col,fogC,f);
  vec3 o=outc(col);o=mix(o,uColor*vC,uUnlit);gl_FragColor=vec4(o,a);}`);
@@ -572,39 +575,78 @@ add(cooler,mesh(G.box,'#d8d8d2',{p:[0,.28,0],s:[.3,.04,.06]}));
 const tail=N({vis:false});
 // soft contact shadow on concrete
 add(pier,mesh(G.sph,'#000000',{p:[2.2,.57,.05],s:[.4,.01,.28],a:.1,pass:'t',unlit:1}));
-// angler (jointed, rounded limbs)
+// angler: lofted human body (smooth limbs, anatomical proportions)
+function cr(p0,p1,p2,p3,t){const t2=t*t,t3=t2*t;return[0,1,2].map(k=>.5*((2*p1[k])+(-p0[k]+p2[k])*t+(2*p0[k]-5*p1[k]+4*p2[k]-p3[k])*t2+(-p0[k]+3*p1[k]-3*p2[k]+p3[k])*t3))}
+function pathPts(cp,N){const P=[cp[0],...cp,cp[cp.length-1]],out=[];for(let i=0;i<=N;i++){const u=i/N*(cp.length-1),k=Math.min(cp.length-2,Math.floor(u));out.push(cr(P[k],P[k+1],P[k+2],P[k+3],u-k))}return out}
+function loftG(cp,radf,N=18,S=14){const pts=pathPts(cp,N),p=[],n=[],i=[];
+  for(let j=0;j<=N;j++){const a=pts[Math.max(0,j-1)],b=pts[Math.min(N,j+1)],t=norm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);
+    const ref=Math.abs(t[2])<.9?[0,0,1]:[1,0,0],u=norm(cross(t,ref)),v=cross(u,t),[rx,rz]=radf(j/N);
+    for(let k=0;k<=S;k++){const an=k/S*Math.PI*2,c=Math.cos(an),sn=Math.sin(an);
+      p.push(pts[j][0]+u[0]*c*rx+v[0]*sn*rz,pts[j][1]+u[1]*c*rx+v[1]*sn*rz,pts[j][2]+u[2]*c*rx+v[2]*sn*rz);
+      n.push(...norm([u[0]*c/rx+v[0]*sn/rz,u[1]*c/rx+v[1]*sn/rz,u[2]*c/rx+v[2]*sn/rz]))}}
+  for(let j=0;j<N;j++)for(let k=0;k<S;k++){const a=j*(S+1)+k,b=a+S+1;i.push(a,b,a+1,b,b+1,a+1)}
+  for(const[j,sg]of[[0,-1],[N,1]]){const a=pts[Math.max(0,j-1)],b=pts[Math.min(N,j+1)],t=norm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]),c=p.length/3;
+    p.push(...pts[j]);n.push(t[0]*sg,t[1]*sg,t[2]*sg);for(let k=0;k<S;k++)i.push(c,j*(S+1)+k,j*(S+1)+k+1)}
+  return upload({p,n,i})}
+const tab=(T)=>y=>{for(let k=0;k<T.length-1;k++)if(y<=T[k+1][0]){const f=(y-T[k][0])/(T[k+1][0]-T[k][0]);return[lerp(T[k][1],T[k+1][1],f),lerp(T[k][2],T[k+1][2],f)]}return[T[T.length-1][1],T[T.length-1][2]]};
+const prof=(pts)=>t=>{for(let k=0;k<pts.length-1;k++)if(t<=pts[k+1][0]){const f=(t-pts[k][0])/(pts[k+1][0]-pts[k][0]);return lerp(pts[k][1],pts[k+1][1],f)}return pts[pts.length-1][1]};
 const ang=add(ROOT,N({p:[-2.4,.56,2.75],r:[0,.55,0]}));
 const body=add(ang,N());
-const PANTS='#2b313b',JACKET='#38495a',VEST='#d55a24',SKIN='#c99a7a',BOOT='#22252a',CAP='#1f2833';
-const tcylG=gl?upload(cylG(.82,1,1,18)):null;
-function limb(par,a,b,r,col,r2){const d=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],L=Math.hypot(d[0],d[1],d[2]),u=[d[0]/L,d[1]/L,d[2]/L];
-  add(par,mesh(G.cyl,col,{p:[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],r:[Math.acos(Math.max(-1,Math.min(1,u[1]))),Math.atan2(u[0],u[2]),0],s:[r,L,r]}));
-  add(par,mesh(G.sph,col,{p:b,s:[r2||r,r2||r,r2||r]}))}
-for(const x of[-.1,.1]){const hip=[x,.92,0],knee=[x*1.1,.5,.04],ank=[x*1.1,.12,0];
-  add(body,mesh(G.sph,PANTS,{p:hip,s:[.085,.085,.085]}));limb(body,hip,knee,.08,PANTS,.078);limb(body,knee,ank,.07,PANTS,.065);
-  add(body,mesh(G.sph,BOOT,{p:[x*1.1,.06,.07],s:[.075,.06,.15],spec:30}))}
-add(body,mesh(G.sph,PANTS,{p:[0,.94,0],s:[.19,.11,.13]}));
-add(body,N({m:tcylG,c:hex(JACKET),p:[0,1.2,0],s:[.2,.52,.14]}));
-add(body,N({m:tcylG,c:hex(VEST),p:[0,1.24,0],s:[.214,.38,.152],spec:20}));
-add(body,mesh(G.box,'#b8481a',{p:[0,1.12,.15],s:[.3,.025,.012]}));add(body,mesh(G.box,'#b8481a',{p:[0,1.3,.15],s:[.3,.025,.012]}));
-add(body,mesh(G.sph,JACKET,{p:[0,1.46,0],s:[.2,.07,.13]}));
-for(const x of[-.2,.2])add(body,mesh(G.sph,JACKET,{p:[x,1.41,0],s:[.075,.075,.075]}));
-// right arm -> hand on rod
-limb(body,[.2,1.41,0],[.28,1.2,.17],.058,JACKET,.056);limb(body,[.28,1.2,.17],[.24,1.08,.34],.05,JACKET,.045);
-const handR=add(body,mesh(G.sph,SKIN,{p:[.24,1.08,.36],s:[.048,.048,.048]}));
-// left arm (pivot at shoulder so it can be raised)
-const armL=add(body,N({p:[-.2,1.41,0]}));
-limb(armL,[0,0,0],[.02,-.26,.16],.058,JACKET,.056);limb(armL,[.02,-.26,.16],[.2,-.36,.26],.05,JACKET,.045);
-add(armL,mesh(G.sph,SKIN,{p:[.21,-.37,.27],s:[.046,.046,.046]}));
-const head=add(body,N({p:[0,1.62,0]}));
-add(head,mesh(G.cyl,SKIN,{p:[0,-.11,0],s:[.055,.09,.055]}));
-add(head,mesh(G.sph,SKIN,{s:[.105,.125,.115]}));
-add(head,mesh(G.sph,SKIN,{p:[0,-.07,.04],s:[.08,.06,.08]}));
-for(const x of[-.105,.105])add(head,mesh(G.sph,SKIN,{p:[x,0,0],s:[.02,.035,.025]}));
-add(head,mesh(G.box,'#0c0e12',{p:[0,.015,.105],s:[.17,.035,.02],spec:90}));
-add(head,mesh(G.sph,SKIN,{p:[0,-.015,.118],s:[.017,.026,.02]}));
-add(head,mesh(G.hemi,CAP,{p:[0,.035,0],s:[.115,.1,.122]}));
-add(head,mesh(G.box,CAP,{p:[0,.04,.15],s:[.16,.012,.1],r:[-.12,0,0]}));
+const PANTS='#2a2f37',JACKET='#2f3d4c',VEST='#d0561f',SKIN='#c48f6e',BOOT='#1d1f23',CAP='#1c2430',HAIR='#2b211b';
+const M=(m,col,o={})=>N(Object.assign({m,c:hex(col)},o));
+if(gl){
+ // torso (jacket) + vest
+ const torsoT=tab([[.90,.155,.112],[1.0,.152,.108],[1.1,.148,.104],[1.25,.172,.118],[1.35,.186,.112],[1.41,.165,.095],[1.47,.1,.075],[1.53,.052,.05],[1.56,.045,.045]]);
+ add(body,M(loftG([[0,.9,0],[0,1.2,.005],[0,1.56,0]],t=>torsoT(.9+t*.66),20,18),JACKET,{mat:3}));
+ const vestT=tab([[1.0,.162,.118],[1.1,.158,.114],[1.25,.184,.13],[1.36,.198,.122],[1.43,.17,.1]]);
+ add(body,M(loftG([[0,1.0,0],[0,1.2,.006],[0,1.44,0]],t=>vestT(1+t*.44),14,18),VEST,{spec:24,mat:3}));
+ for(const y of[1.12,1.3])add(body,mesh(G.box,'#c9ccce',{p:[0,y,.128],s:[.27,.018,.01],spec:60}));
+ add(body,mesh(G.box,'#151515',{p:[0,1.2,.133],s:[.008,.38,.006]}));
+ add(body,M(loftG([[-.07,1.5,.01],[0,1.535,.06],[.07,1.5,.01]],()=>[.022,.03],10,8),JACKET,{mat:3}));
+ // hips + legs
+ add(body,M(loftG([[-.13,.92,0],[0,.9,0],[.13,.92,0]],t=>{const r=prof([[0,.085],[.5,.1],[1,.085]])(t);return[r,r*.95]},10,14),PANTS,{mat:3}));
+ const legR=prof([[0,.04],[.06,.09],[.25,.085],[.5,.06],[.65,.066],[.92,.046],[1,.03]]);
+ for(const x of[-.09,.09]){add(body,M(loftG([[x,.96,0],[x*1.08,.52,.045],[x*1.1,.1,0]],t=>{const r=legR(t);return[r,r*1.05]},22,14),PANTS,{mat:3}));
+   const bt=add(body,N({p:[x*1.1,.055,.05]}));
+   add(bt,M(loftG([[0,.02,-.09],[0,.03,.04],[0,.01,.14]],t=>{const r=prof([[0,.03],[.15,.058],[.6,.052],[.9,.042],[1,.015]])(t);return[r,r*.8]},12,12),BOOT,{spec:40}));
+   add(bt,mesh(G.box,'#0e0f11',{p:[0,-.035,.025],s:[.1,.02,.26]}))}
+ // arms (right fixed to rod, left on pivot)
+ const armR=prof([[0,.03],[.05,.062],[.45,.048],[.55,.046],[.95,.036],[1,.03]]);
+ add(body,M(loftG([[.17,1.405,0],[.26,1.19,.14],[.235,1.1,.3]],t=>{const r=armR(t);return[r,r]},20,12),JACKET,{mat:3}));
+ add(body,mesh(G.sph,JACKET,{p:[.172,1.4,0],s:[.066,.066,.07]}));
+}
+// right hand (gripping): palm + curled fingers + thumb
+const handR=add(body,N({p:[.24,1.08,.355],r:[.5,0,.2]}));
+add(handR,mesh(G.sph,SKIN,{s:[.038,.045,.03],mat:2}));
+for(let k=0;k<4;k++)add(handR,mesh(G.sph,SKIN,{p:[.03,.03-k*.02,.018],s:[.018,.011,.02],mat:2}));
+add(handR,mesh(G.sph,SKIN,{p:[-.02,.03,.025],s:[.012,.026,.012],r:[0,0,.6],mat:2}));
+const armL=add(body,N({p:[-.17,1.405,0]}));
+if(gl){const armR=prof([[0,.03],[.05,.062],[.45,.048],[.55,.046],[.95,.036],[1,.03]]);
+ add(armL,M(loftG([[0,0,0],[.04,-.25,.12],[.18,-.33,.24]],t=>{const r=armR(t);return[r,r]},20,12),JACKET,{mat:3}));
+ add(armL,mesh(G.sph,JACKET,{p:[-.002,-.02,0],s:[.066,.066,.07]}));}
+const hL=add(armL,N({p:[.2,-.35,.265],r:[.3,.6,0]}));
+add(hL,mesh(G.sph,SKIN,{s:[.037,.044,.03],mat:2}));
+for(let k=0;k<4;k++)add(hL,mesh(G.sph,SKIN,{p:[.028,.028-k*.019,.018],s:[.017,.011,.02],mat:2}));
+// head
+const head=add(body,N({p:[0,1.655,.008]}));
+if(gl)add(head,M(loftG([[0,-.16,-.005],[0,-.1,.005],[0,-.05,.0]],()=>[.048,.05],6,12),SKIN,{mat:2}));
+add(head,mesh(G.sph,SKIN,{s:[.088,.112,.1],mat:2}));
+add(head,mesh(G.sph,SKIN,{p:[0,-.055,.02],s:[.074,.068,.082],mat:2}));
+add(head,mesh(G.sph,SKIN,{p:[0,-.098,.064],s:[.03,.026,.026],mat:2}));
+add(head,mesh(G.cone,'#bd8566',{p:[0,-.02,.112],r:[Math.PI/2,0,0],s:[.017,.038,.022],mat:2}));
+add(head,mesh(G.box,'#8e5a4a',{p:[0,-.068,.093],s:[.032,.005,.008]}));
+for(const x of[-.09,.09])add(head,mesh(G.sph,SKIN,{p:[x,-.012,-.005],s:[.012,.028,.02],mat:2}));
+
+add(head,mesh(G.sph,HAIR,{p:[0,.012,-.014],s:[.093,.1,.1]}));
+// sunglasses
+for(const x of[-.034,.034])add(head,mesh(G.sph,'#08090b',{p:[x,.012,.094],s:[.03,.019,.008],spec:120}));
+add(head,mesh(G.box,'#08090b',{p:[0,.016,.098],s:[.018,.005,.005]}));
+for(const x of[-.075,.075])add(head,mesh(G.box,'#08090b',{p:[x,.016,.045],s:[.004,.005,.1]}));
+// cap
+add(head,mesh(G.hemi,CAP,{p:[0,.04,-.004],s:[.099,.085,.11],mat:3}));
+add(head,mesh(G.cyl,CAP,{p:[0,.04,-.004],s:[.099,.012,.11],mat:3}));
+add(head,mesh(G.sph,CAP,{p:[0,.05,.13],r:[-.12,0,0],s:[.08,.009,.075],mat:3}));
+add(head,mesh(G.box,'#c9ccce',{p:[0,.085,.083],s:[.04,.018,.004]}));
 const face=N({vis:false}),sparks=[];function drawFace(){}
 {const mk=n=>{if(n.m)n.mat=1;n.ch.forEach(mk)};mk(pier);mk(lhB);const um=n=>{n.mat=0;n.ch.forEach(um)};um(cooler);}
 for(const n of ROOT.ch)if(n.fog)n.noshadow=true;
