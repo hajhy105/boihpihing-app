@@ -366,195 +366,183 @@ function drawRod(c,x0,y0,cx,cy,x1,y1,R,s,t){
     const tw=(Math.sin(t*4)+1)/2,r=(2+tw*3)*s;c.fillStyle='#fff6c0';c.beginPath();c.moveTo(x1,y1-r*2);c.lineTo(x1+r*.5,y1-r*.5);c.lineTo(x1+r*2,y1);c.lineTo(x1+r*.5,y1+r*.5);c.lineTo(x1,y1+r*2);c.lineTo(x1-r*.5,y1+r*.5);c.lineTo(x1-r*2,y1);c.lineTo(x1-r*.5,y1-r*.5);c.fill()}
   if(R.id==='mid'){const p=P(.18);c.fillStyle='#c9a54a';c.beginPath();c.arc(p.x,p.y,2.5*s,0,7);c.fill()}
 }
-/* ================= pixel-art (도트) renderer ================= */
+/* ================= pixel-art (도트) renderer — first-person view ================= */
 const cv=$('cv'),stage=$('stage');const gl=true;
 const ctx=cv.getContext('2d');
 let W=0,H=0,PW=200,PH=260;
 const fit=()=>{W=stage.clientWidth;H=stage.clientHeight;PW=W<520?180:Math.round(Math.min(320,W/3.2));PH=Math.max(90,Math.round(PW*H/W));cv.width=PW;cv.height=PH};
 const ro=new ResizeObserver(fit);ro.observe(stage);fit();
 const wave=(x,z,t)=>.07*Math.sin(.55*x+1.3*t)+.05*Math.sin(.8*z-1.1*t+.15*x);
-/* palette */
-const PAL={sky:['#3466c4','#4a82d6','#68a1e6','#93c3f2','#c9e4f7'],sea:['#7fd8f2','#3b9fd0','#2b84b8','#1f6a9c','#165480','#0f3e63','#0a2c48'],
- sand:'#c9a86a',sand2:'#a88850',rock:'#6d6a66',rock2:'#55524e',weed:'#3f8f52',weed2:'#2e6e3e',con:'#a3a19a',con2:'#8c8a83',con3:'#c4c2ba',con4:'#74726c',
- white:'#fff7ec',red:'#e0453a',yel:'#ffd23f',ink:'#1b1f2b',isl:'#3f6f5a',isl2:'#335d4b',sun:'#fff3b0',sun2:'#ffe08a'};
+const PAL={sky:['#3466c4','#4a82d6','#68a1e6','#93c3f2','#c9e4f7'],sea:['#6fc3e3','#4aa6d4','#3790c4','#2b7db3','#2470a3','#1d6394'],
+ con:'#a3a19a',con2:'#8c8a83',con3:'#c4c2ba',con4:'#74726c',white:'#fff7ec',red:'#e0453a',yel:'#ffd23f',ink:'#1b1f2b',
+ isl:'#3f6f5a',isl2:'#335d4b',sun:'#fff3b0',sun2:'#ffe08a',skin:'#c48f6e',skin2:'#a87458',glove:'#2f3d4c',sleeve:'#d0561f',sleeve2:'#a9441a'};
 const px=(c,x,y,w=1,h=1,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)};
 function pline(c,x0,y0,x1,y1,col){x0=Math.round(x0);y0=Math.round(y0);x1=Math.round(x1);y1=Math.round(y1);c.fillStyle=col;
   const dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx+dy,g=0;
-  while(g++<2000){c.fillRect(x0,y0,1,1);if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx}if(e2<=dx){e+=dx;y0+=sy}}}
-function pcurve(c,a,b,d,col,n=14){let p=a;for(let i=1;i<=n;i++){const t=i/n,q=[(1-t)*(1-t)*a[0]+2*(1-t)*t*b[0]+t*t*d[0],(1-t)*(1-t)*a[1]+2*(1-t)*t*b[1]+t*t*d[1]];pline(c,p[0],p[1],q[0],q[1],col);p=q}}
+  while(g++<3000){c.fillRect(x0,y0,1,1);if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx}if(e2<=dx){e+=dx;y0+=sy}}}
+const qb=(a,b,d,t)=>[(1-t)*(1-t)*a[0]+2*(1-t)*t*b[0]+t*t*d[0],(1-t)*(1-t)*a[1]+2*(1-t)*t*b[1]+t*t*d[1]];
+function pcurve(c,a,b,d,col,n=16,w=1){let p=a;for(let i=1;i<=n;i++){const q=qb(a,b,d,i/n);pline(c,p[0],p[1],q[0],q[1],col);if(w>1)pline(c,p[0]+1,p[1],q[0]+1,q[1],col);p=q}}
 /* pixel fish sprite (from the 2D fish drawing, alpha-thresholded) */
 const spriteCache={};
-function fishSprite(f,len,sil){len=Math.max(6,Math.round(len));const k=f.id+len+(sil?'s':'');if(spriteCache[k])return spriteCache[k];
-  const w=len+2,h=Math.max(4,Math.round(len*Math.max(.32,f.h)*1.25)+2),o=document.createElement('canvas');o.width=w;o.height=h;const c=o.getContext('2d');
+function fishSprite(f,len,sil){len=Math.max(4,Math.round(len));const k=f.id+len+(sil?'s':'');if(spriteCache[k])return spriteCache[k];
+  const w=len+2,h=Math.max(3,Math.round(len*Math.max(.32,f.h)*1.25)+2),o=document.createElement('canvas');o.width=w;o.height=h;const c=o.getContext('2d');
   drawFish(c,w*.53,h*.5,len*.98,f,sil);const im=c.getImageData(0,0,w,h),d=im.data;
   for(let i=0;i<d.length;i+=4){if(sil){if(d[i+3]>12){d[i]=58;d[i+1]=74;d[i+2]=92;d[i+3]=255}else d[i+3]=0;continue}if(d[i+3]<110){d[i+3]=0}else{d[i+3]=255;for(let j=0;j<3;j++)d[i+j]=Math.round(d[i+j]/24)*24}}
   c.putImageData(im,0,0);return spriteCache[k]=o}
+const shadowCache={};
+function fishShadow(f,len){len=Math.max(4,Math.round(len));const k=f.id+len;if(shadowCache[k])return shadowCache[k];
+  const s=fishSprite(f,len,true),o=document.createElement('canvas');o.width=s.width;o.height=s.height;const c=o.getContext('2d');c.drawImage(s,0,0);
+  c.globalCompositeOperation='source-in';c.fillStyle='#0d3550';c.fillRect(0,0,o.width,o.height);return shadowCache[k]=o}
 function drawSprite(c,sp,x,y,flip,rot){c.save();c.translate(Math.round(x),Math.round(y));if(rot)c.rotate(rot);if(flip)c.scale(-1,1);c.drawImage(sp,-Math.round(sp.width/2),-Math.round(sp.height/2));c.restore()}
-/* angler sprite (14x24) */
-const ANG=[
-'.....kkkk.....',
-'....kccccc....',
-'...kcccccccc..',
-'....ssssk.....',
-'....sgggs.....',
-'....sssss.....',
-'.....sss......',
-'...jjoooojj...',
-'..jjooyoooj...',
-'..jjooooooj...',
-'..j.ooyoo.j...',
-'..j.ooooo.j...',
-'..s.ooooo.s...',
-'....ppppp.....',
-'....ppppp.....',
-'....pp.pp.....',
-'....pp.pp.....',
-'....pp.pp.....',
-'....pp.pp.....',
-'....pp.pp.....',
-'...bbb.bbb....',
-'...bbb.bbb....'];
-const ACOL={k:'#1c2430',c:'#26303d',s:'#c48f6e',g:'#0c0e12',j:'#2f3d4c',o:'#d0561f',y:'#e8e8e2',p:'#2a2f37',b:'#1d1f23'};
-function drawAngler(c,x,y,pose){const lean=pose==='fight'?1:0,arm=pose==='happy';
-  for(let r=0;r<ANG.length;r++)for(let q=0;q<ANG[r].length;q++){const ch=ANG[r][q];if(ch==='.')continue;
-    let xx=x+q+(r<13?lean*-1:0),yy=y+r;if(pose==='sad'&&r<7)yy+=1;px(c,xx,yy,1,1,ACOL[ch])}
-  if(arm){for(let i=0;i<5;i++)px(c,x+2-(i>2?1:0),y+10-i,1,1,ACOL.j);px(c,x+1,y+4,1,2,ACOL.s)}}
-/* world → pixel mapping (side view: further out to sea = further right) */
-let yW=150,PX0=44;
-const sx=z=>PX0+(1.5-z)*((PW-PX0-14)/6.6);
-let menuMode=false;function layout(w,h){yW=Math.round(h*(menuMode?.3:.5));PX0=Math.round(w*.24)}
+/* ---------- first-person camera (eye on the breakwater, looking out to sea) ---------- */
+const EYE={x:1.2,y:2.2,z:3.5};
+let yH=100,FX=100,FY=100,CX=100,menuMode=false;
+function layout(w,h){yH=Math.round(h*(menuMode?.3:.36));FY=(h*.9-yH)*1.7/EYE.y;FX=FY*1.15;CX=w*.5}
+const dist=z=>Math.max(.6,EYE.z-z);
+function proj(x,y,z){const d=dist(z);return[CX+FX*(x-EYE.x)/d,yH+FY*(EYE.y-y)/d,FY/d]}
 /* ---------- game state shared with logic ---------- */
 let mood='',zeroT=0,landAge=0,biteAge=0,bRip=0;
 let st='idle',T=0,fish=null,fw=0,bx0=1,bz0=-3,castT=0,waitT=0,nibT=0,nib=0,biteT=0;
 let gauge=0,tens=0,clock=0,run=0,nextRun=0,heavy=false,P={};
 let resT=0;
-const handW=[0,1.9,2.4];
-function tipPos(){return[0,2.6,1.2]}
+const handW=[.7,1.5,2.7];
 function bobPos(){
-  if(st==='cast'){const t=Math.min(1,castT/.9);return[bx0,Math.sin(t*Math.PI)*2.2,lerp(1.0,bz0,t),0,0]}
+  if(st==='cast'){const t=Math.min(1,castT/.9);return[lerp(.9,bx0,t),Math.sin(t*Math.PI)*2.2+(1-t)*2.6,lerp(2.2,bz0,t),0,0]}
   let x=bx0,z=bz0,y=wave(x,z,T);
   if(st==='wait'){const s=Math.exp(-landAge*4);y+=Math.abs(Math.sin(landAge*13))*.16*s;y-=nib*.11}
   if(st==='bite'){const a=biteAge,dv=a<.12?a/.12:1;y-=dv*.16+Math.sin(a*21)*.06*dv}
-  if(st==='fight'){const k=gauge/100;z=lerp(bz0,1.5,k*.7)+Math.sin(T*(run>0?6:1.7))*(run>0?.25:.1);y=wave(x,z,T)-.12}
+  if(st==='fight'){const k=gauge/100;z=lerp(bz0,1.2,k*.75)+Math.sin(T*(run>0?6:1.7))*(run>0?.25:.1);x=bx0+Math.sin(T*(run>0?4.3:1.3))*(run>0?.5:.18);y=wave(x,z,T)-.12}
   return[x,y,z,0,0]}
-/* effects in world coords (used by game logic) */
 let ripples=[],drops=[],chumP=[];
 function ripple(x,z,s){ripples.push({x,z,r:.05,a:.8,s:s||1})}
 function splash(x,y,z,n){for(let k=0;k<n;k++)drops.push({x,y,z,vx:rnd(-1.2,1.2),vy:rnd(1.5,3.2),vz:rnd(-1.2,1.2),a:1})}
 function throwChum(){const c=[1.1,0,-2.8];for(let k=0;k<36;k++){const tx=c[0]+rnd(-1.6,1.6),tz=c[2]+rnd(-1.4,1.4),t=rnd(.7,1.1);
   chumP.push({x:handW[0],y:handW[1]+.1,z:handW[2],vx:(tx-handW[0])/t,vz:(tz-handW[2])/t,vy:(0-handW[1])/t+4.9*t,t:0,life:t,d:k*.012,sink:0})}}
-/* sea life */
+/* sea life: jumping fish and passing shadows */
 let sea=[],seaT=2.5;
 function spawnSea(){const f=FISH[Math.floor(Math.random()*FISH.length)],dir=Math.random()<.5?-1:1;
-  if(Math.random()<.4){const z=rnd(-5,-1.5);sea.push({k:'jump',f,dir,z,t:0,dur:rnd(.9,1.3),h:rnd(18,32),L:rnd(10,16)});splash(0,0,z,6);ripple(0,z,1.2)}
-  else{const cnt=Math.random()<.35?3:1,dep=rnd(.25,.85),L=rnd(9,15),v=rnd(10,18);for(let i=0;i<cnt;i++)sea.push({k:'swim',f,dir,x:dir>0?-20-i*12:PW+20+i*12,dep:dep+i*.04,t:i,v,L:cnt>1?L*.8:L})}}
-function flyCatch(){const b=bobPos();sea.push({k:'catch',f:fish,z:b[2],t:0,dur:.9,L:Math.min(26,8+fw*1.4)})}
+  if(Math.random()<.45){const z=rnd(-6,-1.5),x=rnd(-1.5,4);sea.push({k:'jump',f,dir,x,z,t:0,dur:rnd(.9,1.3),h:rnd(.8,1.5),L:rnd(.5,.9)});splash(x,0,z,6);ripple(x,z,1.2)}
+  else{const cnt=Math.random()<.35?3:1,z=rnd(-5.5,-.5),L=rnd(.4,.8),v=rnd(.5,1.1);for(let i=0;i<cnt;i++)sea.push({k:'swim',f,dir,x:dir>0?-4-i*.7:6+i*.7,z:z+i*.25,t:i,v,L:cnt>1?L*.8:L})}}
+function flyCatch(){const b=bobPos();sea.push({k:'catch',f:fish,x:b[0],z:b[2],t:0,dur:.9,L:Math.min(1.4,.3+fw*.06)})}
 function updSea(dt){seaT-=dt;if(seaT<=0){spawnSea();seaT=rnd(3.5,8)}
-  for(const o of sea){o.t+=dt;if(o.k==='swim'){o.x+=o.dir*o.v*dt;if(o.x<-40||o.x>PW+40)o.done=1}
-    else if(o.t>=o.dur){if(o.k==='jump'){const ez=o.z-o.dir*.9;splash(0,0,ez,8);ripple(0,ez,1.6)}o.done=1}}
-  sea=sea.filter(o=>!o.done);
-  for(const c of chumP)if(c.hit)c.sink+=dt}
-/* DOM overlays */
+  for(const o of sea){o.t+=dt;if(o.k==='swim'){o.x+=o.dir*o.v*dt;if(o.x<-5||o.x>7)o.done=1}
+    else if(o.t>=o.dur){if(o.k==='jump'){const ex=o.x+o.dir*1.2;splash(ex,0,o.z,8);ripple(ex,o.z,1.6)}o.done=1}}
+  sea=sea.filter(o=>!o.done)}
 const pop=$('pop'),resist=$('resist');
-function toScreen(p){const s=W/PW;return{x:sx(p[2])*s,y:(yW-(p[1]>.6?30:p[1]*14))*s}}
+function toScreen(p){const s=W/PW,q=proj(p[0],p[1],p[2]);return{x:q[0]*s,y:q[1]*s}}
 /* ---------- drawing ---------- */
-function drawBackground(c,w,h,t){
+const BY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function dither(c,x0,y0,w,h,col,a){c.fillStyle=col;for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++)if(BY[(y&3)*4+(x&3)]/16<a)c.fillRect(x,y,1,1)}
+function drawWorld(c,w,h,t){
   layout(w,h);
-  // sky bands with dithered seams
-  const bands=PAL.sky.length,bh=yW/bands;
+  const bands=PAL.sky.length,bh=yH/bands;
   for(let i=0;i<bands;i++){px(c,0,Math.floor(i*bh),w,Math.ceil(bh)+1,PAL.sky[i]);if(i<bands-1){c.fillStyle=PAL.sky[i+1];for(let x=(i%2);x<w;x+=2)c.fillRect(x,Math.floor((i+1)*bh)-1,1,1)}}
-  // sun
-  const sxp=Math.round(w*.8),syp=Math.round(yW*.3);
+  const sxp=Math.round(w*.78),syp=Math.round(yH*.35);
   c.fillStyle=PAL.sun2;for(let a=0;a<12;a++){const an=a/12*Math.PI*2+t*.2;c.fillRect(Math.round(sxp+Math.cos(an)*9),Math.round(syp+Math.sin(an)*9),1,1)}
   for(let y=-5;y<=5;y++)for(let x=-5;x<=5;x++)if(x*x+y*y<=26)px(c,sxp+x,syp+y,1,1,x*x+y*y>16?PAL.sun2:PAL.sun);
-  // clouds
-  for(let i=0;i<4;i++){const cx=((i*67+t*3.5*(1+i*.2))%(w+60))-30,cy=Math.round(yW*(.14+i*.12));
+  for(let i=0;i<4;i++){const cx=((i*67+t*3.5*(1+i*.2))%(w+60))-30,cy=Math.round(yH*(.12+i*.14));
     c.fillStyle=PAL.white;c.fillRect(cx,cy,22,4);c.fillRect(cx+4,cy-3,10,3);c.fillRect(cx+12,cy-5,7,5);c.fillStyle='#dbe9f5';c.fillRect(cx+2,cy+3,18,2)}
-  // far island + lighthouse
-  c.fillStyle=PAL.isl;c.fillRect(w-70,yW-6,40,6);c.fillRect(w-62,yW-9,22,3);c.fillRect(w-56,yW-11,10,2);c.fillStyle=PAL.isl2;c.fillRect(w-44,yW-4,26,4);
-  const lx=w-24;c.fillStyle='#8f8f89';c.fillRect(lx-12,yW-3,20,3);
-  for(let i=0;i<5;i++)px(c,lx,yW-4-i*3,3,3,i%2?PAL.white:PAL.red);px(c,lx-1,yW-19,5,2,'#2d2d2d');px(c,lx,yW-21,3,2,(Math.sin(t*3)>0)?'#fff7b0':'#e8c860');px(c,lx-1,yW-22,5,1,PAL.red);
-  // gull
-  {const gx=Math.round(((t*9)%(w+40))-20),gy=Math.round(yW*.45+Math.sin(t*1.3)*3),f=Math.sin(t*8)>0;c.fillStyle='#f4f4f0';c.fillRect(gx,gy,1,1);c.fillRect(gx-1,gy-(f?1:0),1,1);c.fillRect(gx+1,gy-(f?1:0),1,1);c.fillRect(gx-2,gy-(f?2:-1),1,1);c.fillRect(gx+2,gy-(f?2:-1),1,1)}
-  // underwater bands (dithered)
-  const sea=PAL.sea,deep=h-yW,step=deep/(sea.length-1);
-  for(let i=1;i<sea.length;i++){px(c,0,Math.floor(yW+1+(i-1)*step),w,Math.ceil(step)+1,sea[i]);c.fillStyle=sea[Math.min(sea.length-1,i+1)];for(let x=(i%2);x<w;x+=2)c.fillRect(x,Math.floor(yW+1+i*step)-1,1,1)}
-  // light rays
-  c.fillStyle='rgba(255,255,255,.07)';for(let i=0;i<5;i++){const x0=Math.round((i*53+t*4)%(w+40))-20;for(let y=0;y<deep*.7;y+=1)c.fillRect(x0+Math.round(y*.35),yW+2+y,3,1)}
-  // surface waves
-  for(let x=0;x<w;x++){const o=Math.round(Math.sin(x*.18+t*2.2)+Math.sin(x*.07-t*1.3)*.6);px(c,x,yW+o,1,1,sea[0]);if(o<0)px(c,x,yW+o+1,1,1,sea[1]);
-    if(((x*13+Math.floor(t*6))%37)===0)px(c,x,yW+o-1,1,1,PAL.white)}
-  // seabed
-  const by=h-7;for(let x=0;x<w;x++){const o=Math.round(Math.sin(x*.12)*1.5+Math.sin(x*.05)*1.2);px(c,x,by+o,1,h-by-o,PAL.sand);if((x*7)%11===0)px(c,x,by+o+2,1,1,PAL.sand2)}
-  for(let i=0;i<6;i++){const rx=Math.round(PX0+20+i*((w-PX0)/6)),ry=by-1;px(c,rx,ry-2,6,3,PAL.rock);px(c,rx+1,ry-3,4,1,PAL.rock);px(c,rx+1,ry,5,1,PAL.rock2)}
-  for(let i=0;i<9;i++){const wx=Math.round(PX0+10+i*((w-PX0)/9)),hh=6+(i*5)%9;for(let k=0;k<hh;k++)px(c,wx+Math.round(Math.sin(t*1.5+k*.5+i)*1.2),by-k,1,1,k%2?PAL.weed:PAL.weed2)}}
+  // far islands + lighthouse on the horizon
+  c.fillStyle=PAL.isl;c.fillRect(6,yH-5,46,5);c.fillRect(14,yH-8,24,3);c.fillRect(20,yH-10,10,2);c.fillStyle=PAL.isl2;c.fillRect(40,yH-3,30,3);
+  c.fillStyle=PAL.isl;c.fillRect(w-58,yH-4,34,4);c.fillRect(w-50,yH-6,16,2);
+  const lx=w-30;c.fillStyle='#8f8f89';c.fillRect(lx-8,yH-2,16,2);
+  for(let i=0;i<4;i++)px(c,lx,yH-3-i*3,3,3,i%2?PAL.white:PAL.red);px(c,lx-1,yH-16,5,2,'#2d2d2d');px(c,lx,yH-18,3,2,(Math.sin(t*3)>0)?'#fff7b0':'#e8c860');px(c,lx-1,yH-19,5,1,PAL.red);
+  {const gx=Math.round(((t*9)%(w+40))-20),gy=Math.round(yH*.55+Math.sin(t*1.3)*3),f=Math.sin(t*8)>0;c.fillStyle='#f4f4f0';c.fillRect(gx,gy,1,1);c.fillRect(gx-1,gy-(f?1:0),1,1);c.fillRect(gx+1,gy-(f?1:0),1,1);c.fillRect(gx-2,gy-(f?2:-1),1,1);c.fillRect(gx+2,gy-(f?2:-1),1,1)}
+  // sea: bands that get wider toward the viewer
+  const sea=PAL.sea;let prev=yH;
+  for(let i=0;i<sea.length;i++){const yb=Math.round(yH+(h-yH)*Math.pow((i+1)/sea.length,1.6));px(c,0,prev,w,yb-prev+1,sea[i]);
+    if(i<sea.length-1){c.fillStyle=sea[i+1];for(let x=(i%2);x<w;x+=2)c.fillRect(x,yb,1,1)}prev=yb}
+  px(c,0,yH,w,1,'#bfe6f5');
+  // perspective wave dashes
+  for(let r=0;r<13;r++){const z=-7+r*.7+((t*.25)%.7),q=proj(0,0,z),y=Math.round(q[1]);if(y<=yH+1||y>=h)continue;
+    const len=Math.max(1,Math.round(q[2]*.35)),gap=Math.max(11,Math.round(q[2]*2.2)),off=Math.round((r*17+Math.sin(t+r)*q[2]*.3))%gap;
+    for(let x=-gap+off;x<w;x+=gap){const lit=((x*7+r*13)%5)===0;px(c,x,y,len,1,lit?'#d8f1fa':'rgba(18,60,96,.3)');if(!lit&&len>2)px(c,x+1,y-1,len-2,1,'rgba(200,235,250,.35)')}}
+  // sun glint column
+  for(let i=0;i<26;i++){const yy=yH+2+Math.round(Math.pow(i/26,1.5)*(h-yH)*.8),ww=1+Math.round(i/6),xx=sxp+Math.round(Math.sin(t*3+i*1.7)*(2+i*.4));if(((i*5+Math.floor(t*8))%3)!==0)px(c,xx,yy,ww,1,'#fff6d0')}}
 function drawPier(c,w,h){
-  const top=yW-18;
-  px(c,0,top,PX0,h-top,PAL.con);px(c,0,top,PX0,2,PAL.con3);px(c,PX0-2,top,2,h-top,PAL.con2);
-  for(let i=0;i<40;i++){const x=(i*37)%PX0,y=top+3+((i*53)%(h-top-4));px(c,x,y,1,1,i%3?PAL.con2:PAL.con4)}
-  for(let x=8;x<PX0;x+=14)px(c,x,top+2,1,10,PAL.con2);
-  px(c,0,yW,PX0,h-yW,'rgba(10,30,50,.25)');px(c,0,yW-1,PX0,2,'rgba(20,40,40,.35)');
-  // tetrapods at the foot
-  const tp=(x,y)=>{c.fillStyle=PAL.con;c.fillRect(x-1,y-5,3,10);c.fillRect(x-5,y-1,10,3);c.fillStyle=PAL.con2;c.fillRect(x-4,y+3,3,3);c.fillRect(x+2,y-4,3,3);c.fillStyle=PAL.con3;c.fillRect(x-1,y-5,1,3)};
-  tp(PX0+3,yW+4);tp(PX0+9,yW+12);tp(PX0+2,yW+18);tp(PX0+11,yW-3);
-  // cooler
-  px(c,PX0-34,top-6,10,6,PAL.white);px(c,PX0-34,top-7,10,2,'#2f6fb0');px(c,PX0-31,top-8,4,1,'#c9ccce');return top}
+  const top=Math.round(h*.9);
+  px(c,0,top,w,h-top,PAL.con);px(c,0,top,w,1,PAL.con3);px(c,0,top+1,w,1,PAL.con3);
+  for(let i=0;i<50;i++){const x=(i*37)%w,y=top+3+((i*53)%Math.max(1,h-top-3));px(c,x,y,1,1,i%3?PAL.con2:PAL.con4)}
+  for(let x=14;x<w;x+=30)px(c,x,top+2,1,h-top,PAL.con2);
+  // tetrapod tips peeking in at the sides
+  const tp=(x,y)=>{c.fillStyle=PAL.con;c.fillRect(x-2,y-8,5,14);c.fillRect(x-8,y-2,16,5);c.fillStyle=PAL.con2;c.fillRect(x-7,y+2,5,3);c.fillRect(x+2,y-7,3,5);c.fillStyle=PAL.con3;c.fillRect(x-2,y-8,2,4)};
+  tp(6,top-4);tp(w-8,top-6);
+  // cooler on the right
+  px(c,w-30,top+3,18,10,PAL.white);px(c,w-30,top+2,18,3,'#2f6fb0');px(c,w-25,top+1,8,1,'#c9ccce');px(c,w-30,top+12,18,1,'#c8c2b6');
+  return top}
+function drawHands(c,w,h,hand,grip,happy,up){
+  // first-person hands: lower hand on the butt, upper hand on the reel seat, sleeves from the bottom edge
+  const hx=Math.round(hand[0]),hy=Math.round(hand[1]);
+  const arm=(x,y,tx,wd)=>{for(let r=y+4;r<h;r++){const k=(r-y)/(h-y),cx=Math.round(lerp(x,tx,k)),ww=Math.round(wd*(.8+k*.5));px(c,cx-(ww>>1),r,ww,1,PAL.sleeve);px(c,cx-(ww>>1),r,2,1,PAL.sleeve2);px(c,cx+(ww>>1)-2,r,2,1,'#e87a3e');if(r===y+5||r===y+6)px(c,cx-(ww>>1),r,ww,1,'#e8e8e2')}};
+  arm(hx,hy,hx+Math.round(w*.1),12);
+  px(c,hx-5,hy,10,7,PAL.glove);px(c,hx-4,hy-1,8,1,PAL.glove);px(c,hx-5,hy+1,1,4,'#3d5064');px(c,hx+4,hy+2,1,3,'#1f2833');
+  const q=[Math.round(up[0])-3,Math.round(up[1])-3];
+  arm(q[0]+4,q[1],q[0]+Math.round(w*.24),13);
+  px(c,q[0]-1,q[1],9,7,PAL.glove);px(c,q[0],q[1]-1,7,1,PAL.glove);px(c,q[0]-1,q[1]+1,1,4,'#3d5064');px(c,q[0]+7,q[1]+2,1,3,'#1f2833');
+  if(happy){px(c,q[0]+9,q[1]-5,2,2,PAL.yel);px(c,q[0]-6,q[1]-3,1,1,PAL.yel)}}
 function drawFrame(c,w,h,t,menu){
   c.imageSmoothingEnabled=false;
-  drawBackground(c,w,h,t);
-  // chum cloud underwater
-  if(!menu&&save.chumLeft>0){const cx=Math.round(sx(-2.8));c.fillStyle='rgba(122,79,38,.28)';for(let i=0;i<70;i++){const a=i*2.4,r=(i%10)*2.3;c.fillRect(Math.round(cx+Math.cos(a+t*.3)*r*1.6),Math.round(yW+10+Math.sin(a)*r*.6+(i%7)),2,2)}}
-  // swimming fish (behind pier)
-  for(const o of sea)if(o.k==='swim'){const sp=fishSprite(o.f,o.L);drawSprite(c,sp,o.x,yW+8+o.dep*(h-yW-20)+Math.sin(T*2+o.t)*1.5,o.dir<0,0)}
-  const top=drawPier(c,w,h);
-  if(menu){drawAngler(c,PX0-16,top-22,'idle');const tip=[PX0+34,yW-52],hand=[PX0-6,top-12];pcurve(c,hand,[PX0+14,yW-46],tip,'#3a3d42');pcurve(c,tip,[PX0+46,yW-10],[PX0+56,yW],'rgba(255,255,255,.7)',10);px(c,PX0+55,yW-3,2,3,PAL.red);px(c,PX0+55,yW,2,2,PAL.white);return}
-  // angler
-  const happy=st==='result'&&mood==='happy',sad=st==='result'&&mood==='sad';
-  const ax=PX0-16,ay=top-22-(happy?Math.round(Math.abs(Math.sin(T*6))*2):0);
-  drawAngler(c,ax,ay,happy?'happy':sad?'sad':st==='fight'?'fight':'idle');
-  // rod
-  const R=rod(),hand=[ax+12,ay+11];let tip=[PX0+34,yW-52];
-  if(st==='aim'){const k=aimPos();tip=[PX0+34-k*34,yW-52-k*8]}
-  const b=bobPos(),bxp=sx(b[2]),byp=yW-Math.round(b[1]*14);
-  if(st==='fight'||st==='bite'){const bend=st==='fight'?Math.min(1,.3+tens/100*.7+(run>0?.2:0)):.25;tip=[tip[0]+(bxp-tip[0])*bend*.25,tip[1]+bend*20]}
-  const ctrl=[(hand[0]+tip[0])/2-2,Math.min(hand[1],tip[1])-6+(st==='fight'?Math.min(1,tens/100)*8:0)];
-  pcurve(c,hand,ctrl,tip,R.col==='#1a1b20'?'#2b2c33':R.col);pcurve(c,[hand[0]+1,hand[1]],[ctrl[0]+1,ctrl[1]],[tip[0],tip[1]+1],R.col==='#1a1b20'?'#2b2c33':R.col);
-  px(c,hand[0]-1,hand[1]-1,3,3,R.grip);px(c,hand[0]+1,hand[1]+2,2,2,R.reel);
-  for(let i=0;i<R.guides;i++){const tt=.45+i*.5/R.guides,q=[(1-tt)*(1-tt)*hand[0]+2*(1-tt)*tt*ctrl[0]+tt*tt*tip[0],(1-tt)*(1-tt)*hand[1]+2*(1-tt)*tt*ctrl[1]+tt*tt*tip[1]];px(c,q[0],q[1]+1,1,1,R.id==='pro'?PAL.yel:PAL.white)}
-  // line + bobber + hook + fish under water
-  const showB=st==='cast'||st==='wait'||st==='bite'||st==='fight';
-  if(showB){const tc=st==='fight'?tens/100:0,lc=`rgb(255,${Math.round(255-tc*170)},${Math.round(255-tc*150)})`;
-    const sag=st==='fight'||st==='cast'?0:10;pcurve(c,tip,[(tip[0]+bxp)/2,Math.max(tip[1],byp)-4+sag],[bxp,byp-4],lc,16);
-    const hookY=yW+(st==='fight'?14+Math.round(Math.sin(T*(run>0?9:3))*4):st==='cast'?0:22);
-    if(st!=='cast'){c.fillStyle='rgba(230,240,250,.55)';for(let y=byp+2;y<hookY;y+=2)c.fillRect(bxp,y,1,1);px(c,bxp,hookY,1,2,'#c9ccce');px(c,bxp-1,hookY+2,2,1,'#c9ccce')}
-    // bobber
-    px(c,bxp,byp-6,1,2,PAL.yel);px(c,bxp-1,byp-4,3,2,PAL.red);px(c,bxp-1,byp-2,3,2,PAL.white);
-    // fish near the hook
-    if(fish&&(st==='bite'||st==='fight'||(st==='wait'&&nib>0))){const L=Math.min(30,8+fw*1.3),sp=fishSprite(fish,L);
-      const fx=bxp+(st==='fight'?L*.45+Math.sin(T*(run>0?10:4))*3:L*.5+(st==='wait'?6:0)),fy=hookY+2+(st==='fight'?Math.sin(T*7)*2:0);
-      c.globalAlpha=st==='wait'?.45:1;drawSprite(c,sp,fx,fy,true,st==='fight'?Math.sin(T*(run>0?14:6))*.25:0);c.globalAlpha=1}}
-  // jumping / caught fish
-  for(const o of sea){if(o.k==='jump'){const p=Math.min(1,o.t/o.dur),x=sx(o.z)+o.dir*28*p,y=yW-Math.sin(Math.PI*p)*o.h;drawSprite(c,fishSprite(o.f,o.L),x,y,o.dir<0,-Math.cos(Math.PI*p)*o.dir*.9)}
-    if(o.k==='catch'){const p=Math.min(1,o.t/o.dur),x=lerp(sx(o.z),PX0-29,p),y=lerp(yW,top-10,p)-Math.sin(Math.PI*p)*40;drawSprite(c,fishSprite(o.f,o.L*(1-p*.4)),x,y,true,p*Math.PI*4)}}
-  // ripples (surface rings)
-  for(const r of ripples){const cx=sx(r.z),rad=r.r*r.s*14,a=r.a;c.fillStyle=`rgba(255,255,255,${a})`;
-    for(let i=-1;i<=1;i+=2){c.fillRect(Math.round(cx+i*rad),yW-1,2,1);c.fillRect(Math.round(cx+i*rad*.6),yW-2,1,1)}}
+  drawWorld(c,w,h,t);
+  // chum cloud
+  if(!menu&&save.chumLeft>0){const q=proj(1.1,0,-2.8),r=q[2]*1.6;for(let i=0;i<60;i++){const a=i*2.4+t*.25,rr=(i%10)/10*r;px(c,q[0]+Math.cos(a)*rr*1.4,q[1]+Math.sin(a)*rr*.35,2,1,'rgba(122,79,38,.35)')}}
+  // swimming shadows
+  for(const o of sea)if(o.k==='swim'){const q=proj(o.x,-.2,o.z);if(q[1]<=yH)continue;c.globalAlpha=.45;drawSprite(c,fishShadow(o.f,o.L*q[2]),q[0],q[1]+Math.sin(T*2+o.t),o.dir<0,0);c.globalAlpha=1}
+  // ripples (perspective ellipses)
+  for(const r of ripples){const q=proj(r.x,0,r.z),rx=r.r*r.s*q[2],ry=Math.max(1,rx*.28);c.fillStyle=`rgba(255,255,255,${Math.max(0,r.a)})`;
+    for(let i=0;i<24;i++){const a=i/24*Math.PI*2;c.fillRect(Math.round(q[0]+Math.cos(a)*rx),Math.round(q[1]+Math.sin(a)*ry),1,1)}}
+  // fish near the hook (shadow under the surface)
+  const b=bobPos(),bq=proj(b[0],b[1],b[2]),sc=bq[2];
+  if(!menu&&fish&&(st==='bite'||st==='fight'||(st==='wait'&&nib>0))){const L=Math.min(1.6,.35+fw*.07)*sc,wq=proj(b[0]+.35,-.3,b[2]-.25);
+    c.globalAlpha=st==='wait'?.3:.6;drawSprite(c,fishShadow(fish,L),wq[0]+(st==='fight'?Math.sin(T*(run>0?10:4))*sc*.12:0),wq[1],false,st==='fight'?Math.sin(T*(run>0?14:6))*.2:0);c.globalAlpha=1;
+    if(st==='fight'&&run>0&&Math.sin(T*5)>.6){const sp=fishSprite(fish,L);drawSprite(c,sp,wq[0],bq[1]-sp.height*.4,Math.sin(T*2)>0,Math.sin(T*9)*.4)}}
+  // jumping fish
+  for(const o of sea)if(o.k==='jump'){const p=Math.min(1,o.t/o.dur),q=proj(o.x+o.dir*1.2*p,Math.sin(Math.PI*p)*o.h,o.z);drawSprite(c,fishSprite(o.f,o.L*q[2]),q[0],q[1],o.dir<0,-Math.cos(Math.PI*p)*o.dir*.9)}
   // splash drops
-  c.fillStyle=PAL.white;for(const d of drops){if(d.a>0)c.fillRect(Math.round(sx(d.z)),Math.round(yW-d.y*14),1,1)}
+  c.fillStyle=PAL.white;for(const d of drops){if(d.a<=0)continue;const q=proj(d.x,d.y,d.z),s=q[2]>40?2:1;c.fillRect(Math.round(q[0]),Math.round(q[1]),s,s)}
   // chum particles
-  c.fillStyle='#8a5a2b';for(const p of chumP){if(p.d>0)continue;const x=sx(p.z),y=yW-p.y*14;c.fillRect(Math.round(x),Math.round(y),1,1)}
-  // aim arc hint
-  if(st==='aim'){c.fillStyle='rgba(255,255,255,.5)';const far=sx(lerp(-1.4,-4.6,aimPos()));c.fillRect(Math.round(far),yW-3,1,3)}
+  c.fillStyle='#8a5a2b';for(const p of chumP){if(p.d>0)continue;const q=proj(p.x,Math.max(p.y,-.05),p.z);c.fillRect(Math.round(q[0]),Math.round(q[1]),q[2]>40?2:1,q[2]>40?2:1)}
+  const top=drawPier(c,w,h);
+  // rod (from the hands at the bottom, out over the water)
+  const R=rod(),happy=!menu&&st==='result'&&mood==='happy';
+  let hand=[w*.34,h*.9],tip=[w*.6,h*.16];
+  if(!menu&&st==='aim'){const k=aimPos();tip=[w*(.6-k*.3),h*(.16-k*.1)];hand=[w*.34,h*.92]}
+  if(!menu&&st==='cast'){const k=Math.min(1,castT/.25);tip=[lerp(w*.3,w*.6,k),lerp(h*.06,h*.16,k)]}
+  let bend=0;if(!menu&&st==='fight')bend=Math.min(1,.25+tens/100*.7+(run>0?.2:0));else if(!menu&&st==='bite')bend=.15;
+  if(bend){tip=[lerp(tip[0],bq[0],bend*.35),tip[1]+bend*h*.16]}
+  if(happy){hand=[hand[0],hand[1]-Math.abs(Math.sin(T*6))*3]}
+  const ctrl=[lerp(hand[0],tip[0],.45)-2,lerp(hand[1],tip[1],.45)+bend*h*.06-h*.02];
+  const showB=menu||st==='cast'||st==='wait'||st==='bite'||st==='fight';
+  // line
+  if(showB){const tc=!menu&&st==='fight'?tens/100:0,lc=`rgba(255,${Math.round(255-tc*170)},${Math.round(255-tc*150)},.85)`;
+    const sag=(st==='fight'&&!menu)?0:Math.max(4,(bq[1]-tip[1])*.15);pcurve(c,tip,[(tip[0]+bq[0])/2,Math.max(tip[1],bq[1])+sag*.2],[bq[0],bq[1]-Math.max(2,sc*.3)],lc,22)}
+  const rc=R.col==='#1a1b20'?'#2b2c33':R.col;
+  pcurve(c,hand,ctrl,tip,rc,18);
+  // thicker butt section near the hands
+  {const n=18;let p=hand;for(let i=1;i<=n*.5;i++){const q=qb(hand,ctrl,tip,i/n);pline(c,p[0]+1,p[1],q[0]+1,q[1],rc);if(i<4)pline(c,p[0]-1,p[1],q[0]-1,q[1],rc);p=q}}
+  if(R.id==='pro'){let p=hand;for(let i=1;i<=18;i+=2){const q=qb(hand,ctrl,tip,i/18);px(c,q[0],q[1],1,1,PAL.yel);p=q}}
+  for(let i=0;i<R.guides;i++){const q=qb(hand,ctrl,tip,.4+i*.5/R.guides);px(c,q[0]-1,q[1]+1,2,1,'#e6e8ea')}
+  // reel
+  {const q=qb(hand,ctrl,tip,.08);px(c,q[0]+2,q[1]+1,4,4,R.reel);px(c,q[0]+3,q[1]+2,2,2,'#555b63');const sp=!menu&&st==='fight'&&Math.sin(T*20)>0;px(c,q[0]+6,q[1]+(sp?1:3),2,1,'#e6e8ea')}
+  drawHands(c,w,h,hand,R.grip,happy,qb(hand,ctrl,tip,.16));
+  // bobber
+  if(showB){const s=Math.max(1,Math.round(sc*.09)),x=Math.round(bq[0]),y=Math.round(bq[1]);
+    if(st==='cast'&&!menu){px(c,x-s,y-s*2,s*2,s*2,PAL.red);px(c,x-s,y,s*2,s,PAL.white)}
+    else{px(c,x,y-s*4,1,s*2,PAL.yel);px(c,x-s,y-s*2,s*2+1,s*2,PAL.red);px(c,x-s,y,s*2+1,1,'rgba(255,255,255,.8)');if(!menu&&st==='bite'&&Math.sin(T*25)>0)px(c,x-s-2,y+1,s*2+5,1,PAL.white)}}
+  // caught fish flying toward the viewer
+  for(const o of sea)if(o.k==='catch'){const p=Math.min(1,o.t/o.dur),q=proj(lerp(o.x,1.2,p),Math.sin(Math.PI*p)*1.8+p*1.2,lerp(o.z,2.2,p));drawSprite(c,fishSprite(o.f,Math.min(w*.6,o.L*q[2])),q[0],q[1],false,Math.sin(p*12)*.3)}
+  // aim marker on the water
+  if(!menu&&st==='aim'){const q=proj(1.2,0,lerp(-1.4,-4.6,aimPos()));c.fillStyle='rgba(255,255,255,.8)';c.fillRect(Math.round(q[0])-3,Math.round(q[1]),7,1);c.fillRect(Math.round(q[0]),Math.round(q[1])-2,1,5)}
 }
-/* stage + menu canvases */
 function syncWorld(){}
 function render(){ctx.setTransform(1,0,0,1,0,0);drawFrame(ctx,PW,PH,T,false);
-  if(st==='bite'){const s=toScreen([bx0,1.05,bz0]);pop.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;pop.hidden=false}else pop.hidden=true;
-  if(st==='fight'&&run>0){const b=bobPos(),s=toScreen([b[0],1,b[2]]);resist.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;resist.hidden=false}else resist.hidden=true;
+  if(st==='bite'){const b=bobPos(),s=toScreen([b[0],b[1]+.9,b[2]]);pop.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;pop.hidden=false}else pop.hidden=true;
+  if(st==='fight'&&run>0){const b=bobPos(),s=toScreen([b[0],.9,b[2]]);resist.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;resist.hidden=false}else resist.hidden=true;
   if(!$('menu').hidden)drawMenu()}
 const mcv=$('menuCv'),mctx=mcv?mcv.getContext('2d'):null;
 function drawMenu(){if(!mctx)return;const w=Math.round(Math.min(220,innerWidth/2.6)),h=Math.round(w*innerHeight/innerWidth);if(mcv.width!==w||mcv.height!==h){mcv.width=w;mcv.height=h}
-  const sv=[yW,PX0];menuMode=true;drawFrame(mctx,w,h,T,true);menuMode=false;const BY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];mctx.fillStyle='#0b2a3c';for(let y=Math.round(h*.3);y<h;y++){const a=(y-h*.3)/(h*.7)*.8;for(let x=0;x<w;x++)if(BY[(y&3)*4+(x&3)]/16<a)mctx.fillRect(x,y,1,1)}yW=sv[0];PX0=sv[1];layout(PW,PH)}
+  const sv=[st,bx0,bz0];st='wait';bx0=1.6;bz0=-3;landAge=9;menuMode=true;
+  drawFrame(mctx,w,h,T,true);menuMode=false;st=sv[0];bx0=sv[1];bz0=sv[2];layout(PW,PH);
+  mctx.fillStyle='#0b2a3c';for(let y=Math.round(h*.3);y<h;y++){const a=(y-h*.3)/(h*.7)*.8;for(let x=0;x<w;x++)if(BY[(y&3)*4+(x&3)]/16<a)mctx.fillRect(x,y,1,1)}}
 
 /* ---------- game ---------- */
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
