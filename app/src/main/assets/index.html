@@ -341,21 +341,82 @@ const xf=(m,p)=>[m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12],m[1]*p[0]+m[5]*p[1]+m[9]*p[
 function prog(vs,fs){const p=gl.createProgram();for(const[t,s]of[[gl.VERTEX_SHADER,vs],[gl.FRAGMENT_SHADER,fs]]){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(sh);gl.attachShader(p,sh)}
   gl.linkProgram(p);const u={},a={};const nu=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);for(let k=0;k<nu;k++){const n=gl.getActiveUniform(p,k).name;u[n]=gl.getUniformLocation(p,n)}
   const na=gl.getProgramParameter(p,gl.ACTIVE_ATTRIBUTES);for(let k=0;k<na;k++){const n=gl.getActiveAttrib(p,k).name;a[n]=gl.getAttribLocation(p,n)}return{p,u,a}}
-let LIT,TEX;
+let LIT,TEX,SKY,DEP;
+const GLSL_HEAD=`#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+`;
+const GLSL_COMMON=`
+const vec3 SL=normalize(vec3(.13,.08,-1.));
+vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
+vec3 outc(vec3 c){return pow(aces(c*.95),vec3(1./2.2));}
+vec3 sky(vec3 d){float y=d.y;vec3 hor=vec3(.34,.48,.64);vec3 zen=vec3(.04,.14,.42);
+ vec3 c=mix(hor,zen,pow(clamp(y*1.6,0.,1.),.5));if(y<0.)c=mix(hor,vec3(.22,.31,.40),clamp(-y*4.,0.,1.));
+ float s=max(dot(d,SL),0.);c+=vec3(1.,.78,.5)*pow(s,5.)*.3+vec3(1.,.88,.65)*pow(s,60.)*.7+vec3(1.,.97,.9)*smoothstep(.9993,.9997,s)*40.;return c;}
+float h3(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}
+float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),
+            mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}
+`;
 if(gl){
-LIT=prog(`attribute vec3 aP;attribute vec3 aN;attribute vec3 aC;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vN;varying vec3 vW;varying vec3 vC;
-void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=uNM*aN;vC=aC;gl_Position=uVP*w;}`,
-`precision mediump float;varying vec3 vN;varying vec3 vW;varying vec3 vC;uniform vec3 uColor;uniform float uAlpha;uniform vec3 uEye;uniform float uSpec;uniform float uUnlit;uniform vec3 uFog;uniform vec2 uFogR;uniform float uWater;
-void main(){vec3 n=normalize(vN);vec3 V=normalize(uEye-vW);if(dot(n,V)<0.)n=-n;vec3 L=normalize(vec3(.45,.75,.35));float d=max(dot(n,L),0.);
-vec3 base=uColor*vC;vec3 amb=mix(vec3(.42,.40,.36),vec3(.70,.80,.92),n.y*.5+.5);
-vec3 col=base*(amb*.62+d*vec3(1.,.95,.86)*.78);float a=uAlpha;
-if(uSpec>0.&&uWater<.5){vec3 h=normalize(L+V);col+=pow(max(dot(n,h),0.),uSpec)*.35;}
-if(uWater>.5){vec3 SL=normalize(vec3(.13,.1,-1.));float fr=pow(1.-max(dot(n,V),0.),4.);col=mix(col,vec3(.60,.73,.84),fr*.6);
- vec3 R=reflect(-SL,n);col+=pow(max(dot(R,V),0.),uSpec)*vec3(1.,.96,.88)*1.1;a=mix(uAlpha,1.,fr);}
-col=mix(col,base,uUnlit);float f=smoothstep(uFogR.x,uFogR.y,length(vW-uEye));col=mix(col,uFog,f);gl_FragColor=vec4(col,a);}`);
+LIT=prog(`attribute vec3 aP;attribute vec3 aN;attribute vec3 aC;uniform mat4 uM;uniform mat4 uVP;uniform mat4 uLVP;uniform mat3 uNM;varying vec3 vN;varying vec3 vW;varying vec3 vC;varying vec4 vLS;
+void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=uNM*aN;vC=aC;vLS=uLVP*w;gl_Position=uVP*w;}`,
+GLSL_HEAD+`varying vec3 vN;varying vec3 vW;varying vec3 vC;varying vec4 vLS;uniform vec3 uColor;uniform float uAlpha;uniform vec3 uEye;uniform float uSpec;uniform float uUnlit;uniform vec2 uFogR;uniform float uWater;uniform float uMat;uniform float uTime;uniform sampler2D uSM;
+`+GLSL_COMMON+`
+float unpack(vec4 c){return dot(c,vec4(1./16777216.,1./65536.,1./256.,1.));}
+float shadow(vec3 n,vec3 L){vec3 p=vLS.xyz/vLS.w*.5+.5;if(p.x<0.||p.x>1.||p.y<0.||p.y>1.||p.z>1.)return 1.;
+ float b=.002+.004*(1.-max(dot(n,L),0.));float s=0.;
+ for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){float d=unpack(texture2D(uSM,p.xy+vec2(float(x),float(y))/1024.));s+=(p.z-b>d)?0.:1.;}
+ return s/9.;}
+vec3 waterN(vec3 n0){vec2 p=vW.xz;float t=uTime;vec2 g=vec2(0.);float fade=1./(1.+length(vW-uEye)*.035);
+ g+=vec2(.8,.6)*1.6*.05*cos(dot(vec2(.8,.6),p)*1.6+t*1.9);
+ g+=vec2(-.5,.86)*2.7*.03*cos(dot(vec2(-.5,.86),p)*2.7+t*2.6);
+ g+=vec2(.97,-.24)*4.3*.018*cos(dot(vec2(.97,-.24),p)*4.3+t*3.4);
+ g+=vec2(-.3,-.95)*7.1*.011*cos(dot(vec2(-.3,-.95),p)*7.1+t*4.1);
+ g+=vec2(.6,-.8)*11.*.0065*cos(dot(vec2(.6,-.8),p)*11.+t*5.3);
+ g+=vec2(-.9,.4)*17.*.004*cos(dot(vec2(-.9,.4),p)*17.+t*6.7);
+ g+=vec2(.2,.98)*26.*.0022*cos(dot(vec2(.2,.98),p)*26.+t*8.1);
+ return normalize(n0+vec3(-g.x,0.,-g.y)*fade*1.7);}
+void main(){vec3 n=normalize(vN);vec3 V=normalize(uEye-vW);if(dot(n,V)<0.&&uWater<.5)n=-n;
+ vec3 L=normalize(vec3(.45,.75,.35));vec3 base=pow(uColor*vC,vec3(2.2));float a=uAlpha;
+ float sh=shadow(n,L);vec3 col;
+ vec3 vd=-V;vec3 fogC=sky(normalize(vec3(vd.x,max(vd.y,.015),vd.z)));
+ if(uWater>.5){n=waterN(vec3(0.,1.,0.)*.4+n*.6);n=normalize(n);
+  float F=.02+.98*pow(1.-max(dot(n,V),0.),5.);vec3 R=reflect(-V,n);R.y=abs(R.y);vec3 refl=sky(normalize(R));
+  vec3 body=base*.22+vec3(.003,.022,.032)+vec3(.01,.06,.055)*max(dot(n,L),0.)*sh;
+  col=mix(body,refl*mix(.7,1.,sh),F);
+  col+=vec3(1.,.9,.72)*pow(max(dot(reflect(-SL,n),V),0.),700.)*45.;
+  a=mix(uAlpha,1.,F);
+ }else{
+  if(uMat>.5){float k=vn(vW*3.1)*.55+vn(vW*9.7)*.3+h3(floor(vW*55.))*.15;float st=vn(vW*.5+3.);base*=.55+.62*k;base*=mix(.62,1.1,smoothstep(.25,.75,st));
+   base*=mix(.35,1.,smoothstep(-.3,.4,vW.y));}
+  float d=max(dot(n,L),0.);vec3 amb=mix(vec3(.10,.095,.09),vec3(.30,.40,.55),n.y*.5+.5);
+  col=base*(amb+vec3(1.,.93,.82)*1.75*d*sh);
+  if(uSpec>0.){vec3 h=normalize(L+V);col+=pow(max(dot(n,h),0.),uSpec)*.5*sh*vec3(1.,.95,.9);}
+  col+=base*pow(1.-max(dot(n,V),0.),3.)*.25;
+ }
+ float f=smoothstep(uFogR.x,uFogR.y,length(vW-uEye));col=mix(col,fogC,f);
+ vec3 o=outc(col);o=mix(o,uColor*vC,uUnlit);gl_FragColor=vec4(o,a);}`);
 TEX=prog(`attribute vec3 aP;attribute vec2 aU;uniform mat4 uM;uniform mat4 uVP;varying vec2 vU;void main(){vU=aU;gl_Position=uVP*uM*vec4(aP,1.);}`,
 `precision mediump float;varying vec2 vU;uniform sampler2D uT;uniform float uAlpha;void main(){vec4 c=texture2D(uT,vU);if(c.a<.02)discard;gl_FragColor=vec4(c.rgb,c.a*uAlpha);}`);
+SKY=prog(`attribute vec3 aP;uniform mat4 uVP;uniform vec3 uEye;varying vec3 vD;void main(){vD=aP;vec4 p=uVP*vec4(uEye+aP*100.,1.);gl_Position=vec4(p.xy,p.w*.99999,p.w);}`,
+GLSL_HEAD+`varying vec3 vD;`+GLSL_COMMON+`void main(){gl_FragColor=vec4(outc(sky(normalize(vD))),1.);}`);
+DEP=prog(`attribute vec3 aP;uniform mat4 uM;uniform mat4 uLVP;void main(){gl_Position=uLVP*uM*vec4(aP,1.);}`,
+GLSL_HEAD+`vec4 pack(float d){vec4 r=fract(d*vec4(16777216.,65536.,256.,1.));r-=r.xxyz*vec4(0.,1./256.,1./256.,1./256.);return r;}void main(){gl_FragColor=pack(gl_FragCoord.z);}`);
 }
+// shadow map target
+const SMS=1024;let SMT=null,SMF=null,LVP=M4();
+if(gl){SMT=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,SMT);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,SMS,SMS,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+ for(const[k,v]of[[gl.TEXTURE_MIN_FILTER,gl.NEAREST],[gl.TEXTURE_MAG_FILTER,gl.NEAREST],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]])gl.texParameteri(gl.TEXTURE_2D,k,v);
+ SMF=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,SMF);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,SMT,0);
+ const rb=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,SMS,SMS);
+ gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rb);gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+ const Ld=norm([.45,.75,.35]),c=[-2.6,.3,1.6],e=[c[0]+Ld[0]*25,c[1]+Ld[1]*25,c[2]+Ld[2]*25];
+ const o=(l,r,b,t,n,f)=>new Float32Array([2/(r-l),0,0,0,0,2/(t-b),0,0,0,0,-2/(f-n),0,-(r+l)/(r-l),-(t+b)/(t-b),-(f+n)/(f-n),1]);
+ LVP=mul(o(-7.5,7.5,-6,6,1,60),lookAt(e,c,[0,1,0]));}
+let GT=0;
 
 /* geometry */
 function upload(g,dyn){const m={n:g.i.length,dyn};const B=(d,t)=>{const b=gl.createBuffer();gl.bindBuffer(t,b);gl.bufferData(t,d,dyn?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);return b};
@@ -418,19 +479,34 @@ function draw(n){
   const P=LIT,m=n.m;gl.useProgram(P.p);
   gl.uniformMatrix4fv(P.u.uM,false,n.mw);gl.uniformMatrix4fv(P.u.uVP,false,VP);gl.uniformMatrix3fv(P.u.uNM,false,nmat(n.mw));
   gl.uniform3fv(P.u.uColor,n.c);gl.uniform1f(P.u.uAlpha,n.a);gl.uniform3fv(P.u.uEye,EYE);gl.uniform1f(P.u.uSpec,n.spec||0);gl.uniform1f(P.u.uUnlit,n.unlit||0);
-  gl.uniform3fv(P.u.uFog,FOG);const fr=n.fog||(n.nofog?[999,1000]:[22,80]);gl.uniform2f(P.u.uFogR,fr[0],fr[1]);gl.uniform1f(P.u.uWater,n.pass==='w'?1:0);
+  const fr=n.fog||(n.nofog?[999,1000]:[24,90]);gl.uniform2f(P.u.uFogR,fr[0],fr[1]);gl.uniform1f(P.u.uWater,n.pass==='w'?1:0);gl.uniform1f(P.u.uMat,n.mat||0);gl.uniform1f(P.u.uTime,GT);gl.uniformMatrix4fv(P.u.uLVP,false,LVP);gl.uniform1i(P.u.uSM,1);
   gl.bindBuffer(gl.ARRAY_BUFFER,m.p);gl.enableVertexAttribArray(P.a.aP);gl.vertexAttribPointer(P.a.aP,3,gl.FLOAT,false,0,0);
   gl.bindBuffer(gl.ARRAY_BUFFER,m.nb);gl.enableVertexAttribArray(P.a.aN);gl.vertexAttribPointer(P.a.aN,3,gl.FLOAT,false,0,0);
   gl.bindBuffer(gl.ARRAY_BUFFER,m.c);gl.enableVertexAttribArray(P.a.aC);gl.vertexAttribPointer(P.a.aC,3,gl.FLOAT,false,0,0);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}
 const FOG=hex('#d3e5ee');
+function drawDepth(n){const P=DEP,m=n.m;gl.uniformMatrix4fv(P.u.uM,false,n.mw);
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.p);gl.enableVertexAttribArray(P.a.aP);gl.vertexAttribPointer(P.a.aP,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}
+function drawSky(){const P=SKY,m=G.sph;gl.useProgram(P.p);gl.uniformMatrix4fv(P.u.uVP,false,VP);gl.uniform3fv(P.u.uEye,EYE);
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.p);gl.enableVertexAttribArray(P.a.aP);gl.vertexAttribPointer(P.a.aP,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}
 function render(){
-  gl.viewport(0,0,cv.width,cv.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  GT=T;
   const asp=W/H,nar=Math.max(0,Math.min(1,(1.5-asp)/.5));EYE=[lerp(.3,-.7,nar),lerp(2.55,2.9,nar),lerp(8.2,8.9,nar)];const tgt=[lerp(.3,-.4,nar),.5,-3];VP=mul(persp(lerp(.85,1.0,nar),asp,.1,120),lookAt(EYE,tgt,[0,1,0]));
   LIST=[];walk(ROOT,M4());
-  gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
+  // 1) shadow map
+  gl.bindFramebuffer(gl.FRAMEBUFFER,SMF);gl.viewport(0,0,SMS,SMS);gl.clearColor(1,1,1,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.disable(gl.CULL_FACE);gl.depthMask(true);
+  gl.useProgram(DEP.p);gl.uniformMatrix4fv(DEP.u.uLVP,false,LVP);
+  for(const n of LIST)if(n.pass==='o'&&n.m&&!n.fog&&!n.noshadow)drawDepth(n);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  // 2) main
+  gl.viewport(0,0,cv.width,cv.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,SMT);gl.activeTexture(gl.TEXTURE0);
+  gl.depthMask(false);drawSky();gl.depthMask(true);
   for(const n of LIST)if(n.pass==='o')draw(n);
-  gl.disable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   for(const n of LIST)if(n.pass==='w')draw(n);
   gl.depthMask(false);for(const n of LIST)if(n.pass==='t')draw(n);gl.depthMask(true);
 }
@@ -443,7 +519,7 @@ const wave=(x,z,t)=>.07*Math.sin(.55*x+1.3*t)+.05*Math.sin(.8*z-1.1*t+.15*x)+.02
 const waveN=(x,z,t)=>{const dx=.07*.55*Math.cos(.55*x+1.3*t)+.05*.15*Math.cos(.8*z-1.1*t+.15*x)+.025*1.7*Math.cos(1.7*(x+z)+2.2*t),dz=.05*.8*Math.cos(.8*z-1.1*t+.15*x)+.025*1.7*Math.cos(1.7*(x+z)+2.2*t);return norm([-dx-.012*3.1*Math.cos(3.1*x-2.3*z+3.1*t),1,-dz+.012*2.3*Math.cos(3.1*x-2.3*z+3.1*t)])};
 // water
 let WM=null,WX=72,WZ=60,W0=[-35,-55],WS=[70,64];
-if(gl){const p=[],n=[],c=[],i=[];for(let z=0;z<=WZ;z++)for(let x=0;x<=WX;x++){p.push(W0[0]+x/WX*WS[0],0,W0[1]+Math.pow(z/WZ,1.6)*WS[1]);n.push(0,1,0);const d=z/WZ;c.push(...mixc(hex('#165473'),hex('#2f7699'),d))}
+if(gl){const p=[],n=[],c=[],i=[];for(let z=0;z<=WZ;z++)for(let x=0;x<=WX;x++){p.push(W0[0]+x/WX*WS[0],0,W0[1]+Math.pow(z/WZ,1.6)*WS[1]);n.push(0,1,0);const d=z/WZ;c.push(...mixc(hex('#1d5a70'),hex('#2a6c86'),d))}
   for(let z=0;z<WZ;z++)for(let x=0;x<WX;x++){const a=z*(WX+1)+x,b=a+WX+1;i.push(a,b,a+1,b,b+1,a+1)}WM=upload({p,n,c,i},true);WM.P=new Float32Array(p);WM.Nn=new Float32Array(n)}
 const water=add(ROOT,N({m:WM,c:[1,1,1],a:.85,pass:'w',spec:260}));
 function updWater(t){const P=WM.P,Nn=WM.Nn;for(let k=0;k<P.length;k+=3){const x=P[k],z=P[k+2];P[k+1]=wave(x,z,t);const nn=waveN(x,z,t);Nn[k]=nn[0];Nn[k+1]=nn[1];Nn[k+2]=nn[2]}
@@ -459,7 +535,7 @@ if(gl){const k=document.createElement('canvas');k.width=k.height=256;const c=k.g
       const gg=d.createRadialGradient(x,y,0,x,y,r);const shade=Math.round(lerp(255,214,Math.min(1,(y-40)/120)));
       gg.addColorStop(0,`rgba(${shade},${shade},${Math.min(255,shade+8)},.42)`);gg.addColorStop(.6,`rgba(${shade},${shade},${shade},.25)`);gg.addColorStop(1,`rgba(${shade},${shade},${shade},0)`);d.fillStyle=gg;d.beginPath();d.arc(x,y,r,0,7);d.fill()}
     cloudTex.push(texFrom(q))}}
-const sun=add(ROOT,N({tex:sunTex,p:[9,7.5,-70],s:[16,16,1],pass:'t'}));
+const sun=add(ROOT,N({tex:sunTex,p:[9,7.5,-70],s:[16,16,1],pass:'t',vis:false}));
 const clouds=[];
 for(let k=0;k<6;k++){const w=rnd(18,34);const c=add(ROOT,N({tex:cloudTex[k%3],p:[-40+k*16+rnd(-4,4),rnd(11,19),-75-rnd(0,15)],s:[w,w*.39,1],pass:'t',a:.9}));c.v=rnd(.15,.35);clouds.push(c)}
 // seagull
@@ -480,7 +556,7 @@ add(lhB,mesh(G.cyl,'#2d2d2d',{p:[1,3.75,0],s:[.62,.12,.62]}));const lamp=add(lhB
 add(lhB,mesh(G.cone,'#d63a32',{p:[1,4.5,0],s:[.45,.4,.45]}));
 // concrete breakwater + tetrapods
 const pier=add(ROOT,N({p:[-4.6,0,2.7]}));
-add(pier,mesh(G.box,'#b4b2aa',{p:[0,.1,0],s:[7,.9,3.2]}));
+add(pier,mesh(G.box,'#a3a198',{p:[0,.1,0],s:[7,.9,3.2]}));
 for(let k=0;k<9;k++)add(pier,mesh(G.box,'#a6a49c',{p:[-3.1+k*.78,.556,0],s:[.02,.01,3.2]}));
 add(pier,mesh(G.box,'#8e8c85',{p:[0,-.6,1.62],s:[7,.6,.05]}));
 const cylG2=gl?upload(cylG(.12,.24,.75,10)):null,TD=[[0,1,0],[.943,-.333,0],[-.471,-.333,.816],[-.471,-.333,-.816]];
@@ -495,30 +571,43 @@ const cooler=add(pier,N({p:[1.0,.82,.45],r:[0,.3,0]}));add(cooler,mesh(G.box,'#f
 add(cooler,mesh(G.box,'#d8d8d2',{p:[0,.28,0],s:[.3,.04,.06]}));
 const tail=N({vis:false});
 // soft contact shadow on concrete
-add(pier,mesh(G.sph,'#000000',{p:[2.2,.57,.05],s:[.45,.01,.32],a:.18,pass:'t',unlit:1}));
-// angler (realistic proportions)
+add(pier,mesh(G.sph,'#000000',{p:[2.2,.57,.05],s:[.4,.01,.28],a:.1,pass:'t',unlit:1}));
+// angler (jointed, rounded limbs)
 const ang=add(ROOT,N({p:[-2.4,.56,2.75],r:[0,.55,0]}));
 const body=add(ang,N());
-const PANTS='#2f3540',JACKET='#3d4f5f',VEST='#d9622b',SKIN='#d9ae8e';
-for(const x of[-.11,.11]){add(body,mesh(G.box,'#2a2a2a',{p:[x,.05,.06],s:[.13,.09,.28]}));add(body,mesh(G.cyl,PANTS,{p:[x,.47,0],s:[.088,.8,.088]}))}
-add(body,mesh(G.box,PANTS,{p:[0,.9,0],s:[.34,.14,.2]}));
-const torso=add(body,N({p:[0,1.2,0]}));
-add(torso,mesh(G.cyl,JACKET,{s:[.22,.52,.15]}));
-add(torso,mesh(G.cyl,VEST,{p:[0,.04,0],s:[.235,.42,.165]}));
-for(const y of[-.1,.08])add(torso,mesh(G.box,'#b84d1f',{p:[0,y,.145],s:[.28,.03,.01]}));
-add(torso,mesh(G.sph,JACKET,{p:[0,.25,0],s:[.22,.08,.14]}));
-const armL=add(torso,mesh(G.cyl,JACKET,{p:[-.25,-.02,.05],r:[.35,0,.15],s:[.065,.5,.065]}));
-add(torso,mesh(G.cyl,JACKET,{p:[.19,-.02,.17],r:[1.0,0,-.25],s:[.065,.42,.065]}));
-const handR=add(torso,mesh(G.sph,SKIN,{p:[.22,-.14,.33],s:[.05,.05,.05]}));
-add(torso,mesh(G.sph,SKIN,{p:[-.27,-.25,.13],s:[.045,.045,.045]}));
+const PANTS='#2b313b',JACKET='#38495a',VEST='#d55a24',SKIN='#c99a7a',BOOT='#22252a',CAP='#1f2833';
+const tcylG=gl?upload(cylG(.82,1,1,18)):null;
+function limb(par,a,b,r,col,r2){const d=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],L=Math.hypot(d[0],d[1],d[2]),u=[d[0]/L,d[1]/L,d[2]/L];
+  add(par,mesh(G.cyl,col,{p:[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],r:[Math.acos(Math.max(-1,Math.min(1,u[1]))),Math.atan2(u[0],u[2]),0],s:[r,L,r]}));
+  add(par,mesh(G.sph,col,{p:b,s:[r2||r,r2||r,r2||r]}))}
+for(const x of[-.1,.1]){const hip=[x,.92,0],knee=[x*1.1,.5,.04],ank=[x*1.1,.12,0];
+  add(body,mesh(G.sph,PANTS,{p:hip,s:[.085,.085,.085]}));limb(body,hip,knee,.08,PANTS,.078);limb(body,knee,ank,.07,PANTS,.065);
+  add(body,mesh(G.sph,BOOT,{p:[x*1.1,.06,.07],s:[.075,.06,.15],spec:30}))}
+add(body,mesh(G.sph,PANTS,{p:[0,.94,0],s:[.19,.11,.13]}));
+add(body,N({m:tcylG,c:hex(JACKET),p:[0,1.2,0],s:[.2,.52,.14]}));
+add(body,N({m:tcylG,c:hex(VEST),p:[0,1.24,0],s:[.214,.38,.152],spec:20}));
+add(body,mesh(G.box,'#b8481a',{p:[0,1.12,.15],s:[.3,.025,.012]}));add(body,mesh(G.box,'#b8481a',{p:[0,1.3,.15],s:[.3,.025,.012]}));
+add(body,mesh(G.sph,JACKET,{p:[0,1.46,0],s:[.2,.07,.13]}));
+for(const x of[-.2,.2])add(body,mesh(G.sph,JACKET,{p:[x,1.41,0],s:[.075,.075,.075]}));
+// right arm -> hand on rod
+limb(body,[.2,1.41,0],[.28,1.2,.17],.058,JACKET,.056);limb(body,[.28,1.2,.17],[.24,1.08,.34],.05,JACKET,.045);
+const handR=add(body,mesh(G.sph,SKIN,{p:[.24,1.08,.36],s:[.048,.048,.048]}));
+// left arm (pivot at shoulder so it can be raised)
+const armL=add(body,N({p:[-.2,1.41,0]}));
+limb(armL,[0,0,0],[.02,-.26,.16],.058,JACKET,.056);limb(armL,[.02,-.26,.16],[.2,-.36,.26],.05,JACKET,.045);
+add(armL,mesh(G.sph,SKIN,{p:[.21,-.37,.27],s:[.046,.046,.046]}));
 const head=add(body,N({p:[0,1.62,0]}));
-add(head,mesh(G.cyl,SKIN,{p:[0,-.1,0],s:[.06,.1,.06]}));
-add(head,mesh(G.sph,SKIN,{s:[.11,.13,.12]}));
-add(head,mesh(G.box,'#111317',{p:[0,.015,.105],s:[.17,.035,.02],spec:40}));
-add(head,mesh(G.sph,SKIN,{p:[0,-.02,.12],s:[.018,.025,.02]}));
-add(head,mesh(G.hemi,'#26303d',{p:[0,.04,0],s:[.118,.1,.125]}));
-add(head,mesh(G.box,'#26303d',{p:[0,.045,.15],s:[.17,.012,.1],r:[-.15,0,0]}));
+add(head,mesh(G.cyl,SKIN,{p:[0,-.11,0],s:[.055,.09,.055]}));
+add(head,mesh(G.sph,SKIN,{s:[.105,.125,.115]}));
+add(head,mesh(G.sph,SKIN,{p:[0,-.07,.04],s:[.08,.06,.08]}));
+for(const x of[-.105,.105])add(head,mesh(G.sph,SKIN,{p:[x,0,0],s:[.02,.035,.025]}));
+add(head,mesh(G.box,'#0c0e12',{p:[0,.015,.105],s:[.17,.035,.02],spec:90}));
+add(head,mesh(G.sph,SKIN,{p:[0,-.015,.118],s:[.017,.026,.02]}));
+add(head,mesh(G.hemi,CAP,{p:[0,.035,0],s:[.115,.1,.122]}));
+add(head,mesh(G.box,CAP,{p:[0,.04,.15],s:[.16,.012,.1],r:[-.12,0,0]}));
 const face=N({vis:false}),sparks=[];function drawFace(){}
+{const mk=n=>{if(n.m)n.mat=1;n.ch.forEach(mk)};mk(pier);mk(lhB);const um=n=>{n.mat=0;n.ch.forEach(um)};um(cooler);}
+for(const n of ROOT.ch)if(n.fog)n.noshadow=true;
 // rod & line
 const rodT=gl?tubeMesh(24,8):null,gripT=gl?tubeMesh(4,8):null,lineT=gl?tubeMesh(20,4):null,goldT=gl?tubeMesh(24,4):null;
 const rodN=add(ROOT,N({m:rodT})),gripN=add(ROOT,N({m:gripT})),goldN=add(ROOT,N({m:goldT,c:C('#ffd166'),vis:false}));
@@ -603,7 +692,7 @@ function syncWorld(){
   tail.vis=save.log.some(r=>r.ok);
   // angler pose
   const happy=st==='result'&&mood==='happy',sad=st==='result'&&mood==='sad';
-  ang.p[1]=.56+(happy?Math.abs(Math.sin(T*6))*.08:0);armL.r=happy?[-2.6+Math.sin(T*6)*.2,0,.3]:[.35,0,.15];
+  ang.p[1]=.56+(happy?Math.abs(Math.sin(T*6))*.08:0);armL.r=happy?[-2.4+Math.sin(T*6)*.2,0,-.2]:[0,0,0];
   body.p=[0,Math.sin(T*1.5)*.006,0];body.r=st==='fight'?[-.12,0,Math.sin(T*25)*.015]:st==='aim'?[-.08*aimPos(),0,0]:[0,0,0];
   head.r=sad?[.35,0,0]:st==='bite'?[-.08,0,0]:[0,Math.sin(T*.7)*.15,0];
   drawFace();
