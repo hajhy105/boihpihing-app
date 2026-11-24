@@ -496,7 +496,7 @@ function drawSky(){const P=SKY,m=G.sph;gl.useProgram(P.p);gl.uniformMatrix4fv(P.
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}
 function render(){
   GT=T;
-  const asp=W/H,nar=Math.max(0,Math.min(1,(1.5-asp)/.5));EYE=[lerp(.3,-.7,nar),lerp(2.55,2.9,nar),lerp(8.2,8.9,nar)];const tgt=[lerp(.3,-.4,nar),.5,-3];VP=mul(persp(lerp(.85,1.0,nar),asp,.1,120),lookAt(EYE,tgt,[0,1,0]));
+  const asp=W/H,nar=Math.max(0,Math.min(1,(1.5-asp)/.5));const sk=camShake();EYE=[POV_EYE[0]+sk[0],POV_EYE[1]+sk[1],POV_EYE[2]];VP=mul(persp(lerp(.95,1.12,nar),asp,.05,120),lookAt(EYE,[POV_TGT[0]+sk[0]*.5,POV_TGT[1]+sk[1]*.5,POV_TGT[2]],[0,1,0]));
   LIST=[];walk(ROOT,M4());
   // 1) shadow map
   gl.bindFramebuffer(gl.FRAMEBUFFER,SMF);gl.viewport(0,0,SMS,SMS);gl.clearColor(1,1,1,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -590,7 +590,7 @@ function loftG(cp,radf,N=18,S=14){const pts=pathPts(cp,N),p=[],n=[],i=[];
   return upload({p,n,i})}
 const tab=(T)=>y=>{for(let k=0;k<T.length-1;k++)if(y<=T[k+1][0]){const f=(y-T[k][0])/(T[k+1][0]-T[k][0]);return[lerp(T[k][1],T[k+1][1],f),lerp(T[k][2],T[k+1][2],f)]}return[T[T.length-1][1],T[T.length-1][2]]};
 const prof=(pts)=>t=>{for(let k=0;k<pts.length-1;k++)if(t<=pts[k+1][0]){const f=(t-pts[k][0])/(pts[k+1][0]-pts[k][0]);return lerp(pts[k][1],pts[k+1][1],f)}return pts[pts.length-1][1]};
-const ang=add(ROOT,N({p:[-2.4,.56,2.75],r:[0,.55,0]}));
+const ang=add(ROOT,N({p:[-2.4,.56,2.75],r:[0,.55,0],vis:false}));
 const body=add(ang,N());
 const PANTS='#2a2f37',JACKET='#2f3d4c',VEST='#d0561f',SKIN='#c48f6e',BOOT='#1d1f23',CAP='#1c2430',HAIR='#2b211b';
 const M=(m,col,o={})=>N(Object.assign({m,c:hex(col)},o));
@@ -654,7 +654,16 @@ for(const n of ROOT.ch)if(n.fog)n.noshadow=true;
 const rodT=gl?tubeMesh(24,8):null,gripT=gl?tubeMesh(4,8):null,lineT=gl?tubeMesh(20,4):null,goldT=gl?tubeMesh(24,4):null;
 const rodN=add(ROOT,N({m:rodT})),gripN=add(ROOT,N({m:gripT})),goldN=add(ROOT,N({m:goldT,c:C('#ffd166'),vis:false}));
 const lineN=add(ROOT,N({m:lineT,c:[1,1,1],unlit:.7}));
-const reel=add(ROOT,N());add(reel,mesh(G.cyl,'#ffffff',{r:[Math.PI/2,0,0],s:[.09,.06,.09]}));const reelC=reel.ch[0];const gem=add(reel,mesh(G.sph,'#e8c766',{p:[0,0,.04],s:[.035,.035,.035],vis:false}));
+const reel=add(ROOT,N());add(reel,mesh(G.cyl,'#ffffff',{r:[0,0,Math.PI/2],s:[.042,.03,.042]}));const reelC=reel.ch[0];const gem=add(reel,mesh(G.sph,'#e8c766',{p:[0,0,.04],s:[.035,.035,.035],vis:false}));
+// first-person hands (sleeve + gripping hand)
+function fpHand(){const g=add(ROOT,N());const SK='#c48f6e',JK='#2f3d4c';
+  add(g,mesh(G.cyl,JK,{p:[0,0,.2],r:[Math.PI/2,0,0],s:[.055,.34,.05],mat:3}));
+  add(g,mesh(G.cyl,'#26323f',{p:[0,0,.045],r:[Math.PI/2,0,0],s:[.058,.04,.053],mat:3}));
+  add(g,mesh(G.sph,SK,{p:[0,0,-.02],s:[.042,.036,.055],mat:2}));
+  for(let k=0;k<4;k++)add(g,mesh(G.sph,SK,{p:[-.03+k*.02,.032,-.04],s:[.011,.02,.014],mat:2}));
+  add(g,mesh(G.sph,SK,{p:[.04,.01,-.03],s:[.012,.012,.026],r:[0,-.5,0],mat:2}));
+  return g}
+const fpR=fpHand(),fpL=fpHand();
 const guides=[];for(let k=0;k<4;k++)guides.push(add(ROOT,mesh(G.tor,'#ffffff',{s:[.035,.035,.035],vis:false})));
 const tipStar=add(ROOT,mesh(G.oct,'#fff6c0',{unlit:1,vis:false,s:[.06,.09,.03]}));
 // bobber
@@ -694,9 +703,17 @@ function fishNode(f,L){const g=N({s:[L,L,L]}),h=f.h;
 let mood='',zeroT=0,landAge=0,biteAge=0,bRip=0;
 let st='idle',T=0,fish=null,fw=0,bx0=1,bz0=-3,castT=0,waitT=0,nibT=0,nib=0,biteT=0;
 let gauge=0,tens=0,clock=0,run=0,nextRun=0,heavy=false,P={};
-const TIP0=[-.95,2.7,1.5];
-let handW=[-2.1,1.1,3.0];
-function tipPos(){if(st==='aim'){const k=aimPos();return[TIP0[0]-.9*k,TIP0[1]+.15*k,TIP0[2]+1.1*k]}const bend=st==='fight'?Math.min(1,.3+tens/100*.7+(run>0?.2:0)):st==='bite'?.25:0;
+/* first-person view: camera stands where the angler stood */
+const POV_EYE=[-2.15,2.18,3.3],POV_TGT=[.9,.2,-3.2];
+const CF=norm([POV_TGT[0]-POV_EYE[0],POV_TGT[1]-POV_EYE[1],POV_TGT[2]-POV_EYE[2]]),CR=norm(cross(CF,[0,1,0])),CU=cross(CR,CF);
+const cpt=(f,r,u)=>[0,1,2].map(k=>POV_EYE[k]+CF[k]*f+CR[k]*r+CU[k]*u);
+const TIP0=cpt(2.5,.7,.62);
+let handW=cpt(.78,.27,-.27);
+function camShake(){if(st==='fight'){const a=.004+tens/100*.012+(run>0?.01:0);return[Math.sin(T*31)*a,Math.sin(T*27+1)*a]}
+  if(st==='bite')return[Math.sin(T*40)*.003,Math.sin(T*33)*.003];
+  if(st==='result'&&mood==='happy'){const k=Math.max(0,1-(T-resT)*1.5);return[0,Math.sin(T*9)*.02*k]}return[0,Math.sin(T*1.3)*.006]}
+let resT=0;
+function tipPos(){if(st==='aim'){const k=aimPos();return[TIP0[0]+CU[0]*.9*k-CF[0]*.9*k,TIP0[1]+CU[1]*.9*k-CF[1]*.9*k,TIP0[2]+CU[2]*.9*k-CF[2]*.9*k]}const bend=st==='fight'?Math.min(1,.3+tens/100*.7+(run>0?.2:0)):st==='bite'?.25:0;
   const b=st==='fight'?bobPos():[bx0,0,bz0];return[TIP0[0]+(b[0]-TIP0[0])*bend*.12,TIP0[1]-bend*.75,TIP0[2]+(b[2]-TIP0[2])*bend*.12]}
 function bobPos(){
   if(st==='cast'){const t=Math.min(1,castT/.9),tp=tipPos();return[lerp(tp[0],bx0,t),lerp(tp[1],wave(bx0,bz0,T),t)+Math.sin(t*Math.PI)*2.2,lerp(tp[2],bz0,t),t*6,0]}
@@ -719,7 +736,7 @@ function updSea(dt){seaT-=dt;if(seaT<=0){spawnSea();seaT=rnd(3.5,8)}
     if(o.k==='swim'){o.x+=o.dir*o.v*dt;n.p=[o.x,-.22+Math.sin(T*2+o.t)*.04,o.z];n.r=[0,o.dir>0?0:Math.PI,Math.sin(T*6+o.t)*.08];if(Math.abs(o.x)>13)o.done=1}
     else if(o.k==='jump'){const p=Math.min(1,o.t/o.dur);n.p=[o.x+o.dir*2.2*p,Math.sin(Math.PI*p)*o.h-.1,o.z];n.r=[0,o.dir>0?0:Math.PI,-Math.cos(Math.PI*p)*1.1*1];
       if(p>=1){const ex=o.x+o.dir*2.2;splash(ex,0,o.z,8);ripple(ex,o.z,1.6);o.done=1}}
-    else if(o.k==='catch'){const p=Math.min(1,o.t/o.dur),to=[-3.4,1.1,3.3];n.p=[lerp(o.x,to[0],p),lerp(o.y,to[1],p)+Math.sin(Math.PI*p)*2,lerp(o.z,to[2],p)];n.r=[0,Math.PI,p*Math.PI*4];n.s=n.s.map(()=>(1-p*.6)*(n.s0||(n.s0=n.s[0])));if(p>=1)o.done=1}}
+    else if(o.k==='catch'){const p=Math.min(1,o.t/o.dur),to=cpt(.9,.05,-.25);n.p=[lerp(o.x,to[0],p),lerp(o.y,to[1],p)+Math.sin(Math.PI*p)*2,lerp(o.z,to[2],p)];n.r=[0,Math.PI,p*Math.PI*4];n.s=n.s.map(()=>(1-p*.6)*(n.s0||(n.s0=n.s[0])));if(p>=1)o.done=1}}
   for(const o of sea)if(o.done){const k=ROOT.ch.indexOf(o.n);if(k>=0)ROOT.ch.splice(k,1)}
   sea=sea.filter(o=>!o.done)}
 
@@ -738,17 +755,19 @@ function syncWorld(){
   body.p=[0,Math.sin(T*1.5)*.006,0];body.r=st==='fight'?[-.12,0,Math.sin(T*25)*.015]:st==='aim'?[-.08*aimPos(),0,0]:[0,0,0];
   head.r=sad?[.35,0,0]:st==='bite'?[-.08,0,0]:[0,Math.sin(T*.7)*.15,0];
   drawFace();
-  if(handR.mw)handW=xf(handR.mw,[0,0,0]);
+  {const sw=st==='fight'?Math.sin(T*(run>0?14:6))*.012:0;handW=cpt(.78,.27+sw,-.27+(st==='aim'?.1*aimPos():0));}
   // rod
   const R=rod(),tp=tipPos(),dir=norm([tp[0]-handW[0],tp[1]-handW[1],tp[2]-handW[2]]),butt=[handW[0]-dir[0]*.3,handW[1]-dir[1]*.3,handW[2]-dir[2]*.3];
   const bend=st==='fight'?Math.min(1,.3+tens/100*.7):0,ctrl=[lerp(butt[0],tp[0],.55),lerp(butt[1],tp[1],.55)+.25-bend*.2,lerp(butt[2],tp[2],.55)];
   const pts=[];for(let j=0;j<=24;j++)pts.push(qb(butt,ctrl,tp,j/24));
   const w=R.lw/4.5,rc=hex(R.col),stripe=hex('#ffffff');
-  setTube(rodT,pts,t=>(.03-.022*t)*w,null);rodN.c=rc;rodN.spec=60;
-  const gp=[];for(let j=0;j<=4;j++)gp.push(qb(butt,ctrl,tp,j/4*.2));setTube(gripT,gp,()=>.05*w);gripN.c=hex(R.grip);
+  setTube(rodT,pts,t=>(.017-.0125*t)*w,null);rodN.c=rc;rodN.spec=60;
+  const gp=[];for(let j=0;j<=4;j++)gp.push(qb(butt,ctrl,tp,j/4*.2));setTube(gripT,gp,()=>.024*w);gripN.c=hex(R.grip);
   goldN.vis=R.id==='pro';if(goldN.vis){const g2=pts.map((p,j)=>[p[0],p[1]+.018*w*(1-j/24),p[2]]);setTube(goldT,g2,()=>.008)}
   for(let k=0;k<4;k++){const g=guides[k];g.vis=k<R.guides;if(g.vis){const p=qb(butt,ctrl,tp,.4+k*(.55/R.guides));g.p=[p[0],p[1]-.04,p[2]];g.c=hex(R.id==='pro'?'#ffd166':'#ffffff');g.r=[0,.55,0]}}
-  const rp=qb(butt,ctrl,tp,.12);reel.p=[rp[0],rp[1]-.1,rp[2]];reel.r=[0,.55,0];reelC.c=hex(R.reel);gem.vis=R.id==='pro';
+  {const yaw=Math.atan2(-dir[0],-dir[2]),pit=Math.asin(Math.max(-1,Math.min(1,dir[1])));
+   fpR.p=[handW[0],handW[1]-.035,handW[2]];fpR.r=[pit,yaw,0];const lp=qb(butt,ctrl,tp,.02);fpL.p=[lp[0]-CR[0]*.02,lp[1]-.04,lp[2]-CR[2]*.02];fpL.r=[pit,yaw,.3];}
+  const rp=qb(butt,ctrl,tp,.12);reel.p=[rp[0],rp[1]-.05,rp[2]];reel.r=[0,Math.atan2(dir[0],dir[2]),0];reelC.c=hex(R.reel);gem.vis=R.id==='pro';
   tipStar.vis=false;if(tipStar.vis){const k=(Math.sin(T*4)+1)/2;tipStar.p=tp;tipStar.s=[.04+k*.05,.06+k*.08,.02];tipStar.r=[0,T*2,0]}
   // bobber + line
   const showB=st!=='idle'&&st!=='result'&&st!=='aim';bob.vis=lineN.vis=showB;
@@ -795,7 +814,7 @@ const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 function feel(w){return w<1?'가벼운 손맛':w<2?'제법 묵직함':w<5?'무거운 고기!':w<9?'엄청난 힘!':'괴물급 손맛!!'}
 
 function finish(ok,kind){
-  st='result';holding=false;mood=ok?'happy':'sad';
+  st='result';holding=false;mood=ok?'happy':'sad';resT=T;
   const f=fish,len=Math.round(f.c*Math.cbrt(fw)),t=tier(f);
   let html='';
   if(ok){
