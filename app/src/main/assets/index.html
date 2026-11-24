@@ -49,6 +49,36 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 #res .badge{display:inline-block;background:var(--yel);color:#6b4500;border-radius:999px;padding:2px 10px;font-size:13px;margin-top:4px}
 #res .stat{font-family:Jua,sans-serif;font-size:20px;color:var(--ink)}
 @keyframes pop{from{transform:translate(-50%,-50%) scale(.7);opacity:0}}
+[hidden]{display:none!important}
+.menu{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;background:#0b2a3c;overflow:hidden}
+.menu-art{position:absolute;inset:0;width:100%;height:100%}
+.menu-in{position:relative;padding:0 24px max(40px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;text-align:center}
+.hello{margin:0 0 6px;font-size:16px;opacity:.9}
+.logo{font:clamp(52px,14vw,76px)/1 Jua,sans-serif;margin:0;color:#fff;letter-spacing:1px;text-shadow:0 3px 0 #0b2a3c,0 8px 24px #0008}
+.sub{margin:8px 0 26px;font-size:15px;opacity:.8}
+.menu-btns{display:grid;gap:12px;width:min(340px,100%)}
+.mbtn{min-height:60px;border-radius:999px;border:2px solid #ffffffb0;background:#ffffff26;color:#fff;font:24px Jua,sans-serif;cursor:pointer;backdrop-filter:blur(4px)}
+.mbtn.main{background:var(--org);border-color:transparent;box-shadow:0 6px 0 #c4583f;font-size:28px;min-height:68px}
+.mbtn:active{transform:translateY(3px)}
+.mbtn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.mstat{margin:18px 0 0;font-size:14px;opacity:.75}
+.hrow{display:flex;align-items:center;gap:10px}
+.hbtn{min-height:44px;padding:0 14px;border-radius:999px;border:2px solid var(--line);background:#fff;color:var(--ink);font:16px Jua,sans-serif;cursor:pointer}
+.hbtn:disabled{opacity:.4;cursor:default}
+.chipbtn{cursor:pointer;font:15px Jua,sans-serif;color:var(--org);min-height:36px}
+.sheet{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet-in{max-width:980px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) max(4vw,14px) 40px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.sheet-head h2{margin:0}
+.modal{position:fixed;inset:0;z-index:70;background:#0b2a3c99;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{background:#fff;color:var(--ink);border-radius:22px;padding:20px;width:min(360px,100%);box-shadow:0 6px 0 #a9d8f2}
+.modal-card h3{font-size:26px;margin:0 0 6px}
+.mhelp{margin:0 0 12px;font-size:14px;color:var(--mute)}
+#nickInput{width:100%;min-height:48px;border-radius:14px;border:2px solid var(--line);padding:0 14px;font:18px "Gowun Dodum",sans-serif;color:var(--ink)}
+#nickInput:focus{outline:none;border-color:var(--org)}
+.err{min-height:20px;margin:6px 0 0;font-size:13px;color:#d9433a}
+.modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.okbtn{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;cursor:pointer}
 .hud{display:grid;gap:8px;margin:18px 0 14px;background:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 4px 0 #a9d8f2}
 .row{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.4em;align-items:center;gap:10px;font-size:14px}
 .row span:last-child{text-align:right;font-family:Jua,sans-serif;font-size:16px}
@@ -101,12 +131,78 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 </style>
 </head>
 <body>
+<div id="menu" class="menu">
+  <svg class="menu-art" viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="mSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6ea6"/><stop offset=".55" stop-color="#8db8d6"/><stop offset="1" stop-color="#d6e7ef"/></linearGradient>
+      <linearGradient id="mSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f86a8"/><stop offset=".35" stop-color="#1f6a8c"/><stop offset="1" stop-color="#0e3a52"/></linearGradient>
+      <radialGradient id="mSun"><stop offset="0" stop-color="#fffbe8"/><stop offset=".25" stop-color="#fff3cf" stop-opacity=".8"/><stop offset="1" stop-color="#fff3cf" stop-opacity="0"/></radialGradient>
+      <linearGradient id="mFade" x1="0" y1="0" x2="0" y2="1"><stop offset=".35" stop-color="#0b2a3c" stop-opacity="0"/><stop offset="1" stop-color="#0b2a3c" stop-opacity=".85"/></linearGradient>
+    </defs>
+    <rect width="400" height="700" fill="url(#mSky)"/>
+    <circle cx="300" cy="250" r="90" fill="url(#mSun)"/>
+    <path d="M0 330 C60 300 110 310 160 322 C220 296 280 300 330 318 C360 308 385 312 400 318 V340 H0Z" fill="#5d7f72" opacity=".75"/>
+    <path d="M0 336 C80 322 150 330 230 328 C300 322 360 330 400 328 V345 H0Z" fill="#4b6b5f" opacity=".85"/>
+    <rect y="340" width="400" height="360" fill="url(#mSea)"/>
+    <path d="M250 352 h105 v-6 h-105z" fill="#8f8f89"/>
+    <rect x="330" y="300" width="10" height="46" fill="#d63a32"/><rect x="330" y="314" width="10" height="5" fill="#f2f2ee"/>
+    <rect x="328" y="296" width="14" height="5" fill="#2d2d2d"/><path d="M329 296 l6 -8 l6 8z" fill="#d63a32"/>
+    <g stroke="#ffffff" stroke-opacity=".35" stroke-width="1.5" fill="none" stroke-linecap="round">
+      <path d="M40 380 q15 -5 30 0 M160 372 q15 -4 30 0 M270 386 q18 -5 36 0 M90 420 q20 -6 40 0 M220 432 q22 -6 44 0 M30 470 q24 -7 48 0 M300 480 q24 -7 48 0"/>
+    </g>
+    <path d="M240 360 q30 8 60 0" stroke="#fff6d8" stroke-opacity=".7" stroke-width="3" fill="none"/>
+    <path d="M226 372 q44 10 88 0" stroke="#fff6d8" stroke-opacity=".45" stroke-width="2.5" fill="none"/>
+    <g transform="translate(210 455)">
+      <ellipse cx="0" cy="12" rx="22" ry="5" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>
+      <rect x="-1.5" y="-30" width="3" height="16" fill="#e23b2e"/><circle cx="0" cy="-31" r="3" fill="#ffd23f"/>
+      <path d="M-8 -14 a8 9 0 0 1 16 0z" fill="#e23b2e"/><path d="M-8 -14 h16 a8 12 0 0 1 -16 0z" fill="#f2f2ee"/>
+    </g>
+    <path d="M0 560 L150 535 L170 700 H0Z" fill="#a9a7a0"/><path d="M0 560 L150 535 L156 548 L0 575Z" fill="#c4c2ba"/>
+    <g fill="#8f8d86"><path d="M150 560 l22 -20 l8 26 l-14 4z"/><path d="M168 600 l26 -14 l2 28 l-18 6z"/><path d="M140 640 l30 -10 l6 30 l-24 4z"/></g>
+    <path d="M70 548 v-52 l4 -2 v54z" fill="#22262b"/><path d="M60 500 h26 v28 h-26z" fill="#d9622b"/><circle cx="73" cy="490" r="7" fill="#d9ae8e"/><path d="M65 487 a8 6 0 0 1 16 0z" fill="#26303d"/>
+    <path d="M80 508 L230 380" stroke="#22262b" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M230 380 Q225 420 210 425" stroke="#fff" stroke-opacity=".7" stroke-width="1" fill="none"/>
+    <rect width="400" height="700" fill="url(#mFade)"/>
+  </svg>
+  <div class="menu-in">
+    <p class="hello" id="hello">반가워요, 낚시꾼님</p>
+    <h1 class="logo">보이흐피힝</h1>
+    <p class="sub">방파제 바다낚시</p>
+    <div class="menu-btns">
+      <button id="mPlay" class="mbtn main" type="button">게임하기</button>
+      <button id="mShop" class="mbtn" type="button">상점</button>
+      <button id="mNick" class="mbtn" type="button">닉네임 설정</button>
+    </div>
+    <p class="mstat" id="mStat"></p>
+  </div>
+</div>
+
+<div id="shopScreen" class="sheet" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head"><h2>낚시대 상점</h2><button id="shopClose" class="ghost" type="button">닫기</button></div>
+    <p class="tip" style="margin-top:0">누적 점수가 기준에 닿으면 낚시대가 해금돼요. 점수는 차감되지 않으니 해금한 낚시대는 언제든 바꿔 낄 수 있어요. 바꾼 낚시대는 다음 캐스팅부터 적용돼요. 현재 점수 <b id="shopPts">0</b>점</p>
+    <div class="shop" id="shop"></div>
+  </div>
+</div>
+
+<div id="nickModal" class="modal" hidden>
+  <form id="nickForm" class="modal-card" autocomplete="off">
+    <h3>닉네임 설정</h3>
+    <p class="mhelp">2~10자, 한글·영문·숫자를 쓸 수 있어요.</p>
+    <input id="nickInput" maxlength="10" placeholder="예: 바다사나이" enterkeyhint="done">
+    <p class="err" id="nickErr"></p>
+    <div class="modal-btns"><button type="button" id="nickCancel" class="ghost">취소</button><button type="submit" class="okbtn">저장</button></div>
+  </form>
+</div>
+
 <div class="wrap">
   <header>
-    <h1>보이흐피힝</h1>
+    <div class="hrow"><button id="toMenu" class="hbtn" type="button">‹ 메뉴</button><h1>보이흐피힝</h1></div>
     <div class="chips">
+      <span class="chip"><b id="nickChip">낚시꾼</b></span>
       <span class="chip">🎣 <b id="rodName">일반 낚시대</b> · 권장 <span id="rodMax">8</span>kg 이하</span>
       <span class="chip">점수 <b id="pts">0</b></span>
+      <button id="toShop" class="chip chipbtn" type="button">상점</button>
     </div>
   </header>
 
@@ -128,10 +224,6 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 
   <button id="act" type="button">START</button>
   <p class="tip"><b>START</b>를 누르면 캐스팅 게이지가 움직여요. 표시가 <b>금색 칸</b>에 올 때 한 번 더 누르면 퍼펙트! 정확할수록 멀리 던져지고 희귀·전설 어종이 더 자주 물어요. 찌가 살짝 흔들리는 건 탐색 입질이에요. <b>느낌표(!)</b>가 뜰 때 챔질하세요. 챔질 후에는 버튼을 <b>꾹 누르고 있으면</b> 릴이 감기고, 떼면 게이지가 줄어요. 2kg 이상 무거운 고기는 누르는 동안 장력이 쌓이니, 저항할 때는 손을 떼서 장력을 낮추세요. 제한 시간은 14초이고, 키보드는 스페이스바를 누르고 있으면 돼요.</p>
-
-  <h2>낚시대 상점</h2>
-  <p class="tip" style="margin-top:0">누적 점수가 기준에 닿으면 낚시대가 해금돼요. 점수는 차감되지 않으니 해금한 낚시대는 언제든 바꿔 낄 수 있어요. 바꾼 낚시대는 다음 캐스팅부터 적용돼요.</p>
-  <div class="shop" id="shop"></div>
 
   <h2>어종 도감</h2>
   <div class="dex" id="dex"></div>
@@ -626,6 +718,7 @@ function update(dt){
 
 const act=$('act'),hint=$('hint');
 function hud(){
+  {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok}}
   const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
   const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중… (떼면 멈춤)':'꾹 눌러서 감기'}[st];
   if(act.textContent!==lab)act.textContent=lab;
@@ -656,7 +749,7 @@ act.addEventListener('pointerdown',e=>{e.preventDefault();try{act.setPointerCapt
 act.addEventListener('pointerup',up);window.addEventListener('pointerup',up);
 window.addEventListener('blur',up);
 act.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('keydown',e=>{if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();down()}});
+document.addEventListener('keydown',e=>{if(!$('menu').hidden||!$('shopScreen').hidden||!$('nickModal').hidden)return;if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();down()}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'||e.key==='Enter')up()});
 
 /* ---------- side panels ---------- */
@@ -668,16 +761,50 @@ function renderSide(){
     <ul><li>권장 무게<span>${r.max}kg 이하</span></li><li>감기 속도<span>×${r.up.toFixed(2)}</span></li><li>줄 장력 부담<span>${r.tr===1?'기본':'−'+Math.round((1-r.tr)*100)+'%'}</span></li></ul>
     <button type="button" data-eq="${r.id}" ${on||!own?'disabled':''}>${on?'장착 중':own?'장착하기':`${r.need.toLocaleString('ko-KR')}점 필요 · ${(r.need-save.pts).toLocaleString('ko-KR')}점 남음`}</button></div>`}).join('');
   for(const cv2 of $('shop').querySelectorAll('canvas')){const R=RODS.find(x=>x.id===cv2.dataset.rod),d=devicePixelRatio||1;cv2.width=200*d;cv2.height=80*d;const k=cv2.getContext('2d');k.scale(d,d);drawRod(k,22,62,95,38,180,16,R,1.6,1.6)}
+  if(typeof renderMenu==='function')renderMenu();
   $('dex').innerHTML=FISH.map(f=>{const d=save.dex[f.id],t=tier(f);
     return `<div class="card"><canvas data-id="${f.id}"></canvas><b>${d?esc(f.name):'???'}</b><small>${d?`${d.n}마리 · 최고 ${d.best.toFixed(2)}kg`:`${f.min}–${f.max}kg`}</small><span class="tag" style="color:${t[1]}">${t[0]}</span></div>`}).join('');
   for(const c of $('dex').querySelectorAll('canvas')){const f=FISH.find(x=>x.id===c.dataset.id);fishCanvas(c,f,!save.dex[f.id],120,56)}
   $('log').innerHTML=save.log.length?save.log.slice(0,8).map(r=>{const f=FISH.find(x=>x.id===r.id);if(!f)return'';const tm=new Date(r.t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
     return `<li class="${r.ok?'':'lost'}"><span>${r.ok?'🐟':'💨'} ${esc(f.name)} ${r.w.toFixed(2)}kg${r.ok?` · ${r.l}cm`:' 놓침'}</span><span>${tm}</span></li>`}).join(''):'<li class="empty">아직 조과가 없어요. 첫 캐스팅을 해보세요!</li>';
 }
+
+/* ---------- menu / screens / nickname ---------- */
+const menuEl=$('menu'),shopEl=$('shopScreen'),nickEl=$('nickModal');
+const nick=()=>save.nick||'낚시꾼';
+const canLeave=()=>st==='idle'||st==='result';
+function openShop(){renderSide();shopEl.hidden=false;shopEl.scrollTop=0}
+function openNick(){$('nickInput').value=save.nick||'';$('nickErr').textContent='';nickEl.hidden=false;setTimeout(()=>{try{$('nickInput').focus()}catch(e){}},50)}
+$('mPlay').addEventListener('click',()=>{menuEl.hidden=true;try{window.scrollTo(0,0)}catch(e){}});
+$('mShop').addEventListener('click',openShop);
+$('mNick').addEventListener('click',openNick);
+$('toShop').addEventListener('click',()=>{if(canLeave())openShop()});
+$('toMenu').addEventListener('click',()=>{if(canLeave()){$('res').classList.remove('on');menuEl.hidden=false}});
+$('shopClose').addEventListener('click',()=>{shopEl.hidden=true});
+$('nickCancel').addEventListener('click',()=>{nickEl.hidden=true});
+nickEl.addEventListener('click',e=>{if(e.target===nickEl)nickEl.hidden=true});
+$('nickForm').addEventListener('submit',e=>{e.preventDefault();
+  const v=$('nickInput').value.replace(/\s+/g,' ').trim();
+  if(v.length<2||v.length>10){$('nickErr').textContent='2~10자로 입력해 주세요.';return}
+  if(!/^[가-힣A-Za-z0-9 ]+$/.test(v)){$('nickErr').textContent='한글·영문·숫자만 쓸 수 있어요.';return}
+  save.nick=v;store();renderSide();nickEl.hidden=true});
+function renderMenu(){
+  $('hello').textContent=save.nick?`반가워요, ${save.nick}님`:'반가워요! 닉네임을 정해 보세요';
+  $('mStat').textContent=`점수 ${save.pts.toLocaleString('ko-KR')} · ${rod().name} · 도감 ${Object.keys(save.dex).length}/${FISH.length}`;
+  $('nickChip').textContent=nick();$('shopPts').textContent=save.pts.toLocaleString('ko-KR');
+  const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
+}
+/* Android back button: returns true when handled */
+window.appBack=()=>{
+  if(!nickEl.hidden){nickEl.hidden=true;return true}
+  if(!shopEl.hidden){shopEl.hidden=true;return true}
+  if(menuEl.hidden){if(canLeave()){$('res').classList.remove('on');menuEl.hidden=false}return true}
+  return false;
+};
 let armed=false;
 $('reset').addEventListener('click',e=>{
   if(!armed){armed=true;e.target.textContent='한 번 더 누르면 초기화';setTimeout(()=>{armed=false;e.target.textContent='기록 초기화'},2500);return}
-  save={pts:0,dex:{},log:[],rod:'basic'};store();renderSide();armed=false;e.target.textContent='기록 초기화';
+  save={pts:0,dex:{},log:[],rod:'basic',nick:save.nick||''};store();renderSide();armed=false;e.target.textContent='기록 초기화';
 });
 $('shop').addEventListener('click',e=>{const b=e.target.closest('[data-eq]');if(!b||b.disabled)return;const r=RODS.find(x=>x.id===b.dataset.eq);if(save.pts<r.need)return;save.rod=r.id;store();renderSide()});
 stage.addEventListener('pointerdown',()=>{const r=$('res');if(r.classList.contains('on')){r.classList.remove('on');hint.textContent=''}});

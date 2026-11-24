@@ -77,9 +77,11 @@ public class MainActivity extends Activity {
         webView.onResume();
     }
 
+    /** 뒤로 가기: 게임 화면 → 메뉴, 상점·닉네임 창 → 닫기, 메뉴에서 누르면 앱 종료 */
     @Override
     public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+        webView.evaluateJavascript("(window.appBack && window.appBack()) ? '1' : '0'", value -> {
+            if (!"\"1\"".equals(value)) finish();
+        });
     }
 }
