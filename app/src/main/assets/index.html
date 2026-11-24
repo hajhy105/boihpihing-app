@@ -105,6 +105,20 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
  #act{height:62px;font-size:26px}
 }
 @media(min-width:601px){.wrap{max-width:1180px}.stage{aspect-ratio:auto;height:min(72vh,calc((100vw - 8vw) * .58));min-height:420px}}
+.actrow{display:flex;gap:10px;align-items:stretch}
+.actrow #act{flex:1;min-width:0}
+.chumbtn{flex:none;width:86px;border:0;border-radius:22px;background:#8a5a2b;color:#fff;font:20px/1.1 Jua,sans-serif;box-shadow:0 7px 0 #5f3c1b;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;touch-action:manipulation}
+.chumbtn small{font:13px 'Gowun Dodum',sans-serif;opacity:.9}
+.chumbtn:disabled{opacity:.45;cursor:default}
+.chumbtn:active:not(:disabled){transform:translateY(4px);box-shadow:0 3px 0 #5f3c1b}
+.chumchip{background:#8a5a2b;color:#fff;border-color:#8a5a2b}.chumchip b{color:#ffd166}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.item{background:#fff;border-radius:22px;padding:14px;box-shadow:0 4px 0 #a9d8f2;display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 12px;align-items:center}
+.item svg{grid-row:span 3;width:64px;height:64px}
+.item b{font:20px Jua,sans-serif;font-weight:400}
+.item p{margin:0;font-size:14px;color:#3d5266;line-height:1.45}
+.item .buy{grid-column:1/-1;margin-top:8px;min-height:46px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;box-shadow:0 4px 0 #e0664a;cursor:pointer}
+.item .buy:disabled{background:#eef6fc;color:var(--mute);box-shadow:none;cursor:default}
 .hud{display:grid;gap:8px;margin:18px 0 14px;background:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 4px 0 #a9d8f2}
 .row{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.4em;align-items:center;gap:10px;font-size:14px}
 .row span:last-child{text-align:right;font-family:Jua,sans-serif;font-size:16px}
@@ -209,6 +223,8 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
     <div class="sheet-head"><h2>낚시대 상점</h2><button id="shopClose" class="ghost" type="button">닫기</button></div>
     <p class="tip" style="margin-top:0">누적 점수가 기준에 닿으면 낚시대가 해금돼요. 점수는 차감되지 않으니 해금한 낚시대는 언제든 바꿔 낄 수 있어요. 바꾼 낚시대는 다음 캐스팅부터 적용돼요. 현재 점수 <b id="shopPts">0</b>점</p>
     <div class="shop" id="shop"></div>
+    <h2>코인 아이템 <small class="dexcount">보유 코인 <b id="shopCoins">0</b></small></h2>
+    <div class="items" id="items"></div>
   </div>
 </div>
 
@@ -250,8 +266,10 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
     <div class="hrow"><button id="toMenu" class="hbtn" type="button">‹ 메뉴</button><h1>보이흐피힝</h1><span class="hsp"></span><button id="toDex" class="hbtn" type="button">어종</button><button id="toShop" class="hbtn" type="button">상점</button><button id="helpBtn" class="hbtn" type="button" aria-label="게임 방법">?</button></div>
     <div class="chips">
       <span class="chip"><b id="nickChip">낚시꾼</b></span>
-      <span class="chip">🎣 <b id="rodName">일반 낚시대</b> · 권장 <span id="rodMax">8</span>kg 이하</span>
       <span class="chip">점수 <b id="pts">0</b></span>
+      <span class="chip">코인 <b id="coins">0</b></span>
+      <span class="chip chumchip" id="chumChip" hidden>떡밥 효과 <b id="chumLeft">0</b>회</span>
+      <span class="chip">🎣 <b id="rodName">일반 낚시대</b> · 권장 <span id="rodMax">8</span>kg 이하</span>
     </div>
   </header>
 
@@ -271,7 +289,10 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
     <div class="row off" id="crow"><span>남은 시간</span><div class="bar" id="cbar"><i style="background:#8fd3ff"></i></div><span id="cval">–</span></div>
   </div>
 
-  <button id="act" type="button">START</button>
+  <div class="actrow">
+    <button id="chumBtn" class="chumbtn" type="button" aria-label="떡밥 뿌리기"><span>떡밥</span><small id="chumCnt">0개</small></button>
+    <button id="act" type="button">START</button>
+  </div>
 
 </div>
 
@@ -302,8 +323,9 @@ const FISH=[
 const LIMIT=14;
 const tier=f=>f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
 const KEY='seafish.v1';
-let save={pts:0,dex:{},log:[],rod:'basic'};
+let save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0},chumLeft:0};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.dex)save=s}catch(e){}
+if(typeof save.coins!=='number')save.coins=0;if(!save.items)save.items={chum:0};if(typeof save.items.chum!=='number')save.items.chum=0;if(typeof save.chumLeft!=='number')save.chumLeft=0;
 const store=()=>{try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -730,6 +752,10 @@ const ripPool=[],dropPool=[];
 for(let k=0;k<24;k++)ripPool.push(add(ROOT,mesh(G.ring,'#ffffff',{pass:'t',unlit:1,vis:false})));
 for(let k=0;k<60;k++)dropPool.push(add(ROOT,mesh(G.sph,'#ffffff',{unlit:.6,vis:false,s:[.03,.03,.03]})));
 let ripples=[],drops=[];
+const chumPool=[];for(let k=0;k<36;k++)chumPool.push(add(ROOT,mesh(G.sph,'#7a4f26',{vis:false,s:[.035,.03,.035]})));
+let chumP=[];const chumPatch=add(ROOT,mesh(G.sph,'#6b4a2a',{vis:false,a:.0,pass:'t',unlit:.6,s:[2.4,.01,1.5]}));
+function throwChum(){const c=[1.1,0,-2.8];for(let k=0;k<36;k++){const tx=c[0]+rnd(-1.6,1.6),tz=c[2]+rnd(-1.1,1.1),t=rnd(.7,1.1);
+  chumP.push({x:handW[0],y:handW[1]+.1,z:handW[2],vx:(tx-handW[0])/t,vz:(tz-handW[2])/t,vy:(0-handW[1])/t+4.9*t,t:0,life:t,d:k*.012})}}
 function ripple(x,z,s){ripples.push({x,z,r:.05,a:.8,s:s||1})}
 function splash(x,y,z,n){for(let k=0;k<n;k++)drops.push({x,y,z,vx:rnd(-1.2,1.2),vy:rnd(1.5,3.2),vz:rnd(-1.2,1.2),a:1})}
 // water sparkles
@@ -833,6 +859,8 @@ function syncWorld(){
     const lp=[];for(let j=0;j<=20;j++)lp.push(qb(tp,mid,top,j/20));const tc=st==='fight'?tens/100:0;setTube(lineT,lp,()=>.009+tc*.006);lineN.c=[1,1-tc*.65,1-tc*.6]}
   // fish shadow
   fshadow.vis=(st==='bite'||st==='fight')&&!!fish;if(fshadow.vis){const b=bobPos(),L=Math.min(1.6,.4+fw*.08);fshadow.p=[b[0]+(st==='fight'?Math.sin(T*3)*L*.4:L*.3),-.32,b[2]+.1];fshadow.s=[L*.5,.02,L*.16];fshadow.r=[0,st==='fight'?Math.sin(T*2)*.5:.3,0]}
+  chumPool.forEach((n,k)=>{const c=chumP[k];n.vis=!!c&&c.d<=0;if(n.vis){n.p=[c.x,Math.max(c.y,-.35),c.z];n.r=[T*3+k,T*2,0]}});
+  {const on=save.chumLeft>0;chumPatch.vis=on;if(on){chumPatch.a=.16+.04*Math.sin(T*1.5);chumPatch.p=[1.1,wave(1.1,-2.8,T)+.015,-2.8];chumPatch.s=[2.4+.1*Math.sin(T*.7),.01,1.5]}}
   // ripples & drops
   ripPool.forEach((n,k)=>{const r=ripples[k];n.vis=!!r;if(r){n.p=[r.x,wave(r.x,r.z,T)+.02,r.z];n.s=[r.r*r.s,1,r.r*r.s];n.a=r.a}});
   dropPool.forEach((n,k)=>{const d=drops[k];n.vis=!!d;if(d){n.p=[d.x,d.y,d.z];n.a=d.a}});
@@ -844,10 +872,11 @@ function syncWorld(){
 /* ---------- game ---------- */
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
 const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
-let aimT=0,aimZ=.75,grade='good';
+let aimT=0,aimZ=.75,grade='good',chumUsed=false;
 const tierIx=f=>f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
 const aimPos=()=>{const u=(aimT/.7)%2;return u<1?u:2-u};
-function pickFish(g){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)];
+const CHUM={price:30,casts:5,legend:4};
+function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1);
   const tot=FISH.reduce((s,f)=>s+wt(f),0);let r=Math.random()*tot;
   for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
 }
@@ -857,7 +886,8 @@ function cast(){
   const d=Math.abs(aimPos()-aimZ);grade=d<=GRADES.perfect.w?'perfect':d<=GRADES.great.w?'great':d<=GRADES.good.w?'good':'miss';
   const G0=GRADES[grade],gEl=$('grade');gEl.textContent=G0.lab;gEl.style.color=G0.col;gEl.classList.remove('show');void gEl.offsetWidth;gEl.classList.add('show');
   if(grade==='perfect')buzz([20,30,20]);
-  fish=pickFish(grade);fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),1.8)).toFixed(2);
+  chumUsed=save.chumLeft>0;if(chumUsed){save.chumLeft--;store();renderSide()}
+  fish=pickFish(grade,chumUsed);fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),1.8)).toFixed(2);
   const far=grade==='perfect'?1:grade==='great'?.7:grade==='good'?.4:.1;
   bx0=rnd(-.2,2.8);bz0=lerp(-1.4,-4.6,far)+rnd(-.4,.4);castT=0;st='cast';waitT=rnd(2.2,6.5);nibT=rnd(.6,1.4);nib=0;
 }
@@ -876,11 +906,12 @@ function finish(ok,kind){
   let html='';
   if(ok){
     const pts=Math.round(fw*10*Math.sqrt(20/f.rar));
+    const coin=fw<2?1+Math.floor(Math.random()*4):fw<5?5+Math.floor(Math.random()*10):15+Math.floor(Math.random()*(Math.round(fw*2)+1));save.coins+=coin;
     const d=save.dex[f.id]||{n:0,best:0};const rec=fw>d.best;
     d.n++;if(rec)d.best=fw;save.dex[f.id]=d;const prev=save.pts;save.pts+=pts;
     const unl=RODS.filter(r=>prev<r.need&&save.pts>=r.need);
     save.log.unshift({id:f.id,w:fw,l:len,ok:1,t:Date.now()});
-    html=`<h3>${esc(f.name)} 낚았다!</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · ${len}cm</p><p><span style="color:${t[1]}">●</span> ${t[0]} · +${pts}점 · 캐스팅 <b style="color:${GRADES[grade].col}">${GRADES[grade].ko}</b></p>${rec&&d.n>1?'<span class="badge">개인 최고 기록!</span>':d.n===1?'<span class="badge">도감 신규 등록!</span>':''}${unl.map(r=>`<p class="unl">${r.name} 해금! 상점에서 장착하세요</p>`).join('')}`;
+    html=`<h3>${esc(f.name)} 낚았다!</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · ${len}cm</p><p><span style="color:${t[1]}">●</span> ${t[0]} · +${pts}점 · <b style="color:#c98a00">+${coin}코인</b></p><p>캐스팅 <b style="color:${GRADES[grade].col}">${GRADES[grade].ko}</b>${chumUsed?' · 떡밥 효과':''}</p>${rec&&d.n>1?'<span class="badge">개인 최고 기록!</span>':d.n===1?'<span class="badge">도감 신규 등록!</span>':''}${unl.map(r=>`<p class="unl">${r.name} 해금! 상점에서 장착하세요</p>`).join('')}`;
     const b=bobPos();splash(b[0],b[1],b[2],18);ripple(b[0],b[2],2.2);flyCatch();buzz([30,40,30]);
   }else{
     const msg={miss:['미끼만 털렸어요','느낌표가 뜨면 바로 챔질하세요.'],early:['너무 일찍 챔질했어요','찌가 흔들리는 건 탐색 입질. 느낌표를 기다리세요.'],escape:['바늘이 빠졌어요','게이지가 0%인 채로 1.5초가 지났어요. 저항이 끝나면 바로 다시 감으세요.'],break:['줄이 끊어졌어요!','장력이 한계를 넘었어요. 저항할 땐 잠시 멈추세요.'],tired:['시간 초과','고기를 끌어내지 못했어요.']}[kind];
@@ -901,6 +932,8 @@ function update(dt){
   for(const r of ripples){r.r+=dt*1.1;r.a-=dt*.7}ripples=ripples.filter(r=>r.a>0).slice(-24);
   for(const d of drops){d.x+=d.vx*dt;d.y+=d.vy*dt;d.z+=d.vz*dt;d.vy-=9*dt;d.a-=dt*1.2}drops=drops.filter(d=>d.a>0&&d.y>-.3).slice(-60);
   nib=Math.max(0,nib-dt*2.5);
+  for(const c of chumP){if(c.d>0){c.d-=dt;continue}c.t+=dt;c.x+=c.vx*dt;c.z+=c.vz*dt;c.vy-=9.8*dt;c.y+=c.vy*dt;if(c.y<=0&&!c.hit){c.hit=1;ripple(c.x,c.z,.45);if(Math.random()<.3)splash(c.x,0,c.z,2)}}
+  chumP=chumP.filter(c=>!c.hit||c.y>-.4);
   if(st==='aim')aimT+=dt;
   if(st==='cast'){castT+=dt;if(castT>=.9){st='wait';landAge=0;ripple(bx0,bz0,1.6);splash(bx0,0,bz0,6)}}
   else if(st==='wait'){
@@ -925,12 +958,13 @@ function update(dt){
 
 const act=$('act'),hint=$('hint');
 function hud(){
+  {const cb=$('chumBtn'),en=(st==='idle'||st==='result')&&save.items.chum>0;if(cb.disabled===en)cb.disabled=!en}
   {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok;$('toDex').disabled=!ok;$('helpBtn').disabled=!ok}}
   const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
   const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중… (떼면 멈춤)':'꾹 눌러서 감기'}[st];
   if(act.textContent!==lab)act.textContent=lab;
   act.className=st==='result'?'':st;
-  const h={idle:'START를 눌러 캐스팅하세요',aim:'표시가 금색 칸에 올 때 누르면 귀한 고기가 와요!',cast:'휘익—',wait:'찌를 지켜보세요… 느낌표가 뜨면 챔질!',bite:'입질! 지금 챔질!',result:ok=>''}[st];
+  const h={idle:save.chumLeft>0?`떡밥 효과 중! 남은 ${save.chumLeft}회 — START를 눌러 캐스팅하세요`:'START를 눌러 캐스팅하세요',aim:'표시가 금색 칸에 올 때 누르면 귀한 고기가 와요!',cast:'휘익—',wait:'찌를 지켜보세요… 느낌표가 뜨면 챔질!',bite:'입질! 지금 챔질!',result:ok=>''}[st];
   if(st==='fight')hint.textContent=(heavy?(run>0?'저항 중! 손을 떼고 장력을 낮추세요':'꾹 눌러 감되, 장력이 높으면 떼세요'):'꾹 누르고 있으면 감겨요')+' · '+feel(fw);
   else if(st==='result')hint.textContent=$('res').classList.contains('on')?'':'다시 던지기를 눌러 캐스팅하세요';
   else hint.textContent=h;
@@ -1006,7 +1040,14 @@ $('nickForm').addEventListener('submit',e=>{e.preventDefault();
   save.nick=v;store();renderSide();nickEl.hidden=true});
 function renderMenu(){
   $('hello').textContent=save.nick?`반가워요, ${save.nick}님`:'반가워요! 닉네임을 정해 보세요';
-  $('mStat').textContent=`점수 ${save.pts.toLocaleString('ko-KR')} · ${rod().name} · 도감 ${Object.keys(save.dex).length}/${FISH.length}`;
+  $('mStat').textContent=`점수 ${save.pts.toLocaleString('ko-KR')} · 코인 ${save.coins.toLocaleString('ko-KR')} · ${rod().name} · 도감 ${Object.keys(save.dex).length}/${FISH.length}`;
+  $('coins').textContent=save.coins.toLocaleString('ko-KR');$('shopCoins').textContent=save.coins.toLocaleString('ko-KR');
+  $('chumCnt').textContent=save.items.chum+'개';$('chumChip').hidden=save.chumLeft<=0;$('chumLeft').textContent=save.chumLeft;
+  const can=save.coins>=CHUM.price;
+  $('items').innerHTML=`<div class="item"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#f3e6d3"/><path d="M18 26h28l-3 24H21z" fill="#8a5a2b"/><path d="M16 22h32v6H16z" fill="#6b431e"/><g fill="#c48a4a"><circle cx="26" cy="16" r="3"/><circle cx="34" cy="11" r="2.5"/><circle cx="41" cy="17" r="2"/><circle cx="30" cy="8" r="1.8"/></g></svg>
+    <b>떡밥 뿌리기</b><p>뿌리면 다음 <b style="font:inherit;color:#e2603f">${CHUM.casts}번</b> 캐스팅 동안 전설 어종(부시리·참다랑어)이 나올 확률이 <b style="font:inherit;color:#e2603f">${CHUM.legend}배</b>로 올라가요.</p>
+    <p>가격 ${CHUM.price}코인 · 보유 ${save.items.chum}개</p>
+    <button class="buy" type="button" id="buyChum" ${can?'':'disabled'}>${can?`${CHUM.price}코인으로 사기`:`코인이 부족해요 (${CHUM.price-save.coins}코인 더 필요)`}</button></div>`;
   $('nickChip').textContent=nick();$('dexCount').textContent=`${Object.keys(save.dex).length}/${FISH.length}종`;$('shopPts').textContent=save.pts.toLocaleString('ko-KR');
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
 }
@@ -1019,10 +1060,14 @@ window.appBack=()=>{
   if(menuEl.hidden){if(canLeave()){$('res').classList.remove('on');menuEl.hidden=false}return true}
   return false;
 };
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='buyChum'){if(save.coins<CHUM.price)return;save.coins-=CHUM.price;save.items.chum++;store();renderSide();buzz(20)}});
+$('chumBtn').addEventListener('click',()=>{if(!(st==='idle'||st==='result')||save.items.chum<=0)return;
+  save.items.chum--;save.chumLeft+=CHUM.casts;store();renderSide();throwChum();buzz([15,30,15]);
+  const gEl=$('grade');gEl.textContent='떡밥 투척!';gEl.style.color='#c98a2b';gEl.classList.remove('show');void gEl.offsetWidth;gEl.classList.add('show')});
 let armed=false;
 $('reset').addEventListener('click',e=>{
   if(!armed){armed=true;e.target.textContent='한 번 더 누르면 초기화';setTimeout(()=>{armed=false;e.target.textContent='기록 초기화'},2500);return}
-  save={pts:0,dex:{},log:[],rod:'basic',nick:save.nick||''};store();renderSide();armed=false;e.target.textContent='기록 초기화';
+  save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0},chumLeft:0,nick:save.nick||''};store();renderSide();armed=false;e.target.textContent='기록 초기화';
 });
 $('shop').addEventListener('click',e=>{const b=e.target.closest('[data-eq]');if(!b||b.disabled)return;const r=RODS.find(x=>x.id===b.dataset.eq);if(save.pts<r.need)return;save.rod=r.id;store();renderSide()});
 stage.addEventListener('pointerdown',()=>{const r=$('res');if(r.classList.contains('on')){r.classList.remove('on');hint.textContent=''}});
