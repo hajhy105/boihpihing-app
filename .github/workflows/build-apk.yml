@@ -26,18 +26,25 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk boihpihing-${{ github.run_number }}.apk
+      - name: Rename APKs
+        run: |
+          cp app/build/outputs/apk/classic/debug/app-classic-debug.apk boihpihing-${{ github.run_number }}.apk
+          cp app/build/outputs/apk/dot/debug/app-dot-debug.apk boihpihing-dot-${{ github.run_number }}.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: boihpihing-apk
-          path: boihpihing-${{ github.run_number }}.apk
+          path: |
+            boihpihing-${{ github.run_number }}.apk
+            boihpihing-dot-${{ github.run_number }}.apk
 
       - name: Publish release (direct download link for phones)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: 보이흐피힝 빌드 ${{ github.run_number }}
-          body: 휴대폰에서 아래 Assets의 .apk 파일을 눌러 받은 뒤 설치하세요.
-          files: boihpihing-${{ github.run_number }}.apk
+          body: |
+            boihpihing-N.apk = 3D 버전, boihpihing-dot-N.apk = 도트 버전 (둘은 따로 설치돼요)
+          files: |
+            boihpihing-${{ github.run_number }}.apk
+            boihpihing-dot-${{ github.run_number }}.apk
