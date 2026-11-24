@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>보이흐피힝</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 동화책 같은 바닷가, 말랑하고 귀여운 안내
+   IDEA: 스티커북 속 방파제 — 둥근 모서리와 하얀 테두리의 그림 카드
+   PICTURE: 얼굴 있는 해·구름, 야자수 섬과 등대, 반짝이는 물결, 버킷햇 쓴 꼬마 낚시꾼
+   COLOUR and TYPE: 파스텔 하늘색 바탕, 흰 카드, 코랄·핑크·버터 노랑 포인트 / Jua + Gowun Dodum
+   LAYOUT: 제목·낚시대 → 장면 → 게이지 → 큰 버튼 → 도감·조과 */
+:root{color-scheme:light;--bg:#d8f1ff;--ink:#27486b;--mute:#6a8db0;--panel:#fff;--line:#bfe3f8;--org:#ff8a65;--yel:#ffd166;--red:#ff6b8b;--pink:#ff8fab}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:radial-gradient(circle at 12% 8%,#fff8 0 60px,transparent 61px),radial-gradient(circle at 88% 30%,#fff6 0 40px,transparent 41px),radial-gradient(circle at 6% 70%,#fff5 0 28px,transparent 29px),var(--bg);color:var(--ink);font:16px/1.55 "Gowun Dodum",system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:980px;margin:0 auto;padding:18px max(4vw,14px) 40px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:12px}
+h1,h2,h3{font-family:Jua,sans-serif;font-weight:400;margin:0;line-height:1.05}
+h1{font-size:clamp(34px,6vw,46px);color:#2f6fb0;text-shadow:3px 3px 0 #fff}
+h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;white-space:nowrap}
+.chip b{font-family:Jua,sans-serif;font-weight:400;color:var(--org);font-size:16px}
+.stage{position:relative;aspect-ratio:16/10;min-height:260px;border-radius:26px;overflow:hidden;border:6px solid #fff;box-shadow:0 8px 0 #a9d8f2,0 14px 30px #4a90c033}
+.stage{background:linear-gradient(#3f7fb8,#8db8d6 38%,#d3e5ee 50%)}
+.pop{position:absolute;left:0;top:0;width:52px;height:52px;border-radius:50%;background:#ffd166;border:4px solid #ff8a65;color:#e8604c;font:36px/44px Jua,sans-serif;text-align:center;pointer-events:none;box-shadow:0 4px 0 #e0ad3a}
+.pop::after{content:"";position:absolute;left:50%;bottom:-13px;margin-left:-7px;border:7px solid transparent;border-top:9px solid #ff8a65}
+.aim-css{}
+#aim{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:min(330px,86%);padding:6px;border-radius:999px;background:#ffffffe6;box-shadow:0 4px 0 #a9d8f2}
+#aimz{position:relative;height:20px;border-radius:999px;background:#e7f3fb;overflow:hidden}
+#aimz i{position:absolute;top:0;bottom:0}
+#aimz .good{background:#bfe3ff}#aimz .great{background:#ffc9a8}#aimz .perfect{background:#ffd166;box-shadow:inset 0 0 0 2px #ffb400}
+#mk{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;border-radius:3px;background:#e8604c;box-shadow:0 0 0 2px #fff}
+#grade{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font:44px Jua,sans-serif;text-shadow:0 3px 0 #fff,0 0 12px #fff;pointer-events:none;opacity:0;white-space:nowrap}
+#grade.show{animation:gpop 1.2s ease-out}
+@keyframes gpop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
+@media(prefers-reduced-motion:reduce){#grade.show{animation:none;opacity:1}}
+.resist{position:absolute;left:0;top:0;color:#ff5c7a;font:22px Jua,sans-serif;white-space:nowrap;pointer-events:none;text-shadow:0 2px 0 #fff,0 0 6px #fff}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hint:empty{display:none}
+#hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:#ffffffe0;color:var(--ink);padding:6px 14px;border-radius:999px;font-size:14px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 0 #a9d8f2}
+#res{cursor:pointer;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,92%);max-height:calc(100% - 16px);overflow-y:auto;background:#fff;color:var(--ink);border-radius:22px;border:3px solid #ffe3a3;padding:16px;text-align:center;box-shadow:0 6px 0 #f2c66d,0 14px 30px #0002;display:none}
+#res.on{display:block;animation:pop .3s cubic-bezier(.3,1.6,.5,1)}
+#res h3{font-size:28px;color:#ff7a59}
+#res p{margin:4px 0;font-size:15px;color:var(--mute)}
+#res canvas{width:220px;height:100px;max-width:100%;display:block;margin:4px auto;position:static}
+#res .badge{display:inline-block;background:var(--yel);color:#6b4500;border-radius:999px;padding:2px 10px;font-size:13px;margin-top:4px}
+#res .stat{font-family:Jua,sans-serif;font-size:20px;color:var(--ink)}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(.7);opacity:0}}
+.hud{display:grid;gap:8px;margin:18px 0 14px;background:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 4px 0 #a9d8f2}
+.row{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.4em;align-items:center;gap:10px;font-size:14px}
+.row span:last-child{text-align:right;font-family:Jua,sans-serif;font-size:16px}
+.bar{height:20px;background:#eef8fe;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:999px;background:repeating-linear-gradient(-45deg,#ffd166 0 10px,#ffc23d 10px 20px);transition:width .06s linear}
+#tbar i{background:linear-gradient(90deg,#7ee0b0,#ffd166 60%,#ff6b8b)}
+.row.off{opacity:.4}
+.row.warn .bar{animation:blink .3s infinite alternate}
+@keyframes blink{to{border-color:var(--red);box-shadow:0 0 0 3px #ff6b8b44}}
+#act{-webkit-touch-callout:none;width:100%;height:70px;border:0;border-radius:999px;font:28px Jua,sans-serif;color:#fff;background:var(--org);box-shadow:0 7px 0 #e0664a;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;text-shadow:0 2px 0 #0002}
+#act:active{transform:translateY(5px);box-shadow:0 2px 0 #e0664a}
+#act:focus-visible{outline:3px solid #2f6fb0;outline-offset:3px}
+#act.wait,#act.cast{background:#6bbcf0;box-shadow:0 7px 0 #4a9bd0}
+#act.cast{opacity:.8}
+#act.bite{background:var(--yel);color:#7a4a00;text-shadow:none;box-shadow:0 7px 0 #e0ad3a;animation:pulse .3s infinite alternate}
+#act.fight{background:var(--red);box-shadow:0 7px 0 #d94b6b}
+@keyframes pulse{to{transform:scale(1.04) rotate(-1deg)}}
+.tip{color:var(--mute);font-size:14px;margin:14px 4px 0}
+.tip b{color:var(--org)}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.rod{background:#fff;border-radius:22px;padding:12px 14px 14px;box-shadow:0 4px 0 #a9d8f2;border:3px solid transparent;display:flex;flex-direction:column}
+.rod.on{border-color:#ffd166;box-shadow:0 4px 0 #f2c66d}
+.rod.lock canvas{filter:grayscale(.9) opacity(.5)}
+.rod canvas{width:200px;height:80px;max-width:100%;display:block;margin:0 auto 4px}
+.rod b{font-family:Jua,sans-serif;font-weight:400;font-size:20px}
+.rod small{color:var(--mute);font-size:13px}
+.rod ul{list-style:none;margin:8px 0 12px;padding:0;font-size:14px;display:grid;gap:2px}
+.rod li{display:flex;justify-content:space-between;gap:8px}
+.rod li span{font-family:Jua,sans-serif;white-space:nowrap}
+.rod button{margin-top:auto;min-height:44px;border:0;border-radius:999px;font:17px Jua,sans-serif;background:var(--org);color:#fff;box-shadow:0 4px 0 #e0664a;cursor:pointer}
+.rod button:disabled{background:#eef6fc;color:var(--mute);box-shadow:none;cursor:default}
+.rod.on button:disabled{background:#ffd166;color:#7a4a00}
+#res .close{font-size:12px;margin-top:8px;opacity:.7}
+#res .unl{color:#ff7a59;font-family:Jua,sans-serif;font-size:17px;margin-top:6px}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.card{background:var(--panel);border-radius:20px;padding:12px 10px;text-align:center;box-shadow:0 4px 0 #a9d8f2}
+.card canvas{width:120px;height:56px;display:block;margin:0 auto 4px}
+.card b{font-family:Jua,sans-serif;font-weight:400;font-size:18px;display:block}
+.card small{color:var(--mute);font-size:13px;display:block}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 9px;margin-top:5px;background:#f2f9fe;font-weight:700}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.log li{display:flex;justify-content:space-between;gap:10px;background:var(--panel);border-radius:16px;padding:9px 14px;font-size:15px;box-shadow:0 3px 0 #a9d8f2}
+.log li span:last-child{white-space:nowrap;color:var(--mute)}
+.log .lost{opacity:.6}
+.empty{color:var(--mute);font-size:15px}
+.foot{display:flex;justify-content:flex-end;margin-top:14px}
+.ghost{background:#fff;border:2px solid var(--line);color:var(--mute);border-radius:999px;padding:10px 16px;font:14px "Gowun Dodum",sans-serif;cursor:pointer;min-height:44px}
+@media(max-width:600px){.stage{aspect-ratio:4/3.6}#hint{font-size:13px}}
+@media(prefers-reduced-motion:reduce){#act.bite,#res.on,.row.warn .bar{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>보이흐피힝</h1>
+    <div class="chips">
+      <span class="chip">🎣 <b id="rodName">일반 낚시대</b> · 권장 <span id="rodMax">8</span>kg 이하</span>
+      <span class="chip">점수 <b id="pts">0</b></span>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <div id="hint">START를 눌러 캐스팅하세요</div>
+    <div id="aim" hidden><div id="aimz"><i class="good"></i><i class="great"></i><i class="perfect"></i><b id="mk"></b></div></div>
+    <div id="grade"></div>
+    <div id="res"></div>
+    <div id="pop" class="pop" hidden>!</div>
+    <div id="resist" class="resist" hidden>저항 중!</div>
+  </div>
+
+  <div class="hud">
+    <div class="row" id="grow"><span>챔질 게이지</span><div class="bar" id="gbar"><i></i></div><span id="gval">0%</span></div>
+    <div class="row off" id="trow"><span>줄 장력</span><div class="bar" id="tbar"><i></i></div><span id="tval">–</span></div>
+    <div class="row off" id="crow"><span>남은 시간</span><div class="bar" id="cbar"><i style="background:#8fd3ff"></i></div><span id="cval">–</span></div>
+  </div>
+
+  <button id="act" type="button">START</button>
+  <p class="tip"><b>START</b>를 누르면 캐스팅 게이지가 움직여요. 표시가 <b>금색 칸</b>에 올 때 한 번 더 누르면 퍼펙트! 정확할수록 멀리 던져지고 희귀·전설 어종이 더 자주 물어요. 찌가 살짝 흔들리는 건 탐색 입질이에요. <b>느낌표(!)</b>가 뜰 때 챔질하세요. 챔질 후에는 버튼을 <b>꾹 누르고 있으면</b> 릴이 감기고, 떼면 게이지가 줄어요. 2kg 이상 무거운 고기는 누르는 동안 장력이 쌓이니, 저항할 때는 손을 떼서 장력을 낮추세요. 제한 시간은 14초이고, 키보드는 스페이스바를 누르고 있으면 돼요.</p>
+
+  <h2>낚시대 상점</h2>
+  <p class="tip" style="margin-top:0">누적 점수가 기준에 닿으면 낚시대가 해금돼요. 점수는 차감되지 않으니 해금한 낚시대는 언제든 바꿔 낄 수 있어요. 바꾼 낚시대는 다음 캐스팅부터 적용돼요.</p>
+  <div class="shop" id="shop"></div>
+
+  <h2>어종 도감</h2>
+  <div class="dex" id="dex"></div>
+
+  <h2>최근 조과</h2>
+  <ul class="log" id="log"></ul>
+  <div class="foot"><button class="ghost" id="reset" type="button">기록 초기화</button></div>
+</div>
+
+<script>
+{
+const FISH=[
+ {id:'jg',name:'전갱이',min:.1,max:.5,rar:18,h:.3,col:'#5f8197',belly:'#e8eff3',fin:'#8aa3b1',pat:'line2',c:42},
+ {id:'gd',name:'고등어',min:.2,max:.9,rar:18,h:.27,col:'#2c6a68',belly:'#eef3f3',fin:'#4f8a86',pat:'mack',c:45},
+ {id:'bl',name:'볼락',min:.1,max:.5,rar:15,h:.36,col:'#6a4a3a',belly:'#caa78d',fin:'#7b5845',pat:'spot',c:38},
+ {id:'nr',name:'노래미',min:.3,max:1.5,rar:12,h:.3,col:'#7a5a33',belly:'#d9c290',fin:'#8e6c3f',pat:'spot',c:42},
+ {id:'ur',name:'우럭',min:.3,max:3,rar:13,h:.38,col:'#3b3b3a',belly:'#9c9b93',fin:'#4a4a48',pat:'spot',c:40},
+ {id:'gs',name:'감성돔',min:.5,max:3.5,rar:7,h:.44,col:'#46525d',belly:'#cdd3d8',fin:'#38424b',pat:'band',c:36},
+ {id:'gw',name:'광어',min:.5,max:6,rar:8,h:.5,col:'#6b5a40',belly:'#a99670',fin:'#5c4c35',pat:'spot',c:40},
+ {id:'cd',name:'참돔',min:.8,max:7,rar:6,h:.44,col:'#e0566a',belly:'#ffd6d8',fin:'#d04358',pat:'dots',c:36},
+ {id:'ny',name:'농어',min:1,max:8,rar:5,h:.3,col:'#56656f',belly:'#e5eaed',fin:'#46535b',pat:'freck',c:42},
+ {id:'by',name:'방어',min:3,max:12,rar:3,h:.3,col:'#2d4d78',belly:'#eaeff4',fin:'#c9a93a',pat:'yline',c:42},
+ {id:'bs',name:'부시리',min:4,max:16,rar:1.6,h:.28,col:'#375c7d',belly:'#eef2f5',fin:'#d9b43a',pat:'yline',c:44}
+];
+const LIMIT=14;
+const tier=f=>f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
+const KEY='seafish.v1';
+let save={pts:0,dex:{},log:[],rod:'basic'};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.dex)save=s}catch(e){}
+const store=()=>{try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+/* ---------- fish drawing ---------- */
+function drawFish(c,x,y,L,f,sil){
+  const H=L*f.h,body=sil?'rgba(60,110,160,.22)':null;
+  c.save();c.translate(x,y);
+  c.fillStyle=body||f.fin;
+  c.beginPath();c.moveTo(-L*.4,0);c.lineTo(-L*.6,-H*.5);c.quadraticCurveTo(-L*.52,0,-L*.6,H*.5);c.closePath();c.fill();
+  c.beginPath();c.moveTo(-L*.22,-H*.42);c.quadraticCurveTo(0,-H*.82,L*.16,-H*.44);c.closePath();c.fill();
+  c.beginPath();c.moveTo(-L*.12,H*.42);c.quadraticCurveTo(-L*.02,H*.7,L*.06,H*.44);c.closePath();c.fill();
+  c.beginPath();c.ellipse(0,0,L*.45,H/2,0,0,Math.PI*2);
+  if(sil){c.fill();c.restore();return}
+  const g=c.createLinearGradient(0,-H/2,0,H/2);g.addColorStop(0,f.col);g.addColorStop(.55,f.col);g.addColorStop(1,f.belly);
+  c.fillStyle=g;c.fill();
+  c.save();c.clip();
+  if(f.pat==='mack'){c.strokeStyle='#0d2f2e';c.lineWidth=L*.012;for(let i=-4;i<5;i++){c.beginPath();for(let t=0;t<=1;t+=.1)c.lineTo(i*L*.08+Math.sin(t*6)*L*.02,-H/2+t*H*.45);c.stroke()}}
+  if(f.pat==='spot'||f.pat==='freck'){c.fillStyle=f.pat==='spot'?'rgba(0,0,0,.28)':'rgba(0,0,0,.5)';for(let i=0;i<14;i++){const a=Math.sin(i*12.9)*.5,b=Math.cos(i*7.3)*.5;c.beginPath();c.arc(a*L*.7,b*H*.6-H*.08,L*(f.pat==='spot'?.035:.012),0,7);c.fill()}}
+  if(f.pat==='band'){c.fillStyle='rgba(0,0,0,.18)';for(let i=-2;i<3;i++)c.fillRect(i*L*.13-L*.025,-H,L*.05,H*2)}
+  if(f.pat==='dots'){c.fillStyle='#6fd0ff';for(let i=0;i<12;i++){c.beginPath();c.arc(Math.sin(i*5.1)*L*.3,-H*.22+Math.cos(i*3.7)*H*.12,L*.012,0,7);c.fill()}}
+  if(f.pat==='yline'){c.fillStyle='#f2c94c';c.fillRect(-L*.5,-H*.04,L,H*.1)}
+  if(f.pat==='line2'){c.fillStyle='rgba(255,230,140,.55)';c.fillRect(-L*.5,-H*.02,L,H*.06)}
+  c.restore();
+  c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=L*.01;c.beginPath();c.arc(L*.2,0,H*.38,-1.2,1.2);c.stroke();
+  c.fillStyle='#cdb97c';c.beginPath();c.arc(L*.3,-H*.1,L*.036,0,7);c.fill();
+  c.fillStyle='#0d0d10';c.beginPath();c.arc(L*.3,-H*.1,L*.024,0,7);c.fill();
+  c.fillStyle='rgba(255,255,255,.8)';c.beginPath();c.arc(L*.308,-H*.112,L*.007,0,7);c.fill();
+  c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=L*.008;c.beginPath();c.moveTo(L*.44,H*.04);c.lineTo(L*.38,H*.08);c.stroke();
+  c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=L*.006;c.beginPath();c.moveTo(-L*.38,-H*.02);c.quadraticCurveTo(0,-H*.08,L*.22,-H*.02);c.stroke();
+  c.restore();
+}
+function fishCanvas(cv,f,sil,w,h){const d=devicePixelRatio||1;cv.width=w*d;cv.height=h*d;const c=cv.getContext('2d');c.scale(d,d);drawFish(c,w*.53,h*.5,w*.78,f,sil)}
+
+const RODS=[
+ {id:'basic',name:'일반 낚시대',need:0,max:8,up:1,tr:1,col:'#3a3d42',lw:4.5,guides:0,reel:'#c9ccd1',grip:'#232323',desc:'기본 유리섬유 낚시대'},
+ {id:'beg',name:'초급 낚시대',need:150,max:10,up:1.15,tr:.85,col:'#2f5a46',lw:4.8,guides:2,reel:'#b8bcc2',grip:'#2a2a2a',desc:'녹색 도장, 가이드 2개'},
+ {id:'mid',name:'중급 낚시대',need:500,max:13,up:1.35,tr:.7,col:'#1f3a5c',lw:5.2,guides:3,reel:'#dfe3e8',grip:'#b8875a',desc:'코르크 손잡이와 은빛 릴'},
+ {id:'pro',name:'고급 낚시대',need:1000,max:17,up:1.7,tr:.45,col:'#1a1b20',lw:5.6,guides:4,reel:'#c9a54a',grip:'#3a2a1a',desc:'카본 몸체, 금장 장식, 고급 릴'}
+];
+const rod=()=>RODS.find(r=>r.id===save.rod)||RODS[0];
+function drawRod(c,x0,y0,cx,cy,x1,y1,R,s,t){
+  const q=(t,a,b,d)=>(1-t)*(1-t)*a+2*(1-t)*t*b+t*t*d,P=t=>({x:q(t,x0,cx,x1),y:q(t,y0,cy,y1)});
+  c.lineCap='round';
+  c.strokeStyle=R.col;c.lineWidth=R.lw*s;c.beginPath();c.moveTo(x0,y0);c.quadraticCurveTo(cx,cy,x1,y1);c.stroke();
+  if(R.id==='pro'){c.strokeStyle='#ffd166';c.lineWidth=1.3*s;c.beginPath();c.moveTo(x0,y0);c.quadraticCurveTo(cx,cy,x1,y1);c.stroke()}
+  
+  const g0=P(0),g1=P(.16);c.strokeStyle=R.grip;c.lineWidth=(R.lw+3)*s;c.beginPath();c.moveTo(g0.x,g0.y);c.lineTo(g1.x,g1.y);c.stroke();
+  for(let i=0;i<R.guides;i++){const p=P(.35+i*(.55/R.guides));c.strokeStyle=R.id==='pro'?'#ffd166':'#fff';c.lineWidth=1.6*s;c.beginPath();c.arc(p.x,p.y+3*s,2.6*s,0,7);c.stroke()}
+  const rp=P(.1);c.fillStyle=R.reel;c.strokeStyle='#5d7a99';c.lineWidth=1.5;c.beginPath();c.arc(rp.x+2,rp.y+6*s,5.5*s,0,7);c.fill();c.stroke();
+  c.beginPath();c.moveTo(rp.x+2,rp.y+6*s);c.lineTo(rp.x+2+5*s,rp.y+12*s);c.stroke();
+  if(R.id==='pro'){c.fillStyle='#e8c766';c.beginPath();c.arc(rp.x+2,rp.y+6*s,2.2*s,0,7);c.fill();
+    const tw=(Math.sin(t*4)+1)/2,r=(2+tw*3)*s;c.fillStyle='#fff6c0';c.beginPath();c.moveTo(x1,y1-r*2);c.lineTo(x1+r*.5,y1-r*.5);c.lineTo(x1+r*2,y1);c.lineTo(x1+r*.5,y1+r*.5);c.lineTo(x1,y1+r*2);c.lineTo(x1-r*.5,y1+r*.5);c.lineTo(x1-r*2,y1);c.lineTo(x1-r*.5,y1-r*.5);c.fill()}
+  if(R.id==='mid'){const p=P(.18);c.fillStyle='#c9a54a';c.beginPath();c.arc(p.x,p.y,2.5*s,0,7);c.fill()}
+}
+/* ================= tiny WebGL engine ================= */
+const cv=$('cv'),stage=$('stage');
+const gl=cv.getContext('webgl',{antialias:true,alpha:true,premultipliedAlpha:false})||cv.getContext('experimental-webgl');
+let W=0,H=0,DPR=1;
+const fit=()=>{DPR=Math.min(2,devicePixelRatio||1);W=stage.clientWidth;H=stage.clientHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR)};
+const ro=new ResizeObserver(fit);ro.observe(stage);fit();
+const hex=h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];
+const mixc=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];
+
+/* math */
+const M4=()=>{const m=new Float32Array(16);m[0]=m[5]=m[10]=m[15]=1;return m};
+function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+r]*b[c*4+k];o[c*4+r]=s}return o}
+function persp(f,a,n,fa){const t=1/Math.tan(f/2),m=new Float32Array(16);m[0]=t/a;m[5]=t;m[10]=(fa+n)/(n-fa);m[11]=-1;m[14]=2*fa*n/(n-fa);return m}
+function lookAt(e,c,u){let z=norm([e[0]-c[0],e[1]-c[1],e[2]-c[2]]),x=norm(cross(u,z)),y=cross(z,x);
+  return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,e),-dot(y,e),-dot(z,e),1])}
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const norm=a=>{const l=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/l,a[1]/l,a[2]/l]};
+function trs(p,r,s){const [x,y,z]=r,cx=Math.cos(x),sx=Math.sin(x),cy=Math.cos(y),sy=Math.sin(y),cz=Math.cos(z),sz=Math.sin(z);
+  // R = Ry*Rx*Rz
+  const r00=cy*cz+sy*sx*sz,r01=-cy*sz+sy*sx*cz,r02=sy*cx,r10=cx*sz,r11=cx*cz,r12=-sx,r20=-sy*cz+cy*sx*sz,r21=sy*sz+cy*sx*cz,r22=cy*cx;
+  return new Float32Array([r00*s[0],r10*s[0],r20*s[0],0,r01*s[1],r11*s[1],r21*s[1],0,r02*s[2],r12*s[2],r22*s[2],0,p[0],p[1],p[2],1])}
+function nmat(m){const a=m[0],b=m[1],c=m[2],d=m[4],e=m[5],f=m[6],g=m[8],h=m[9],i=m[10];
+  const c00=e*i-f*h,c01=-(b*i-c*h),c02=b*f-c*e,det=a*c00-d*(b*i-c*h)+g*(b*f-c*e)||1;
+  return new Float32Array([c00/det,-(d*i-f*g)/det,(d*h-e*g)/det,c01/det,(a*i-c*g)/det,-(a*h-b*g)/det,c02/det,-(a*f-c*d)/det,(a*e-b*d)/det])}
+const xf=(m,p)=>[m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12],m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13],m[2]*p[0]+m[6]*p[1]+m[10]*p[2]+m[14]];
+
+/* shaders */
+function prog(vs,fs){const p=gl.createProgram();for(const[t,s]of[[gl.VERTEX_SHADER,vs],[gl.FRAGMENT_SHADER,fs]]){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(sh);gl.attachShader(p,sh)}
+  gl.linkProgram(p);const u={},a={};const nu=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);for(let k=0;k<nu;k++){const n=gl.getActiveUniform(p,k).name;u[n]=gl.getUniformLocation(p,n)}
+  const na=gl.getProgramParameter(p,gl.ACTIVE_ATTRIBUTES);for(let k=0;k<na;k++){const n=gl.getActiveAttrib(p,k).name;a[n]=gl.getAttribLocation(p,n)}return{p,u,a}}
+let LIT,TEX;
+if(gl){
+LIT=prog(`attribute vec3 aP;attribute vec3 aN;attribute vec3 aC;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vN;varying vec3 vW;varying vec3 vC;
+void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=uNM*aN;vC=aC;gl_Position=uVP*w;}`,
+`precision mediump float;varying vec3 vN;varying vec3 vW;varying vec3 vC;uniform vec3 uColor;uniform float uAlpha;uniform vec3 uEye;uniform float uSpec;uniform float uUnlit;uniform vec3 uFog;uniform vec2 uFogR;uniform float uWater;
+void main(){vec3 n=normalize(vN);vec3 V=normalize(uEye-vW);if(dot(n,V)<0.)n=-n;vec3 L=normalize(vec3(.45,.75,.35));float d=max(dot(n,L),0.);
+vec3 base=uColor*vC;vec3 amb=mix(vec3(.42,.40,.36),vec3(.70,.80,.92),n.y*.5+.5);
+vec3 col=base*(amb*.62+d*vec3(1.,.95,.86)*.78);float a=uAlpha;
+if(uSpec>0.&&uWater<.5){vec3 h=normalize(L+V);col+=pow(max(dot(n,h),0.),uSpec)*.35;}
+if(uWater>.5){vec3 SL=normalize(vec3(.13,.1,-1.));float fr=pow(1.-max(dot(n,V),0.),4.);col=mix(col,vec3(.60,.73,.84),fr*.6);
+ vec3 R=reflect(-SL,n);col+=pow(max(dot(R,V),0.),uSpec)*vec3(1.,.96,.88)*1.1;a=mix(uAlpha,1.,fr);}
+col=mix(col,base,uUnlit);float f=smoothstep(uFogR.x,uFogR.y,length(vW-uEye));col=mix(col,uFog,f);gl_FragColor=vec4(col,a);}`);
+TEX=prog(`attribute vec3 aP;attribute vec2 aU;uniform mat4 uM;uniform mat4 uVP;varying vec2 vU;void main(){vU=aU;gl_Position=uVP*uM*vec4(aP,1.);}`,
+`precision mediump float;varying vec2 vU;uniform sampler2D uT;uniform float uAlpha;void main(){vec4 c=texture2D(uT,vU);if(c.a<.02)discard;gl_FragColor=vec4(c.rgb,c.a*uAlpha);}`);
+}
+
+/* geometry */
+function upload(g,dyn){const m={n:g.i.length,dyn};const B=(d,t)=>{const b=gl.createBuffer();gl.bindBuffer(t,b);gl.bufferData(t,d,dyn?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);return b};
+  m.p=B(new Float32Array(g.p),gl.ARRAY_BUFFER);if(g.n)m.nb=B(new Float32Array(g.n),gl.ARRAY_BUFFER);
+  m.c=B(new Float32Array(g.c||g.p.map(()=>1)),gl.ARRAY_BUFFER);if(g.u)m.u=B(new Float32Array(g.u),gl.ARRAY_BUFFER);
+  m.i=B(new Uint16Array(g.i),gl.ELEMENT_ARRAY_BUFFER);return m}
+function sphereG(la=12,lo=16,half=false,colf){const p=[],n=[],c=[],i=[];const lmax=half?la/2:la;
+  for(let y=0;y<=lmax;y++){const v=y/la,th=v*Math.PI;for(let x=0;x<=lo;x++){const ph=x/lo*Math.PI*2,px=Math.sin(th)*Math.cos(ph),py=Math.cos(th),pz=Math.sin(th)*Math.sin(ph);
+    p.push(px,py,pz);n.push(px,py,pz);c.push(...(colf?colf(px,py,pz):[1,1,1]))}}
+  for(let y=0;y<lmax;y++)for(let x=0;x<lo;x++){const a=y*(lo+1)+x,b=a+lo+1;i.push(a,b,a+1,b,b+1,a+1)}
+  if(half){const s=p.length/3;p.push(0,0,0);n.push(0,-1,0);c.push(1,1,1);for(let x=0;x<lo;x++){const a=lmax*(lo+1)+x;i.push(s,a,a+1)}}
+  return{p,n,c,i}}
+function cylG(rt,rb,h,seg=16,cap=true){const p=[],n=[],i=[];const sl=(rb-rt)/h;
+  for(let y=0;y<=1;y++)for(let x=0;x<=seg;x++){const a=x/seg*Math.PI*2,r=y?rt:rb,cx=Math.cos(a),sz=Math.sin(a);p.push(cx*r,y?h/2:-h/2,sz*r);const nn=norm([cx,sl,sz]);n.push(...nn)}
+  for(let x=0;x<seg;x++){const a=x,b=x+seg+1;i.push(a,b,a+1,b,b+1,a+1)}
+  if(cap)for(const[y,r,ny]of[[h/2,rt,1],[-h/2,rb,-1]]){if(r<=0)continue;const s=p.length/3;p.push(0,y,0);n.push(0,ny,0);for(let x=0;x<=seg;x++){const a=x/seg*Math.PI*2;p.push(Math.cos(a)*r,y,Math.sin(a)*r);n.push(0,ny,0)}
+    for(let x=0;x<seg;x++)i.push(s,s+1+x,s+2+x)}
+  return{p,n,i}}
+function boxG(){const p=[],n=[],i=[];const F=[[0,0,1],[0,0,-1],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0]];
+  for(const f of F){const u=Math.abs(f[1])?[1,0,0]:[0,1,0],v=cross(f,u),s=p.length/3;
+    for(const[a,b]of[[-1,-1],[1,-1],[1,1],[-1,1]]){p.push((f[0]+u[0]*a+v[0]*b)/2,(f[1]+u[1]*a+v[1]*b)/2,(f[2]+u[2]*a+v[2]*b)/2);n.push(...f)}i.push(s,s+1,s+2,s,s+2,s+3)}return{p,n,i}}
+function torusG(R,r,seg=20,ts=8,arc=Math.PI*2){const p=[],n=[],i=[];
+  for(let j=0;j<=seg;j++){const a=j/seg*arc;for(let k=0;k<=ts;k++){const b=k/ts*Math.PI*2,cx=Math.cos(a),sx=Math.sin(a);
+    p.push((R+r*Math.cos(b))*cx,(R+r*Math.cos(b))*sx,r*Math.sin(b));n.push(Math.cos(b)*cx,Math.cos(b)*sx,Math.sin(b))}}
+  for(let j=0;j<seg;j++)for(let k=0;k<ts;k++){const a=j*(ts+1)+k,b=a+ts+1;i.push(a,b,a+1,b,b+1,a+1)}return{p,n,i}}
+function ringG(ri,seg=32){const p=[],n=[],i=[];for(let x=0;x<=seg;x++){const a=x/seg*Math.PI*2;p.push(Math.cos(a)*ri,0,Math.sin(a)*ri,Math.cos(a),0,Math.sin(a));n.push(0,1,0,0,1,0)}
+  for(let x=0;x<seg;x++){const a=x*2;i.push(a,a+2,a+1,a+1,a+2,a+3)}return{p,n,i}}
+const quadG=()=>({p:[-.5,-.5,0,.5,-.5,0,.5,.5,0,-.5,.5,0],u:[0,1,1,1,1,0,0,0],i:[0,1,2,0,2,3]});
+let G={};
+if(gl){G={sph:upload(sphereG()),hemi:upload(sphereG(12,16,true)),cyl:upload(cylG(1,1,1)),cone:upload(cylG(0,1,1)),box:upload(boxG()),ring:upload(ringG(.86)),quad:upload(quadG()),
+  tor:upload(torusG(1,.32,24,10)),qtor:upload(torusG(1,.38,8,8,Math.PI/2)),oct:upload(sphereG(2,4))};}
+
+/* dynamic tube (rod, line) */
+function tubeMesh(N,S){const g={p:new Array((N+1)*(S+1)*3).fill(0),n:new Array((N+1)*(S+1)*3).fill(0),c:new Array((N+1)*(S+1)*3).fill(1),i:[]};
+  for(let j=0;j<N;j++)for(let k=0;k<S;k++){const a=j*(S+1)+k,b=a+S+1;g.i.push(a,b,a+1,b,b+1,a+1)}const m=upload(g,true);m.N=N;m.S=S;m.P=new Float32Array(g.p.length);m.Nn=new Float32Array(g.p.length);m.C=new Float32Array(g.p.length).fill(1);return m}
+function setTube(m,pts,radf,colf){const{N,S}=m;for(let j=0;j<=N;j++){const a=pts[Math.max(0,j-1)],b=pts[Math.min(N,j+1)],t=norm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);
+  let u=norm(cross(t,Math.abs(t[1])<.9?[0,1,0]:[1,0,0])),v=cross(t,u),r=radf(j/N),cl=colf?colf(j/N):[1,1,1];
+  for(let k=0;k<=S;k++){const an=k/S*Math.PI*2,nx=u[0]*Math.cos(an)+v[0]*Math.sin(an),ny=u[1]*Math.cos(an)+v[1]*Math.sin(an),nz=u[2]*Math.cos(an)+v[2]*Math.sin(an),o=(j*(S+1)+k)*3;
+    m.P[o]=pts[j][0]+nx*r;m.P[o+1]=pts[j][1]+ny*r;m.P[o+2]=pts[j][2]+nz*r;m.Nn[o]=nx;m.Nn[o+1]=ny;m.Nn[o+2]=nz;m.C[o]=cl[0];m.C[o+1]=cl[1];m.C[o+2]=cl[2]}}
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.p);gl.bufferData(gl.ARRAY_BUFFER,m.P,gl.DYNAMIC_DRAW);gl.bindBuffer(gl.ARRAY_BUFFER,m.nb);gl.bufferData(gl.ARRAY_BUFFER,m.Nn,gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.c);gl.bufferData(gl.ARRAY_BUFFER,m.C,gl.DYNAMIC_DRAW)}
+const qb=(a,b,c,t)=>[0,1,2].map(k=>(1-t)*(1-t)*a[k]+2*(1-t)*t*b[k]+t*t*c[k]);
+
+/* textures */
+function texFrom(canvas){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t}
+
+/* scene graph */
+const N=(o={})=>Object.assign({p:[0,0,0],r:[0,0,0],s:[1,1,1],ch:[],vis:true,c:[1,1,1],a:1,pass:'o'},o);
+const add=(par,...k)=>{par.ch.push(...k);return k[0]};
+const ROOT=N();
+let VP=M4(),EYE=[0,2.6,8],LIST=[];
+function walk(n,pm){if(!n.vis)return;const m=n.mw=mul(pm,trs(n.p,n.r,n.s));if(n.m||n.tex)LIST.push(n);for(const c of n.ch)walk(c,m)}
+function draw(n){
+  if(n.tex){const P=TEX;gl.useProgram(P.p);gl.uniformMatrix4fv(P.u.uM,false,n.mw);gl.uniformMatrix4fv(P.u.uVP,false,VP);gl.uniform1f(P.u.uAlpha,n.a);
+    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,n.tex);gl.uniform1i(P.u.uT,0);const m=G.quad;
+    gl.bindBuffer(gl.ARRAY_BUFFER,m.p);gl.enableVertexAttribArray(P.a.aP);gl.vertexAttribPointer(P.a.aP,3,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,m.u);gl.enableVertexAttribArray(P.a.aU);gl.vertexAttribPointer(P.a.aU,2,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0);gl.disableVertexAttribArray(P.a.aU);return}
+  const P=LIT,m=n.m;gl.useProgram(P.p);
+  gl.uniformMatrix4fv(P.u.uM,false,n.mw);gl.uniformMatrix4fv(P.u.uVP,false,VP);gl.uniformMatrix3fv(P.u.uNM,false,nmat(n.mw));
+  gl.uniform3fv(P.u.uColor,n.c);gl.uniform1f(P.u.uAlpha,n.a);gl.uniform3fv(P.u.uEye,EYE);gl.uniform1f(P.u.uSpec,n.spec||0);gl.uniform1f(P.u.uUnlit,n.unlit||0);
+  gl.uniform3fv(P.u.uFog,FOG);const fr=n.fog||(n.nofog?[999,1000]:[22,80]);gl.uniform2f(P.u.uFogR,fr[0],fr[1]);gl.uniform1f(P.u.uWater,n.pass==='w'?1:0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.p);gl.enableVertexAttribArray(P.a.aP);gl.vertexAttribPointer(P.a.aP,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.nb);gl.enableVertexAttribArray(P.a.aN);gl.vertexAttribPointer(P.a.aN,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.c);gl.enableVertexAttribArray(P.a.aC);gl.vertexAttribPointer(P.a.aC,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}
+const FOG=hex('#d3e5ee');
+function render(){
+  gl.viewport(0,0,cv.width,cv.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  const asp=W/H,nar=Math.max(0,Math.min(1,(1.5-asp)/.5));EYE=[lerp(.3,-.7,nar),lerp(2.55,2.9,nar),lerp(8.2,8.9,nar)];const tgt=[lerp(.3,-.4,nar),.5,-3];VP=mul(persp(lerp(.85,1.0,nar),asp,.1,120),lookAt(EYE,tgt,[0,1,0]));
+  LIST=[];walk(ROOT,M4());
+  gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);
+  for(const n of LIST)if(n.pass==='o')draw(n);
+  gl.disable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  for(const n of LIST)if(n.pass==='w')draw(n);
+  gl.depthMask(false);for(const n of LIST)if(n.pass==='t')draw(n);gl.depthMask(true);
+}
+function toScreen(p){const x=VP[0]*p[0]+VP[4]*p[1]+VP[8]*p[2]+VP[12],y=VP[1]*p[0]+VP[5]*p[1]+VP[9]*p[2]+VP[13],w=VP[3]*p[0]+VP[7]*p[1]+VP[11]*p[2]+VP[15];return{x:(x/w+1)/2*W,y:(1-y/w)/2*H}}
+
+/* ================= world ================= */
+const C=h=>hex(h);
+const mesh=(m,c,o={})=>N(Object.assign({m,c:C(c)},o));
+const wave=(x,z,t)=>.07*Math.sin(.55*x+1.3*t)+.05*Math.sin(.8*z-1.1*t+.15*x)+.025*Math.sin(1.7*(x+z)+2.2*t)+.012*Math.sin(3.1*x-2.3*z+3.1*t);
+const waveN=(x,z,t)=>{const dx=.07*.55*Math.cos(.55*x+1.3*t)+.05*.15*Math.cos(.8*z-1.1*t+.15*x)+.025*1.7*Math.cos(1.7*(x+z)+2.2*t),dz=.05*.8*Math.cos(.8*z-1.1*t+.15*x)+.025*1.7*Math.cos(1.7*(x+z)+2.2*t);return norm([-dx-.012*3.1*Math.cos(3.1*x-2.3*z+3.1*t),1,-dz+.012*2.3*Math.cos(3.1*x-2.3*z+3.1*t)])};
+// water
+let WM=null,WX=72,WZ=60,W0=[-35,-55],WS=[70,64];
+if(gl){const p=[],n=[],c=[],i=[];for(let z=0;z<=WZ;z++)for(let x=0;x<=WX;x++){p.push(W0[0]+x/WX*WS[0],0,W0[1]+Math.pow(z/WZ,1.6)*WS[1]);n.push(0,1,0);const d=z/WZ;c.push(...mixc(hex('#165473'),hex('#2f7699'),d))}
+  for(let z=0;z<WZ;z++)for(let x=0;x<WX;x++){const a=z*(WX+1)+x,b=a+WX+1;i.push(a,b,a+1,b,b+1,a+1)}WM=upload({p,n,c,i},true);WM.P=new Float32Array(p);WM.Nn=new Float32Array(n)}
+const water=add(ROOT,N({m:WM,c:[1,1,1],a:.85,pass:'w',spec:260}));
+function updWater(t){const P=WM.P,Nn=WM.Nn;for(let k=0;k<P.length;k+=3){const x=P[k],z=P[k+2];P[k+1]=wave(x,z,t);const nn=waveN(x,z,t);Nn[k]=nn[0];Nn[k+1]=nn[1];Nn[k+2]=nn[2]}
+  gl.bindBuffer(gl.ARRAY_BUFFER,WM.p);gl.bufferData(gl.ARRAY_BUFFER,P,gl.DYNAMIC_DRAW);gl.bindBuffer(gl.ARRAY_BUFFER,WM.nb);gl.bufferData(gl.ARRAY_BUFFER,Nn,gl.DYNAMIC_DRAW)}
+
+// sun glow (texture)
+let sunTex=null,cloudTex=[];
+if(gl){const k=document.createElement('canvas');k.width=k.height=256;const c=k.getContext('2d');
+  let g=c.createRadialGradient(128,128,0,128,128,128);g.addColorStop(0,'rgba(255,255,250,1)');g.addColorStop(.12,'rgba(255,252,235,1)');g.addColorStop(.2,'rgba(255,240,200,.55)');g.addColorStop(.5,'rgba(255,235,200,.12)');g.addColorStop(1,'rgba(255,235,200,0)');
+  c.fillStyle=g;c.fillRect(0,0,256,256);sunTex=texFrom(k);
+  for(let v=0;v<3;v++){const q=document.createElement('canvas');q.width=512;q.height=200;const d=q.getContext('2d');
+    for(let i=0;i<34;i++){const x=90+Math.random()*332,y=95+Math.random()*50-Math.abs(x-256)*.18,r=34+Math.random()*44;
+      const gg=d.createRadialGradient(x,y,0,x,y,r);const shade=Math.round(lerp(255,214,Math.min(1,(y-40)/120)));
+      gg.addColorStop(0,`rgba(${shade},${shade},${Math.min(255,shade+8)},.42)`);gg.addColorStop(.6,`rgba(${shade},${shade},${shade},.25)`);gg.addColorStop(1,`rgba(${shade},${shade},${shade},0)`);d.fillStyle=gg;d.beginPath();d.arc(x,y,r,0,7);d.fill()}
+    cloudTex.push(texFrom(q))}}
+const sun=add(ROOT,N({tex:sunTex,p:[9,7.5,-70],s:[16,16,1],pass:'t'}));
+const clouds=[];
+for(let k=0;k<6;k++){const w=rnd(18,34);const c=add(ROOT,N({tex:cloudTex[k%3],p:[-40+k*16+rnd(-4,4),rnd(11,19),-75-rnd(0,15)],s:[w,w*.39,1],pass:'t',a:.9}));c.v=rnd(.15,.35);clouds.push(c)}
+// seagull
+const gull=add(ROOT,N({p:[0,5.5,-14]}));add(gull,mesh(G.sph,'#f2f2f0',{s:[.22,.1,.1]}));
+const wingL=add(gull,N({p:[0,.02,0]})),wingR=add(gull,N({p:[0,.02,0]}));
+add(wingL,mesh(G.box,'#9aa3ab',{p:[0,0,.38],s:[.16,.02,.75]}));add(wingR,mesh(G.box,'#9aa3ab',{p:[0,0,-.38],s:[.16,.02,.75]}));
+add(gull,mesh(G.cone,'#e0a030',{p:[.24,0,0],r:[0,0,-Math.PI/2],s:[.03,.09,.03]}));
+// distant coastline hills (hazy)
+const HILLF=[45,160];
+for(const[x,z,sx,sy,sz,c]of[[-30,-95,26,7,10,'#3f5f52'],[-6,-105,30,9,12,'#466a5b'],[22,-98,24,6,10,'#3b5a4f'],[44,-90,20,5,9,'#4a6c5e'],[8,-88,14,3.2,6,'#567a68']])
+  add(ROOT,mesh(G.sph,c,{p:[x,-.5,z],s:[sx,sy,sz],fog:HILLF}));
+// distant red lighthouse on a breakwater
+const lhB=add(ROOT,N({p:[10,0,-30]}));
+add(lhB,mesh(G.box,'#9c9c96',{p:[-5,.3,0],s:[12,.9,1.4]}));
+for(let k=0;k<6;k++)add(lhB,mesh(G.sph,'#8f8f89',{p:[-10+k*2,.1,.9],s:[.9,.6,.7]}));
+add(lhB,mesh(G.cyl,'#d63a32',{p:[1,2.1,0],s:[.55,3,.55]}));add(lhB,mesh(G.cyl,'#f2f2ee',{p:[1,2.6,0],s:[.56,.35,.56]}));
+add(lhB,mesh(G.cyl,'#2d2d2d',{p:[1,3.75,0],s:[.62,.12,.62]}));const lamp=add(lhB,mesh(G.cyl,'#fff1b0',{p:[1,4.05,0],s:[.38,.5,.38],unlit:.8}));
+add(lhB,mesh(G.cone,'#d63a32',{p:[1,4.5,0],s:[.45,.4,.45]}));
+// concrete breakwater + tetrapods
+const pier=add(ROOT,N({p:[-4.6,0,2.7]}));
+add(pier,mesh(G.box,'#b4b2aa',{p:[0,.1,0],s:[7,.9,3.2]}));
+for(let k=0;k<9;k++)add(pier,mesh(G.box,'#a6a49c',{p:[-3.1+k*.78,.556,0],s:[.02,.01,3.2]}));
+add(pier,mesh(G.box,'#8e8c85',{p:[0,-.6,1.62],s:[7,.6,.05]}));
+const cylG2=gl?upload(cylG(.12,.24,.75,10)):null,TD=[[0,1,0],[.943,-.333,0],[-.471,-.333,.816],[-.471,-.333,-.816]];
+function tetrapod(par,p,r,sc){const t=add(par,N({p,r,s:[sc,sc,sc]}));
+  for(const d of TD)add(t,N({m:cylG2,c:hex('#a19f97'),p:[d[0]*.37,d[1]*.37,d[2]*.37],r:[Math.acos(d[1]),Math.atan2(d[0],d[2]),0]}));
+  add(t,mesh(G.sph,'#a19f97',{s:[.25,.25,.25]}));return t}
+// legs: cylinder along +y, tilted by pitch around x then yaw — approximate tetrahedral spread
+[[-3.1,-.35,-1.75,.3],[-1.9,-.25,-1.85,1.2],[-.7,-.4,-1.8,2.1],[.5,-.3,-1.9,.7],[1.7,-.35,-1.8,2.6],[2.9,-.3,-1.7,1.6],[3.7,-.35,-.9,.4],[3.8,-.3,.4,2.2],[3.7,-.35,1.6,1.1],[-2.5,-.75,-2.6,1.9],[.1,-.8,-2.7,.9],[2.6,-.8,-2.6,2.4]]
+  .forEach(([x,y,z,a])=>tetrapod(pier,[x,y+.35,z],[a*.7,a,a*.4],1.05));
+// cooler box
+const cooler=add(pier,N({p:[1.0,.82,.45],r:[0,.3,0]}));add(cooler,mesh(G.box,'#f4f4f0',{s:[.55,.4,.38]}));add(cooler,mesh(G.box,'#2f6fb0',{p:[0,.22,0],s:[.57,.06,.4]}));
+add(cooler,mesh(G.box,'#d8d8d2',{p:[0,.28,0],s:[.3,.04,.06]}));
+const tail=N({vis:false});
+// soft contact shadow on concrete
+add(pier,mesh(G.sph,'#000000',{p:[2.2,.57,.05],s:[.45,.01,.32],a:.18,pass:'t',unlit:1}));
+// angler (realistic proportions)
+const ang=add(ROOT,N({p:[-2.4,.56,2.75],r:[0,.55,0]}));
+const body=add(ang,N());
+const PANTS='#2f3540',JACKET='#3d4f5f',VEST='#d9622b',SKIN='#d9ae8e';
+for(const x of[-.11,.11]){add(body,mesh(G.box,'#2a2a2a',{p:[x,.05,.06],s:[.13,.09,.28]}));add(body,mesh(G.cyl,PANTS,{p:[x,.47,0],s:[.088,.8,.088]}))}
+add(body,mesh(G.box,PANTS,{p:[0,.9,0],s:[.34,.14,.2]}));
+const torso=add(body,N({p:[0,1.2,0]}));
+add(torso,mesh(G.cyl,JACKET,{s:[.22,.52,.15]}));
+add(torso,mesh(G.cyl,VEST,{p:[0,.04,0],s:[.235,.42,.165]}));
+for(const y of[-.1,.08])add(torso,mesh(G.box,'#b84d1f',{p:[0,y,.145],s:[.28,.03,.01]}));
+add(torso,mesh(G.sph,JACKET,{p:[0,.25,0],s:[.22,.08,.14]}));
+const armL=add(torso,mesh(G.cyl,JACKET,{p:[-.25,-.02,.05],r:[.35,0,.15],s:[.065,.5,.065]}));
+add(torso,mesh(G.cyl,JACKET,{p:[.19,-.02,.17],r:[1.0,0,-.25],s:[.065,.42,.065]}));
+const handR=add(torso,mesh(G.sph,SKIN,{p:[.22,-.14,.33],s:[.05,.05,.05]}));
+add(torso,mesh(G.sph,SKIN,{p:[-.27,-.25,.13],s:[.045,.045,.045]}));
+const head=add(body,N({p:[0,1.62,0]}));
+add(head,mesh(G.cyl,SKIN,{p:[0,-.1,0],s:[.06,.1,.06]}));
+add(head,mesh(G.sph,SKIN,{s:[.11,.13,.12]}));
+add(head,mesh(G.box,'#111317',{p:[0,.015,.105],s:[.17,.035,.02],spec:40}));
+add(head,mesh(G.sph,SKIN,{p:[0,-.02,.12],s:[.018,.025,.02]}));
+add(head,mesh(G.hemi,'#26303d',{p:[0,.04,0],s:[.118,.1,.125]}));
+add(head,mesh(G.box,'#26303d',{p:[0,.045,.15],s:[.17,.012,.1],r:[-.15,0,0]}));
+const face=N({vis:false}),sparks=[];function drawFace(){}
+// rod & line
+const rodT=gl?tubeMesh(24,8):null,gripT=gl?tubeMesh(4,8):null,lineT=gl?tubeMesh(20,4):null,goldT=gl?tubeMesh(24,4):null;
+const rodN=add(ROOT,N({m:rodT})),gripN=add(ROOT,N({m:gripT})),goldN=add(ROOT,N({m:goldT,c:C('#ffd166'),vis:false}));
+const lineN=add(ROOT,N({m:lineT,c:[1,1,1],unlit:.7}));
+const reel=add(ROOT,N());add(reel,mesh(G.cyl,'#ffffff',{r:[Math.PI/2,0,0],s:[.09,.06,.09]}));const reelC=reel.ch[0];const gem=add(reel,mesh(G.sph,'#e8c766',{p:[0,0,.04],s:[.035,.035,.035],vis:false}));
+const guides=[];for(let k=0;k<4;k++)guides.push(add(ROOT,mesh(G.tor,'#ffffff',{s:[.035,.035,.035],vis:false})));
+const tipStar=add(ROOT,mesh(G.oct,'#fff6c0',{unlit:1,vis:false,s:[.06,.09,.03]}));
+// bobber
+const bob=add(ROOT,N({vis:false,s:[1.7,1.7,1.7]}));
+add(bob,mesh(G.sph,'#ffffff',{s:[.09,.11,.09]}));add(bob,mesh(G.hemi,'#ff6b81',{p:[0,.005,0],s:[.093,.1,.093]}));
+add(bob,mesh(G.cyl,'#ff6b81',{p:[0,.16,0],s:[.018,.14,.018]}));add(bob,mesh(G.sph,'#ffd23f',{p:[0,.24,0],s:[.03,.03,.03],unlit:.4}));
+const fshadow=add(ROOT,mesh(G.sph,'#1e508c',{vis:false,a:.3,pass:'t',unlit:1}));
+// ripples & drops
+const ripPool=[],dropPool=[];
+for(let k=0;k<24;k++)ripPool.push(add(ROOT,mesh(G.ring,'#ffffff',{pass:'t',unlit:1,vis:false})));
+for(let k=0;k<60;k++)dropPool.push(add(ROOT,mesh(G.sph,'#ffffff',{unlit:.6,vis:false,s:[.03,.03,.03]})));
+let ripples=[],drops=[];
+function ripple(x,z,s){ripples.push({x,z,r:.05,a:.8,s:s||1})}
+function splash(x,y,z,n){for(let k=0;k<n;k++)drops.push({x,y,z,vx:rnd(-1.2,1.2),vy:rnd(1.5,3.2),vz:rnd(-1.2,1.2),a:1})}
+// water sparkles
+const twinkles=[];
+
+/* fish 3D */
+const fishGeo={};
+function fishMesh(f){if(fishGeo[f.id])return fishGeo[f.id];const col=hex(f.col),bel=hex(f.belly),yl=hex('#f2c94c');
+  const g=sphereG(12,18,false,(x,y,z)=>{let c=mixc(bel,col,Math.min(1,Math.max(0,(y+.35)/.7)));
+    if(f.pat==='yline'&&Math.abs(y)<.12)c=yl;if(f.pat==='line2'&&Math.abs(y)<.08)c=mixc(c,yl,.5);
+    if(f.pat==='mack'&&y>.15&&Math.sin(x*22+y*6)>.3)c=mixc(c,[.05,.18,.18],.7);
+    if(f.pat==='band'&&Math.sin(x*14)>.6)c=mixc(c,[0,0,0],.18);
+    if((f.pat==='spot'||f.pat==='freck')&&Math.sin(x*31)*Math.sin(z*27+y*13)>.55)c=mixc(c,[0,0,0],.3);
+    if(f.pat==='dots'&&y>.1&&Math.sin(x*40)*Math.sin(z*40)>.7)c=hex('#6fd0ff');return c});
+  return fishGeo[f.id]=upload(g)}
+function fishNode(f,L){const g=N({s:[L,L,L]}),h=f.h;
+  add(g,N({m:fishMesh(f),s:[.5,h*.5,h*.26],spec:50}));
+  for(const sg of[-1,1])add(g,mesh(G.cone,f.fin,{p:[-.6,sg*h*.13,0],r:[0,0,-Math.PI/2+sg*.55],s:[h*.2,.32,h*.05]}));
+  add(g,mesh(G.sph,f.fin,{p:[-.02,h*.46,0],s:[.3,h*.2,.02]}));add(g,mesh(G.sph,f.fin,{p:[-.2,-h*.42,0],s:[.15,h*.12,.02]}));
+  add(g,mesh(G.sph,f.fin,{p:[.22,-h*.1,0],r:[0,0,-.6],s:[.1,.03,h*.3]}));
+  for(const z of[-1,1]){const e=add(g,N({p:[.33,h*.08,z*h*.2]}));add(e,mesh(G.sph,'#c9b679',{s:[.04,.04,.025],spec:80}));add(e,mesh(G.sph,'#0d0d10',{p:[0,0,z*.012],s:[.026,.026,.018],spec:120}))}
+  return g}
+
+/* ================= game state ================= */
+let mood='',zeroT=0,landAge=0,biteAge=0,bRip=0;
+let st='idle',T=0,fish=null,fw=0,bx0=1,bz0=-3,castT=0,waitT=0,nibT=0,nib=0,biteT=0;
+let gauge=0,tens=0,clock=0,run=0,nextRun=0,heavy=false,P={};
+const TIP0=[-.95,2.7,1.5];
+let handW=[-2.1,1.1,3.0];
+function tipPos(){if(st==='aim'){const k=aimPos();return[TIP0[0]-.9*k,TIP0[1]+.15*k,TIP0[2]+1.1*k]}const bend=st==='fight'?Math.min(1,.3+tens/100*.7+(run>0?.2:0)):st==='bite'?.25:0;
+  const b=st==='fight'?bobPos():[bx0,0,bz0];return[TIP0[0]+(b[0]-TIP0[0])*bend*.12,TIP0[1]-bend*.75,TIP0[2]+(b[2]-TIP0[2])*bend*.12]}
+function bobPos(){
+  if(st==='cast'){const t=Math.min(1,castT/.9),tp=tipPos();return[lerp(tp[0],bx0,t),lerp(tp[1],wave(bx0,bz0,T),t)+Math.sin(t*Math.PI)*2.2,lerp(tp[2],bz0,t),t*6,0]}
+  let x=bx0,z=bz0,y=wave(x,z,T),rz=Math.sin(T*1.6)*.08,rx=0;
+  if(st==='wait'){const s=Math.exp(-landAge*4);y+=Math.abs(Math.sin(landAge*13))*.16*s;rz+=Math.sin(landAge*11)*.5*s;
+    y-=nib*.11;x+=Math.sin(T*42)*nib*.03;rz+=Math.sin(T*31)*nib*.35}
+  if(st==='bite'){const a=biteAge,dv=a<.12?a/.12:1;y-=dv*.16+Math.sin(a*21)*.06*dv+Math.sin(a*37+1)*.035*dv;
+    x+=(Math.sin(a*17)*.07+Math.sin(a*9.3)*.05)*dv;rz=(Math.sin(a*19)*.55+Math.sin(a*7)*.25)*dv;rx=Math.sin(a*13)*.3*dv}
+  if(st==='fight'){const k=gauge/100;x=lerp(bx0,-1.5,k*.7)+Math.sin(T*(run>0?6:1.7))*(run>0?.45:.2);z=lerp(bz0,1.5,k*.7);y=wave(x,z,T)-.16;rz=-.7+Math.sin(T*(run>0?14:4))*.25}
+  return[x,y,z,rx,rz]}
+
+/* sea life */
+let sea=[],seaT=2.5;
+function spawnSea(){const f=FISH[Math.floor(Math.random()*FISH.length)],dir=Math.random()<.5?-1:1;
+  if(Math.random()<.55){const x=rnd(-.5,5),z=rnd(-8,-1),n=fishNode(f,rnd(1.2,1.7));add(ROOT,n);sea.push({k:'jump',n,dir,x,z,t:0,dur:rnd(.9,1.3),h:rnd(1.2,2)});splash(x,0,z,6);ripple(x,z,1.2)}
+  else{const cnt=Math.random()<.35?3:1,z=rnd(-6,.5),L=rnd(1.1,1.5),v=rnd(.8,1.3);for(let i=0;i<cnt;i++){const n=fishNode(f,cnt>1?L*.75:L);add(ROOT,n);sea.push({k:'swim',n,dir,x:dir>0?-12-i*.9:12+i*.9,z:z+i*.4,t:i,v})}}}
+function flyCatch(){const b=bobPos(),n=fishNode(fish,Math.min(.9,.3+fw*.05));add(ROOT,n);sea.push({k:'catch',n,x:b[0],y:b[1],z:b[2],t:0,dur:.9})}
+function updSea(dt){seaT-=dt;if(seaT<=0){spawnSea();seaT=rnd(3.5,8)}
+  for(const o of sea){o.t+=dt;const n=o.n;
+    if(o.k==='swim'){o.x+=o.dir*o.v*dt;n.p=[o.x,-.22+Math.sin(T*2+o.t)*.04,o.z];n.r=[0,o.dir>0?0:Math.PI,Math.sin(T*6+o.t)*.08];if(Math.abs(o.x)>13)o.done=1}
+    else if(o.k==='jump'){const p=Math.min(1,o.t/o.dur);n.p=[o.x+o.dir*2.2*p,Math.sin(Math.PI*p)*o.h-.1,o.z];n.r=[0,o.dir>0?0:Math.PI,-Math.cos(Math.PI*p)*1.1*1];
+      if(p>=1){const ex=o.x+o.dir*2.2;splash(ex,0,o.z,8);ripple(ex,o.z,1.6);o.done=1}}
+    else if(o.k==='catch'){const p=Math.min(1,o.t/o.dur),to=[-3.4,1.1,3.3];n.p=[lerp(o.x,to[0],p),lerp(o.y,to[1],p)+Math.sin(Math.PI*p)*2,lerp(o.z,to[2],p)];n.r=[0,Math.PI,p*Math.PI*4];n.s=n.s.map(()=>(1-p*.6)*(n.s0||(n.s0=n.s[0])));if(p>=1)o.done=1}}
+  for(const o of sea)if(o.done){const k=ROOT.ch.indexOf(o.n);if(k>=0)ROOT.ch.splice(k,1)}
+  sea=sea.filter(o=>!o.done)}
+
+/* per-frame world sync */
+const pop=$('pop'),resist=$('resist');
+function syncWorld(){
+  updWater(T);
+  for(const c of clouds){c.p[0]+=c.v*.016;if(c.p[0]>60)c.p[0]=-60}
+  gull.p=[((T*1.1)%32)-16,5.5+Math.sin(T*1.3)*.3,-14];const fl=Math.sin(T*8)*.6;wingL.r=[fl,0,0];wingR.r=[-fl,0,0];
+  lamp.c=mixc(hex('#fff1b0'),hex('#ffffff'),(Math.sin(T*2)+1)/2);
+  for(const t of twinkles){const k=Math.max(0,Math.sin(T*2.5+t.ph));t.s=[.06*k,.1*k,.02];t.p[1]=wave(t.p[0],t.p[2],T)+.08;t.r=[0,T,0];if(k<=0.01){t.p[0]=rnd(-4,6);t.p[2]=rnd(-12,4)}}
+  tail.vis=save.log.some(r=>r.ok);
+  // angler pose
+  const happy=st==='result'&&mood==='happy',sad=st==='result'&&mood==='sad';
+  ang.p[1]=.56+(happy?Math.abs(Math.sin(T*6))*.08:0);armL.r=happy?[-2.6+Math.sin(T*6)*.2,0,.3]:[.35,0,.15];
+  body.p=[0,Math.sin(T*1.5)*.006,0];body.r=st==='fight'?[-.12,0,Math.sin(T*25)*.015]:st==='aim'?[-.08*aimPos(),0,0]:[0,0,0];
+  head.r=sad?[.35,0,0]:st==='bite'?[-.08,0,0]:[0,Math.sin(T*.7)*.15,0];
+  drawFace();
+  if(handR.mw)handW=xf(handR.mw,[0,0,0]);
+  // rod
+  const R=rod(),tp=tipPos(),dir=norm([tp[0]-handW[0],tp[1]-handW[1],tp[2]-handW[2]]),butt=[handW[0]-dir[0]*.3,handW[1]-dir[1]*.3,handW[2]-dir[2]*.3];
+  const bend=st==='fight'?Math.min(1,.3+tens/100*.7):0,ctrl=[lerp(butt[0],tp[0],.55),lerp(butt[1],tp[1],.55)+.25-bend*.2,lerp(butt[2],tp[2],.55)];
+  const pts=[];for(let j=0;j<=24;j++)pts.push(qb(butt,ctrl,tp,j/24));
+  const w=R.lw/4.5,rc=hex(R.col),stripe=hex('#ffffff');
+  setTube(rodT,pts,t=>(.03-.022*t)*w,null);rodN.c=rc;rodN.spec=60;
+  const gp=[];for(let j=0;j<=4;j++)gp.push(qb(butt,ctrl,tp,j/4*.2));setTube(gripT,gp,()=>.05*w);gripN.c=hex(R.grip);
+  goldN.vis=R.id==='pro';if(goldN.vis){const g2=pts.map((p,j)=>[p[0],p[1]+.018*w*(1-j/24),p[2]]);setTube(goldT,g2,()=>.008)}
+  for(let k=0;k<4;k++){const g=guides[k];g.vis=k<R.guides;if(g.vis){const p=qb(butt,ctrl,tp,.4+k*(.55/R.guides));g.p=[p[0],p[1]-.04,p[2]];g.c=hex(R.id==='pro'?'#ffd166':'#ffffff');g.r=[0,.55,0]}}
+  const rp=qb(butt,ctrl,tp,.12);reel.p=[rp[0],rp[1]-.1,rp[2]];reel.r=[0,.55,0];reelC.c=hex(R.reel);gem.vis=R.id==='pro';
+  tipStar.vis=false;if(tipStar.vis){const k=(Math.sin(T*4)+1)/2;tipStar.p=tp;tipStar.s=[.04+k*.05,.06+k*.08,.02];tipStar.r=[0,T*2,0]}
+  // bobber + line
+  const showB=st!=='idle'&&st!=='result'&&st!=='aim';bob.vis=lineN.vis=showB;
+  if(showB){const b=bobPos();bob.p=[b[0],b[1],b[2]];bob.r=[b[3],0,b[4]];const top=[b[0],b[1]+.2,b[2]];
+    const sag=st==='fight'?0:st==='cast'?0:.7,mid=[(tp[0]+top[0])/2,Math.min(tp[1],top[1])+(Math.max(tp[1],top[1])-Math.min(tp[1],top[1]))*.3-sag*.5,(tp[2]+top[2])/2];
+    const lp=[];for(let j=0;j<=20;j++)lp.push(qb(tp,mid,top,j/20));const tc=st==='fight'?tens/100:0;setTube(lineT,lp,()=>.009+tc*.006);lineN.c=[1,1-tc*.65,1-tc*.6]}
+  // fish shadow
+  fshadow.vis=(st==='bite'||st==='fight')&&!!fish;if(fshadow.vis){const b=bobPos(),L=Math.min(1.6,.4+fw*.08);fshadow.p=[b[0]+(st==='fight'?Math.sin(T*3)*L*.4:L*.3),-.32,b[2]+.1];fshadow.s=[L*.5,.02,L*.16];fshadow.r=[0,st==='fight'?Math.sin(T*2)*.5:.3,0]}
+  // ripples & drops
+  ripPool.forEach((n,k)=>{const r=ripples[k];n.vis=!!r;if(r){n.p=[r.x,wave(r.x,r.z,T)+.02,r.z];n.s=[r.r*r.s,1,r.r*r.s];n.a=r.a}});
+  dropPool.forEach((n,k)=>{const d=drops[k];n.vis=!!d;if(d){n.p=[d.x,d.y,d.z];n.a=d.a}});
+  // DOM overlays
+  if(st==='bite'){const s=toScreen([bx0,1.05,bz0]);pop.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%) scale(${1+Math.sin(T*18)*.08})`;pop.hidden=false}else pop.hidden=true;
+  if(st==='fight'&&run>0){const b=bobPos(),s=toScreen([b[0],b[1]+.7,b[2]]);resist.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;resist.hidden=false}else resist.hidden=true;
+}
+
+/* ---------- game ---------- */
+/* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
+const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
+let aimT=0,aimZ=.75,grade='good';
+const tierIx=f=>f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
+const aimPos=()=>{const u=(aimT/.7)%2;return u<1?u:2-u};
+function pickFish(g){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)];
+  const tot=FISH.reduce((s,f)=>s+wt(f),0);let r=Math.random()*tot;
+  for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
+}
+function startAim(){$('res').classList.remove('on');st='aim';aimT=rnd(0,.7);aimZ=rnd(.58,.9);
+  const z=$('aimz');for(const k of['good','great','perfect']){const e=z.querySelector('.'+k),w=GRADES[k].w;e.style.left=((aimZ-w)*100)+'%';e.style.width=(w*200)+'%'}}
+function cast(){
+  const d=Math.abs(aimPos()-aimZ);grade=d<=GRADES.perfect.w?'perfect':d<=GRADES.great.w?'great':d<=GRADES.good.w?'good':'miss';
+  const G0=GRADES[grade],gEl=$('grade');gEl.textContent=G0.lab;gEl.style.color=G0.col;gEl.classList.remove('show');void gEl.offsetWidth;gEl.classList.add('show');
+  if(grade==='perfect')buzz([20,30,20]);
+  fish=pickFish(grade);fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),1.8)).toFixed(2);
+  const far=grade==='perfect'?1:grade==='great'?.7:grade==='good'?.4:.1;
+  bx0=rnd(-.2,2.8);bz0=lerp(-1.4,-4.6,far)+rnd(-.4,.4);castT=0;st='cast';waitT=rnd(2.2,6.5);nibT=rnd(.6,1.4);nib=0;
+}
+function startFight(){
+  st='fight';heavy=fw>=2;gauge=0;zeroT=0;tens=0;clock=0;run=0;nextRun=rnd(1.2,2.6);
+  const R=rod();P=heavy?{drain:5+fw*1.4,up:34*R.up,tr:(6+fw*2.5)*R.tr*(fw>R.max?1.2:1)}:{drain:5+fw*2.5,up:27.5*R.up,tr:0};
+  const b=bobPos();splash(b[0],b[1],b[2],10);ripple(b[0],b[2],2);buzz(40);
+}
+let holding=false;
+const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+function feel(w){return w<1?'가벼운 손맛':w<2?'제법 묵직함':w<5?'무거운 고기!':w<9?'엄청난 힘!':'괴물급 손맛!!'}
+
+function finish(ok,kind){
+  st='result';holding=false;mood=ok?'happy':'sad';
+  const f=fish,len=Math.round(f.c*Math.cbrt(fw)),t=tier(f);
+  let html='';
+  if(ok){
+    const pts=Math.round(fw*10*Math.sqrt(20/f.rar));
+    const d=save.dex[f.id]||{n:0,best:0};const rec=fw>d.best;
+    d.n++;if(rec)d.best=fw;save.dex[f.id]=d;const prev=save.pts;save.pts+=pts;
+    const unl=RODS.filter(r=>prev<r.need&&save.pts>=r.need);
+    save.log.unshift({id:f.id,w:fw,l:len,ok:1,t:Date.now()});
+    html=`<h3>${esc(f.name)} 낚았다!</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · ${len}cm</p><p><span style="color:${t[1]}">●</span> ${t[0]} · +${pts}점 · 캐스팅 <b style="color:${GRADES[grade].col}">${GRADES[grade].ko}</b></p>${rec&&d.n>1?'<span class="badge">개인 최고 기록!</span>':d.n===1?'<span class="badge">도감 신규 등록!</span>':''}${unl.map(r=>`<p class="unl">${r.name} 해금! 상점에서 장착하세요</p>`).join('')}`;
+    const b=bobPos();splash(b[0],b[1],b[2],18);ripple(b[0],b[2],2.2);flyCatch();buzz([30,40,30]);
+  }else{
+    const msg={miss:['미끼만 털렸어요','느낌표가 뜨면 바로 챔질하세요.'],early:['너무 일찍 챔질했어요','찌가 흔들리는 건 탐색 입질. 느낌표를 기다리세요.'],escape:['바늘이 빠졌어요','게이지가 0%인 채로 1.5초가 지났어요. 저항이 끝나면 바로 다시 감으세요.'],break:['줄이 끊어졌어요!','장력이 한계를 넘었어요. 저항할 땐 잠시 멈추세요.'],tired:['시간 초과','고기를 끌어내지 못했어요.']}[kind];
+    const seen=kind!=='early'&&kind!=='miss';
+    if(seen)save.log.unshift({id:f.id,w:fw,l:len,ok:0,t:Date.now(),k:kind});
+    html=`<h3>${msg[0]}</h3>${seen?`<canvas id="rc"></canvas><p class="stat">놓친 고기: ${esc(f.name)} 약 ${fw.toFixed(1)}kg</p>`:''}<p>${msg[1]}</p>${seen&&fw>rod().max?`<p>${rod().name} 권장 무게(${rod().max}kg)를 넘는 대물이었어요. 상점에서 더 좋은 낚시대를 노려보세요.</p>`:''}`;
+    if(kind==='break')buzz(120);
+    if(!seen)fish=null;
+  }
+  save.log=save.log.slice(0,20);store();
+  const r=$('res');r.innerHTML=html+'<p class="close">화면을 터치하면 닫혀요</p>';r.classList.add('on');
+  const rc=$('rc');if(rc)fishCanvas(rc,f,!ok,220,100);
+  renderSide();
+}
+
+function update(dt){
+  updSea(dt);
+  for(const r of ripples){r.r+=dt*1.1;r.a-=dt*.7}ripples=ripples.filter(r=>r.a>0).slice(-24);
+  for(const d of drops){d.x+=d.vx*dt;d.y+=d.vy*dt;d.z+=d.vz*dt;d.vy-=9*dt;d.a-=dt*1.2}drops=drops.filter(d=>d.a>0&&d.y>-.3).slice(-60);
+  nib=Math.max(0,nib-dt*2.5);
+  if(st==='aim')aimT+=dt;
+  if(st==='cast'){castT+=dt;if(castT>=.9){st='wait';landAge=0;ripple(bx0,bz0,1.6);splash(bx0,0,bz0,6)}}
+  else if(st==='wait'){
+    landAge+=dt;waitT-=dt;nibT-=dt;
+    if(nibT<=0){nib=rnd(.5,.9);ripple(bx0,bz0,.7);nibT=Math.random()<.35?rnd(.15,.3):rnd(.7,1.8)}
+    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=Math.max(.75,1.25-fw*.03);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(60)}
+  }else if(st==='bite'){biteAge+=dt;bRip-=dt;if(bRip<=0){const b=bobPos();ripple(b[0],b[2],1.2+Math.random());if(Math.random()<.4)splash(b[0],0,b[2],3);bRip=rnd(.1,.2)}biteT-=dt;if(biteT<=0)finish(false,'miss')}
+  else if(st==='fight'){
+    clock+=dt;
+    if(heavy){
+      if(run>0){run-=dt;if(run<=0)nextRun=rnd(1.2,2.8)}
+      else{nextRun-=dt;if(nextRun<=0){run=rnd(.6,1.2)+fw*.03;const b=bobPos();ripple(b[0],b[2],1.8);splash(b[0],0,b[2],5);buzz(25)}}
+    }
+    if(holding){gauge+=P.up*(run>0?.5:1)*dt;if(heavy)tens+=(P.tr*(run>0?2.2:1)-15)*dt}else tens-=45*dt;
+    tens=Math.max(0,tens);gauge=Math.max(0,gauge-P.drain*(run>0?1.8:1)*dt);zeroT=gauge<=0?zeroT+dt:0;
+    if(gauge>=100)finish(true);
+    else if(zeroT>=1.5)finish(false,'escape');
+    else if(tens>=100)finish(false,'break');
+    else if(clock>=LIMIT)finish(false,'tired');
+  }
+}
+
+const act=$('act'),hint=$('hint');
+function hud(){
+  const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
+  const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중… (떼면 멈춤)':'꾹 눌러서 감기'}[st];
+  if(act.textContent!==lab)act.textContent=lab;
+  act.className=st==='result'?'':st;
+  const h={idle:'START를 눌러 캐스팅하세요',aim:'표시가 금색 칸에 올 때 누르면 귀한 고기가 와요!',cast:'휘익—',wait:'찌를 지켜보세요… 느낌표가 뜨면 챔질!',bite:'입질! 지금 챔질!',result:ok=>''}[st];
+  if(st==='fight')hint.textContent=(heavy?(run>0?'저항 중! 손을 떼고 장력을 낮추세요':'꾹 눌러 감되, 장력이 높으면 떼세요'):'꾹 누르고 있으면 감겨요')+' · '+feel(fw);
+  else if(st==='result')hint.textContent=$('res').classList.contains('on')?'':'다시 던지기를 눌러 캐스팅하세요';
+  else hint.textContent=h;
+  const g=st==='fight'?gauge:st==='result'&&$('res').classList.contains('on')?0:0;
+  $('gbar').firstElementChild.style.width=g+'%';$('gval').textContent=Math.round(g)+'%';
+  const tOn=st==='fight'&&heavy;
+  $('trow').classList.toggle('off',!tOn);$('trow').classList.toggle('warn',tOn&&tens>70);
+  $('tbar').firstElementChild.style.width=(tOn?Math.min(100,tens):0)+'%';$('tval').textContent=tOn?Math.round(tens)+'%':st==='fight'?'여유':'–';
+  const cOn=st==='fight';$('crow').classList.toggle('off',!cOn);
+  $('cbar').firstElementChild.style.width=(cOn?(1-clock/LIMIT)*100:0)+'%';$('cval').textContent=cOn?Math.ceil(LIMIT-clock)+'초':'–';
+}
+
+function press(){
+  if(st==='idle'||st==='result')startAim();
+  else if(st==='aim')cast();
+  else if(st==='wait')finish(false,'early');
+  else if(st==='bite')startFight();
+  else if(st==='fight')holding=true;
+}
+const down=()=>{press();if(st==='fight')holding=true};
+const up=()=>{holding=false};
+act.addEventListener('pointerdown',e=>{e.preventDefault();try{act.setPointerCapture(e.pointerId)}catch(_){}down()});
+act.addEventListener('pointerup',up);window.addEventListener('pointerup',up);
+window.addEventListener('blur',up);
+act.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('keydown',e=>{if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();down()}});
+document.addEventListener('keyup',e=>{if(e.code==='Space'||e.key==='Enter')up()});
+
+/* ---------- side panels ---------- */
+function renderSide(){
+  $('pts').textContent=save.pts.toLocaleString('ko-KR');
+  const cur=rod();$('rodName').textContent=cur.name;$('rodMax').textContent=cur.max;
+  $('shop').innerHTML=RODS.map(r=>{const own=save.pts>=r.need,on=r.id===cur.id;
+    return `<div class="rod${on?' on':''}${own?'':' lock'}"><canvas data-rod="${r.id}"></canvas><b>${r.name}</b><small>${r.desc}</small>
+    <ul><li>권장 무게<span>${r.max}kg 이하</span></li><li>감기 속도<span>×${r.up.toFixed(2)}</span></li><li>줄 장력 부담<span>${r.tr===1?'기본':'−'+Math.round((1-r.tr)*100)+'%'}</span></li></ul>
+    <button type="button" data-eq="${r.id}" ${on||!own?'disabled':''}>${on?'장착 중':own?'장착하기':`${r.need.toLocaleString('ko-KR')}점 필요 · ${(r.need-save.pts).toLocaleString('ko-KR')}점 남음`}</button></div>`}).join('');
+  for(const cv2 of $('shop').querySelectorAll('canvas')){const R=RODS.find(x=>x.id===cv2.dataset.rod),d=devicePixelRatio||1;cv2.width=200*d;cv2.height=80*d;const k=cv2.getContext('2d');k.scale(d,d);drawRod(k,22,62,95,38,180,16,R,1.6,1.6)}
+  $('dex').innerHTML=FISH.map(f=>{const d=save.dex[f.id],t=tier(f);
+    return `<div class="card"><canvas data-id="${f.id}"></canvas><b>${d?esc(f.name):'???'}</b><small>${d?`${d.n}마리 · 최고 ${d.best.toFixed(2)}kg`:`${f.min}–${f.max}kg`}</small><span class="tag" style="color:${t[1]}">${t[0]}</span></div>`}).join('');
+  for(const c of $('dex').querySelectorAll('canvas')){const f=FISH.find(x=>x.id===c.dataset.id);fishCanvas(c,f,!save.dex[f.id],120,56)}
+  $('log').innerHTML=save.log.length?save.log.slice(0,8).map(r=>{const f=FISH.find(x=>x.id===r.id);if(!f)return'';const tm=new Date(r.t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    return `<li class="${r.ok?'':'lost'}"><span>${r.ok?'🐟':'💨'} ${esc(f.name)} ${r.w.toFixed(2)}kg${r.ok?` · ${r.l}cm`:' 놓침'}</span><span>${tm}</span></li>`}).join(''):'<li class="empty">아직 조과가 없어요. 첫 캐스팅을 해보세요!</li>';
+}
+let armed=false;
+$('reset').addEventListener('click',e=>{
+  if(!armed){armed=true;e.target.textContent='한 번 더 누르면 초기화';setTimeout(()=>{armed=false;e.target.textContent='기록 초기화'},2500);return}
+  save={pts:0,dex:{},log:[],rod:'basic'};store();renderSide();armed=false;e.target.textContent='기록 초기화';
+});
+$('shop').addEventListener('click',e=>{const b=e.target.closest('[data-eq]');if(!b||b.disabled)return;const r=RODS.find(x=>x.id===b.dataset.eq);if(save.pts<r.need)return;save.rod=r.id;store();renderSide()});
+stage.addEventListener('pointerdown',()=>{const r=$('res');if(r.classList.contains('on')){r.classList.remove('on');hint.textContent=''}});
+renderSide();
+
+if(!gl){hint.textContent='이 기기에서는 3D 화면을 열 수 없어요';}
+let last=performance.now();
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;update(dt);if(gl){syncWorld();render()}hud();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+}
+</script>
+</body>
