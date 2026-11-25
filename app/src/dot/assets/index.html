@@ -149,7 +149,7 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .rod{background:#fff;border-radius:22px;padding:12px 14px 14px;box-shadow:0 4px 0 #a9d8f2;border:3px solid transparent;display:flex;flex-direction:column}
 .rod.on{border-color:#ffd166;box-shadow:0 4px 0 #f2c66d}
 .rod.lock canvas{filter:grayscale(.9) opacity(.5)}
-.rod canvas{width:200px;height:80px;max-width:100%;display:block;margin:0 auto 4px}
+.rod canvas{width:216px;height:87px;max-width:100%;display:block;margin:0 auto 4px}
 .rod b{font-family:Jua,sans-serif;font-weight:400;font-size:20px}
 .rod small{color:var(--mute);font-size:13px}
 .rod ul{list-style:none;margin:8px 0 12px;padding:0;font-size:14px;display:grid;gap:2px}
@@ -356,10 +356,10 @@ function drawFish(c,x,y,L,f,sil){
 function fishCanvas(cv,f,sil,w,h){const k=4,pw=Math.round(w/k),ph=Math.round(h/k);cv.width=pw;cv.height=ph;cv.style.imageRendering='pixelated';const c=cv.getContext('2d');c.imageSmoothingEnabled=false;const sp=fishSprite(f,pw*.8,sil);c.drawImage(sp,Math.round((pw-sp.width)/2),Math.round((ph-sp.height)/2))}
 
 const RODS=[
- {id:'basic',name:'일반 낚시대',need:0,max:8,up:1,tr:1,col:'#3a3d42',lw:4.5,guides:0,reel:'#c9ccd1',grip:'#232323',desc:'기본 유리섬유 낚시대'},
- {id:'beg',name:'초급 낚시대',need:150,max:10,up:1.15,tr:.85,col:'#2f5a46',lw:4.8,guides:2,reel:'#b8bcc2',grip:'#2a2a2a',desc:'녹색 도장, 가이드 2개'},
- {id:'mid',name:'중급 낚시대',need:500,max:13,up:1.35,tr:.7,col:'#1f3a5c',lw:5.2,guides:3,reel:'#dfe3e8',grip:'#b8875a',desc:'코르크 손잡이와 은빛 릴'},
- {id:'pro',name:'고급 낚시대',need:1000,max:17,up:1.7,tr:.45,col:'#1a1b20',lw:5.6,guides:4,reel:'#c9a54a',grip:'#3a2a1a',desc:'카본 몸체, 금장 장식, 고급 릴'}
+ {id:'basic',name:'일반 낚시대',need:0,max:8,up:1,tr:1,col:'#3a3d42',lw:4.5,guides:0,reel:'#c9ccd1',grip:'#232323',desc:'크림색 유리섬유 몸체, 검정 손잡이'},
+ {id:'beg',name:'초급 낚시대',need:150,max:10,up:1.15,tr:.85,col:'#2f5a46',lw:4.8,guides:2,reel:'#b8bcc2',grip:'#2a2a2a',desc:'블루 메탈릭 몸체, 노란 초릿대'},
+ {id:'mid',name:'중급 낚시대',need:500,max:13,up:1.35,tr:.7,col:'#1f3a5c',lw:5.2,guides:3,reel:'#dfe3e8',grip:'#b8875a',desc:'레드 카본 몸체, 코르크 손잡이'},
+ {id:'pro',name:'고급 낚시대',need:1000,max:17,up:1.7,tr:.45,col:'#1a1b20',lw:5.6,guides:4,reel:'#c9a54a',grip:'#3a2a1a',desc:'블랙 카본에 금장 감기, 골드 릴'}
 ];
 const rod=()=>RODS.find(r=>r.id===save.rod)||RODS[0];
 function drawRod(c,x0,y0,cx,cy,x1,y1,R,s,t){
@@ -376,6 +376,42 @@ function drawRod(c,x0,y0,cx,cy,x1,y1,R,s,t){
     const tw=(Math.sin(t*4)+1)/2,r=(2+tw*3)*s;c.fillStyle='#fff6c0';c.beginPath();c.moveTo(x1,y1-r*2);c.lineTo(x1+r*.5,y1-r*.5);c.lineTo(x1+r*2,y1);c.lineTo(x1+r*.5,y1+r*.5);c.lineTo(x1,y1+r*2);c.lineTo(x1-r*.5,y1+r*.5);c.lineTo(x1-r*2,y1);c.lineTo(x1-r*.5,y1-r*.5);c.fill()}
   if(R.id==='mid'){const p=P(.18);c.fillStyle='#c9a54a';c.beginPath();c.arc(p.x,p.y,2.5*s,0,7);c.fill()}
 }
+/* ---------- pixel rods: one look per tier ---------- */
+const ROD_SKIN={
+  basic:{name:'유리섬유',th:2,blank:['#e6dfc6','#fffaf0','#b3ab8f'],grip:['#2b2b2b','#3d3d3d'],gripLen:.15,wrap:'#2f6f4f',guide:'#c9ccd1',guides:2,tip:'#e0453a',reel:{body:'#b8bcc2',dark:'#6c7178',spool:'#e7e9ec',knob:'#2b2b2b'},cap:'#2b2b2b'},
+  beg:{name:'블루 메탈릭',th:2,blank:['#2f8fd0','#8fd0f6','#1d5f91'],grip:['#1f2228','#2f3440'],gripLen:.16,wrap:'#8fd0f6',guide:'#e6e8ea',guides:3,tip:'#ffd23f',reel:{body:'#e9eef3',dark:'#2f8fd0',spool:'#1d5f91',knob:'#2f8fd0'},cap:'#2f8fd0',band:'#8fd0f6'},
+  mid:{name:'레드 카본',th:3,blank:['#c23a2e','#f07a62','#7a1f18'],grip:['#c89a62','#a87a46'],gripLen:.17,cork:true,wrap:'#1b1f2b',guide:'#f2f3f5',guides:4,tip:'#fff7ec',reel:{body:'#d9dde2',dark:'#7d838b',spool:'#c23a2e',knob:'#1b1f2b'},cap:'#1b1f2b',band:'#d9dde2'},
+  pro:{name:'골드 카본',th:3,blank:['#1e2026','#4a4f5a','#0f1014'],weave:'#30343d',grip:['#5a2e1e','#7a4128'],gripLen:.18,wrap:'#ffd23f',guide:'#ffd23f',guides:5,tip:'#ffd23f',reel:{body:'#e3b53c',dark:'#8a6416',spool:'#1e2026',knob:'#fff3b0'},cap:'#ffd23f',band:'#ffd23f',sparkle:true}};
+function drawRodPx(c,a,b,d,R,t,spin,big,flip){
+  const S=ROD_SKIN[R.id]||ROD_SKIN.basic,add=big?1:0;
+  // sample the curve densely
+  let L=0,prev=a;for(let i=1;i<=20;i++){const q=qb(a,b,d,i/20);L+=Math.hypot(q[0]-prev[0],q[1]-prev[1]);prev=q}
+  const n=Math.max(20,Math.round(L*2.2)),pts=[];for(let i=0;i<=n;i++){const tt=i/n,p=qb(a,b,d,tt),p2=qb(a,b,d,Math.min(1,tt+.01)),p1=qb(a,b,d,Math.max(0,tt-.01));let tx=p2[0]-p1[0],ty=p2[1]-p1[1];const l=Math.hypot(tx,ty)||1;tx/=l;ty/=l;let nx=-ty,ny=tx;if(ny<0){nx=-nx;ny=-ny}pts.push({t:tt,x:p[0],y:p[1],nx,ny})}
+  const guideT=[];for(let i=0;i<S.guides;i++)guideT.push(.34+i*(.6/S.guides));
+  c.fillStyle='#14202c';for(const p of pts){const tt=p.t,th=(tt<S.gripLen?S.th+1:Math.max(1,Math.round(S.th*(1-tt)+.6*tt)))+(tt<.7?add:0)+2;c.fillRect(Math.round(p.x)-Math.floor(th/2),Math.round(p.y)-Math.floor(th/2),th,th)}
+  for(let i=0;i<pts.length;i++){const p=pts[i],tt=p.t;
+    const th=(tt<S.gripLen?S.th+1:Math.max(1,Math.round(S.th*(1-tt)+.6*tt)))+(tt<.7?add:0);
+    let col,hi=null,sh=null;
+    if(tt<.012){col=S.cap}
+    else if(tt<S.gripLen){col=S.cork?(((i*7)%5===0)?S.grip[1]:S.grip[0]):((i>>1)%3===0?S.grip[1]:S.grip[0]);hi=null}
+    else if(tt<S.gripLen+.02&&S.band){col=S.band}
+    else if(tt>.985){col=S.tip}
+    else{col=S.blank[0];hi=S.blank[1];sh=S.blank[2];if(S.weave&&((i+Math.round(p.x))&1))col=S.weave}
+    if(guideT.some(g=>Math.abs(tt-g)<.012))col=S.wrap;
+    const o=Math.floor(th/2);c.fillStyle=col;c.fillRect(Math.round(p.x)-o,Math.round(p.y)-o,th,th);
+    if(hi&&th>=2){c.fillStyle=hi;c.fillRect(Math.round(p.x-p.nx*o),Math.round(p.y-p.ny*o),1,1)}
+    if(sh&&th>=3){c.fillStyle=sh;c.fillRect(Math.round(p.x+p.nx*o),Math.round(p.y+p.ny*o),1,1)}}
+  // guides hang below the blank
+  for(const g of guideT){const p=pts[Math.round(g*n)],r=g<.6?2:1;for(let k=1;k<=r+1;k++)px(c,p.x+p.nx*(k+1),p.y+p.ny*(k+1),1,1,S.guide);if(r>1)px(c,p.x+p.nx*(r+2)+(p.ny>0?1:0),p.y+p.ny*(r+2),1,1,S.guide)}
+  // reel under the grip
+  {const p=pts[Math.round(S.gripLen*.7*n)],sg=flip?-1:1,rx=Math.round(p.x+p.nx*4*sg),ry=Math.round(p.y+p.ny*4*sg),Rl=S.reel;
+    px(c,p.x+p.nx*2*sg,p.y+p.ny*2*sg,1,2,Rl.dark);
+    px(c,rx-2,ry-1,5,4,Rl.body);px(c,rx-2,ry-1,5,1,Rl.spool);px(c,rx-3,ry,1,2,Rl.dark);px(c,rx+3,ry,1,2,Rl.dark);px(c,rx-1,ry+1,3,1,Rl.dark);
+    const ang=spin?t*18:0.8,hx=rx+4+Math.round(Math.cos(ang)*2),hy=ry+1+Math.round(Math.sin(ang)*2);px(c,rx+3,ry+1,1,1,Rl.dark);pline(c,rx+3,ry+1,hx,hy,Rl.dark);px(c,hx,hy,2,2,Rl.knob)}
+  // tip sparkle for the top rod
+  if(S.sparkle){const tw=(Math.sin(t*4)+1)/2;if(tw>.35){const r=tw>.75?2:1;c.fillStyle='#fff6c0';c.fillRect(Math.round(d[0])-r,Math.round(d[1]),r*2+1,1);c.fillRect(Math.round(d[0]),Math.round(d[1])-r,1,r*2+1)}}
+  return pts}
+
 /* ================= pixel-art (도트) renderer — first-person view ================= */
 const cv=$('cv'),stage=$('stage');const gl=true;
 const ctx=cv.getContext('2d');
@@ -580,14 +616,7 @@ function drawFrame(c,w,h,t,menu){
   // line
   if(showB){const tc=!menu&&st==='fight'?tens/100:0,lc=`rgba(255,${Math.round(255-tc*170)},${Math.round(255-tc*150)},.85)`;
     const sag=(st==='fight'&&!menu)?0:Math.max(4,(bq[1]-tip[1])*.15);pcurve(c,tip,[(tip[0]+bq[0])/2,Math.max(tip[1],bq[1])+sag*.2],[bq[0],bq[1]-Math.max(2,sc*.3)],lc,22)}
-  const rc=R.col==='#1a1b20'?'#2b2c33':R.col;
-  pcurve(c,hand,ctrl,tip,rc,18);
-  // thicker butt section near the hands
-  {const n=18;let p=hand;for(let i=1;i<=n*.5;i++){const q=qb(hand,ctrl,tip,i/n);pline(c,p[0]+1,p[1],q[0]+1,q[1],rc);if(i<4)pline(c,p[0]-1,p[1],q[0]-1,q[1],rc);p=q}}
-  if(R.id==='pro'){let p=hand;for(let i=1;i<=18;i+=2){const q=qb(hand,ctrl,tip,i/18);px(c,q[0],q[1],1,1,PAL.yel);p=q}}
-  for(let i=0;i<R.guides;i++){const q=qb(hand,ctrl,tip,.4+i*.5/R.guides);px(c,q[0]-1,q[1]+1,2,1,'#e6e8ea')}
-  // reel
-  {const q=qb(hand,ctrl,tip,.08);px(c,q[0]+2,q[1]+1,4,4,R.reel);px(c,q[0]+3,q[1]+2,2,2,'#555b63');const sp=!menu&&st==='fight'&&Math.sin(T*20)>0;px(c,q[0]+6,q[1]+(sp?1:3),2,1,'#e6e8ea')}
+  drawRodPx(c,hand,ctrl,tip,R,T,!menu&&st==='fight'&&holding,true,true);
   drawHands(c,w,h,hand,R.grip,happy,qb(hand,ctrl,tip,.16));
   // bobber
   if(showB){const s=Math.max(1,Math.round(sc*.09)),x=Math.round(bq[0]),y=Math.round(bq[1]);
@@ -748,7 +777,7 @@ function renderSide(){
     return `<div class="rod${on?' on':''}${own?'':' lock'}"><canvas data-rod="${r.id}"></canvas><b>${r.name}</b><small>${r.desc}</small>
     <ul><li>권장 무게<span>${r.max}kg 이하</span></li><li>감기 속도<span>×${r.up.toFixed(2)}</span></li><li>줄 장력 부담<span>${r.tr===1?'기본':'−'+Math.round((1-r.tr)*100)+'%'}</span></li></ul>
     <button type="button" data-eq="${r.id}" ${on||!own?'disabled':''}>${on?'장착 중':own?'장착하기':`${r.need.toLocaleString('ko-KR')}점 필요 · ${(r.need-save.pts).toLocaleString('ko-KR')}점 남음`}</button></div>`}).join('');
-  for(const cv2 of $('shop').querySelectorAll('canvas')){const R=RODS.find(x=>x.id===cv2.dataset.rod);cv2.width=50;cv2.height=20;cv2.style.imageRendering='pixelated';const k=cv2.getContext('2d');k.imageSmoothingEnabled=false;k.scale(.25,.25);drawRod(k,22,62,95,38,180,16,R,1.6,1.6);const im=k.getImageData(0,0,50,20),dd=im.data;for(let i=3;i<dd.length;i+=4)dd[i]=dd[i]<90?0:255;k.putImageData(im,0,0)}
+  for(const cv2 of $('shop').querySelectorAll('canvas')){const R=RODS.find(x=>x.id===cv2.dataset.rod);cv2.width=72;cv2.height=29;cv2.style.imageRendering='pixelated';const k=cv2.getContext('2d');k.imageSmoothingEnabled=false;k.clearRect(0,0,72,29);drawRodPx(k,[5,23],[34,15],[68,5],R,1.2,false)}
   if(typeof renderMenu==='function')renderMenu();
   $('dex').innerHTML=FISH.map(f=>{const d=save.dex[f.id],t=tier(f);
     return `<div class="card"><canvas data-id="${f.id}"></canvas><b>${d?esc(f.name):'???'}</b><small>${d?`${d.n}마리 · 최고 ${d.best.toFixed(2)}kg`:`${f.min}–${f.max}kg`}</small><span class="tag" style="color:${t[1]}">${t[0]}</span></div>`}).join('');
