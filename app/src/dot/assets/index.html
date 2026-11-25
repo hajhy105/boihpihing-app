@@ -104,6 +104,8 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .upbtn{width:100%;background:#7a4fd0!important}.lvb{font-style:normal;color:#7a4fd0}
 .rod.flash-ok{animation:fok .7s}.rod.flash-ng{animation:fng .5s}@keyframes fok{0%,100%{background:#fff}40%{background:#fff4c2}}@keyframes fng{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .wxsel{min-width:96px;min-height:40px;font:17px Jua,sans-serif;border:3px solid #1b1f2b;background:#fff;padding:0 6px}
+.adretry{display:block;margin:10px auto 2px;padding:10px 14px;background:#7a4fd0;color:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;font:17px Jua,sans-serif;cursor:pointer}
+body.has-banner .menu{padding-bottom:70px}body.has-banner .sheet-in{padding-bottom:80px}
 .modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .okbtn{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;cursor:pointer}
 .howto{cursor:pointer}
@@ -254,6 +256,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div class="shop" id="shop"></div>
     <h2>코인 아이템 <small class="dexcount">보유 코인 <b id="shopCoins">0</b></small></h2>
     <div class="items" id="items"></div>
+    <div class="items" id="adShop" hidden></div>
     <h2>미끼·채비 <small class="dexcount">던지기 전에 위쪽 미끼 칩을 눌러 바꿔요</small></h2>
     <div class="items" id="baitShop"></div>
   </div>
@@ -288,6 +291,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div class="setrow"><span>🌦️ 실제 날씨</span><button id="tgRealWx" class="tg" type="button"></button></div>
     <div class="setrow"><span>📍 날씨 지역</span><select id="wxRegion" class="wxsel"></select></div>
     <p class="mhelp" id="wxInfo" style="margin:8px 0 0"></p>
+    <button type="button" id="adPrivacy" class="okbtn" style="margin-top:10px;width:100%" hidden>광고 개인정보 설정</button>
     <p class="mhelp" style="margin:4px 0 0;font-size:11.5px">날씨 데이터: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0)</p>
     <div class="modal-btns"><button type="button" id="setClose" class="okbtn">닫기</button></div>
   </div>
@@ -1146,7 +1150,7 @@ function finish(ok,kind){
   st='result';holding=false;mood=ok?'happy':'sad';resT=T;
   const f=fish,len=Math.round(f.c*Math.cbrt(fw)),t=tier(f);
   let html='';
-  if(ok){
+  if(ok){retryInfo=null;
     const pts=Math.round(Math.min(fw,30)*10*Math.sqrt(20/f.rar));
     const coin=fw<2?1+Math.floor(Math.random()*4):fw<5?5+Math.floor(Math.random()*10):15+Math.floor(Math.random()*(Math.round(Math.min(fw,40)*2)+1));save.coins+=coin;
     const d=save.dex[f.id]||{n:0,best:0};const rec=fw>d.best;
@@ -1161,6 +1165,7 @@ function finish(ok,kind){
     if(seen)save.log.unshift({id:f.id,w:fw,l:len,ok:0,t:Date.now(),k:kind});
     html=`<h3>${msg[0]}</h3>${seen?`<canvas id="rc"></canvas><p class="stat">놓친 고기: ${esc(f.name)} 약 ${fw.toFixed(1)}kg</p>`:''}<p>${msg[1]}</p>${seen&&fw>rod().max?`<p>${rod().name} 권장 무게(${rod().max}kg)를 넘는 대물이었어요. 상점에서 더 좋은 낚시대를 노려보세요.</p>`:''}`;
     if(kind==='break'||kind==='snag'){buzz(120);sfx.snap();const B=bait();if(B.lure){save.baits[B.id]=Math.max(0,save.baits[B.id]-1);const left=save.baits[B.id];if(left<=0)save.bait='krill';setTimeout(()=>toast(`${B.ico} 줄이 끊어지며 ${B.name}을(를) 잃어버렸어요${left>0?` (남은 ${left}개)`:' — 크릴로 바꿨어요'}`,3600),700);renderWX()}}else sfx.fail();
+    if(seen&&['escape','break','snag','tired'].includes(kind)&&ADS()&&!tripEnd){retryInfo={fish:f,fw,bx0,bz0};html+=`<button type="button" id="adRetry" class="adretry">📺 광고 보고 한 번 더 걸기</button>`}else retryInfo=null;
     if(!seen)fish=null;
   }
   save.log=save.log.slice(0,20);store();tripCheck();
@@ -1304,7 +1309,7 @@ function renderMenu(){
     <b>투시 안경</b><p>쓰는 순간 바닷속이 훤히 보여요. 물고기 이름과 무게를 보고 <b style="font:inherit;color:#1f8fa6">원하는 물고기 위로 던지면</b> 그 고기가 물어요. 1번 던지면 끝나고, 챔질 시간도 <b style="font:inherit;color:#1f8fa6">${XRAY.bite}배</b> 넉넉해져요.</p>
     <p>가격 ${XRAY.price}코인 · 보유 ${save.items.xray}개</p>
     <button class="buy" type="button" id="buyXray" ${save.coins>=XRAY.price?'':'disabled'}>${save.coins>=XRAY.price?`${XRAY.price}코인으로 사기`:`코인이 부족해요 (${XRAY.price-save.coins}코인 더 필요)`}</button></div>`;
-  renderBaitShop();renderWX();renderQuest();renderSpot();
+  renderBaitShop();renderWX();renderQuest();renderSpot();renderAdShop();
   $('nickChip').textContent=nick();$('dexCount').textContent=`${Object.keys(save.dex).length}/${FISH.length}종`;$('shopPts').textContent=save.pts.toLocaleString('ko-KR');
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
 }
@@ -1314,7 +1319,7 @@ function renderSetWx(){const b=$('tgRealWx');b.textContent=save.wxSet.real?'켜�
   $('wxInfo').textContent=!save.wxSet.real?'게임 날씨(30분마다 바뀜)를 쓰고 있어요.':realFresh()?`${wxRegion().name}: ${WEATHERS[WX_REAL.id].ico} ${WEATHERS[WX_REAL.id].name} · ${WX_REAL.temp}°C · 바람 ${WX_REAL.wind}m/s${WX_REAL.wave?` · 파고 ${WX_REAL.wave}m`:''} (${new Date(WX_REAL.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준)`:wxFetching?'날씨를 불러오는 중…':'인터넷에 연결되면 실제 날씨를 불러와요. 그전까지는 게임 날씨를 써요.'}
 $('tgRealWx').addEventListener('click',()=>{save.wxSet.real=!save.wxSet.real;store();if(save.wxSet.real)fetchRealWx(true);tickWorld();renderSetWx();sfx.click()});
 $('wxRegion').addEventListener('change',e=>{save.wxSet.region=e.target.value;WX_REAL=null;store();fetchRealWx(true);tickWorld();renderSetWx()});
-function openSet(){renderSet();renderSetWx();$('setModal').hidden=false}
+function openSet(){renderSet();renderSetWx();try{$('adPrivacy').hidden=!(ADS()&&window.AndroidAds.privacyOptionsRequired())}catch(e){}$('setModal').hidden=false}
 $('mSet').addEventListener('click',openSet);$('setBtn').addEventListener('click',openSet);
 $('setClose').addEventListener('click',()=>{$('setModal').hidden=true});
 $('setModal').addEventListener('click',e=>{if(e.target.id==='setModal')$('setModal').hidden=true});
@@ -1445,6 +1450,29 @@ function drawVessel(c,cx,wl,t,mode,k,dir,night){const big=mode.includes('ship'),
 function drawVesselLamps(c,cx,wl,t,k){const L=k(44),H=k(9),y=wl-H-k(17);pline(c,cx-L/2+k(2),y,cx+L/2,y,'#2b2f36');
   for(let i=0;i<7;i++){const x=Math.round(cx-L/2+k(4)+i*(L-k(6))/6);px(c,x-k(1),y+k(1),k(3),k(3),'#fffbe0');c.fillStyle='rgba(255,250,210,.12)';c.fillRect(x-k(2),y,k(7),k(5))}}
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-upg]');if(t&&!t.disabled)upgradeRod(t.dataset.upg)});
+/* ---------- 광고 (스토어 앱에서만: window.AndroidAds) ---------- */
+const ADS=()=>window.AndroidAds&&typeof window.AndroidAds.isAvailable==='function'&&window.AndroidAds.isAvailable();
+const AD_COIN={reward:25,perDay:5};
+if(!save.adDay||save.adDay.day!==kstDay())save.adDay={day:kstDay(),n:0};
+let bannerOn=null,retryInfo=null;
+function syncBanner(){if(!ADS())return;const want=!$('menu').hidden||!$('shopScreen').hidden||!$('dexScreen').hidden||!$('spotScreen').hidden;const v=want&&$('travel').hidden;
+  if(v!==bannerOn){bannerOn=v;try{window.AndroidAds.setBanner(v)}catch(e){}document.body.classList.toggle('has-banner',v)}}
+setInterval(syncBanner,400);
+function adCoinLeft(){if(save.adDay.day!==kstDay())save.adDay={day:kstDay(),n:0};return AD_COIN.perDay-save.adDay.n}
+function renderAdShop(){const el=$('adShop');if(!el)return;if(!ADS()){el.hidden=true;return}el.hidden=false;const left=adCoinLeft(),ready=(()=>{try{return window.AndroidAds.rewardedReady()}catch(e){return false}})();
+  el.innerHTML=`<div class="item bitem"><div class="bbig">📺</div><b>광고 보고 코인 받기</b><p>짧은 광고를 끝까지 보면 <b style="font:inherit;color:#2fae74">${AD_COIN.reward}코인</b>을 받아요. 하루 ${AD_COIN.perDay}번까지(한국 시간 자정에 초기화).</p><p>오늘 남은 횟수 ${left}번</p>
+    <button class="buy" type="button" id="adCoinBtn" ${left>0&&ready?'':'disabled'}>${left<=0?'오늘은 다 받았어요':ready?'광고 보고 받기':'광고 준비 중…'}</button></div>`}
+window.onAdsReady=()=>{renderAdShop()};
+window.onAdReward=tag=>{
+  if(tag==='coin'){save.adDay.n++;save.coins+=AD_COIN.reward;store();renderSide();sfx.coin();toast(`📺 고마워요! ${AD_COIN.reward}코인을 받았어요`)}
+  else if(tag==='retry'&&retryInfo){const r=retryInfo;retryInfo=null;$('res').classList.remove('on');fish=r.fish;fw=r.fw;bx0=r.bx0;bz0=r.bz0;startFight();toast('다시 한 번! 놓치지 마세요 🎣')}
+  setTimeout(renderAdShop,800)};
+window.onAdFail=tag=>{if(tag==='retry')retryInfo=null;toast('광고를 끝까지 보지 않았거나 불러오지 못했어요');setTimeout(renderAdShop,800)};
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#adCoinBtn,#adRetry,#adPrivacy');if(!t||t.disabled)return;e.stopPropagation();
+  if(t.id==='adCoinBtn'){if(adCoinLeft()>0)window.AndroidAds.showRewarded('coin')}
+  else if(t.id==='adRetry'){if(retryInfo)window.AndroidAds.showRewarded('retry')}
+  else if(t.id==='adPrivacy')window.AndroidAds.showPrivacyOptions()},true);
+document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#adRetry'))e.stopPropagation()},true);
 window.appBack=()=>{
   if(!howEl.hidden){howEl.hidden=true;return true}
   if(!$('travel').hidden){endTravel();return true}

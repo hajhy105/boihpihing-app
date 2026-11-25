@@ -11,6 +11,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -58,7 +59,11 @@ public class MainActivity extends Activity {
             }
         });
 
-        setContentView(webView);
+        // 화면 = WebView(게임) 위에 광고 배너를 얹을 수 있는 틀. 스토어 빌드에서만 광고가 붙는다.
+        FrameLayout root = new FrameLayout(this);
+        root.addView(webView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        setContentView(root);
+        Ads.attach(this, root, webView);
         hideSystemBars();
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
         else webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
@@ -75,14 +80,22 @@ public class MainActivity extends Activity {
         super.onPause();
         webView.evaluateJavascript("window.appPause && window.appPause()", null);   // 앱이 가려지면 소리 멈춤
         webView.onPause();
+        Ads.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         webView.onResume();
+        Ads.onResume();
         webView.evaluateJavascript("window.appResume && window.appResume()", null);
         hideSystemBars();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Ads.destroy();
+        super.onDestroy();
     }
 
     @Override

@@ -40,12 +40,13 @@ jobs:
           PY
 
       - name: Build debug APK
-        run: gradle assembleClassicDebug assembleDotDebug --no-daemon
+        run: gradle assembleClassicDebug assembleDotDebug assembleStoreDebug --no-daemon
 
       - name: Rename APKs
         run: |
           cp app/build/outputs/apk/classic/debug/app-classic-debug.apk boihpihing-${{ github.run_number }}.apk
           cp app/build/outputs/apk/dot/debug/app-dot-debug.apk boihpihing-dot-${{ github.run_number }}.apk
+          cp app/build/outputs/apk/store/debug/app-store-debug.apk boihpihing-store-test-${{ github.run_number }}.apk
 
       # 구글 플레이 업로드용 AAB. 업로드 키 비밀값이 등록돼 있을 때만 만든다
       - name: Build signed store AAB
@@ -67,6 +68,7 @@ jobs:
             boihpihing-${{ github.run_number }}.apk
             boihpihing-dot-${{ github.run_number }}.apk
             boihpihing-store-${{ github.run_number }}.aab
+            boihpihing-store-test-${{ github.run_number }}.apk
           if-no-files-found: warn
 
       - name: Publish release (direct download link for phones)
@@ -77,8 +79,10 @@ jobs:
           body: |
             boihpihing-N.apk = 3D 버전, boihpihing-dot-N.apk = 도트 버전 (둘은 따로 설치돼요)
             boihpihing-store-N.aab = 구글 플레이 업로드용 (휴대폰에 직접 설치하는 파일이 아니에요)
+            boihpihing-store-test-N.apk = 스토어 버전 광고 테스트용 (테스트 광고가 나와요. 플레이 스토어 버전을 설치하기 전에 지워야 해요)
           files: |
             boihpihing-${{ github.run_number }}.apk
             boihpihing-dot-${{ github.run_number }}.apk
             boihpihing-store-${{ github.run_number }}.aab
+            boihpihing-store-test-${{ github.run_number }}.apk
           fail_on_unmatched_files: false
