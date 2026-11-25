@@ -80,6 +80,17 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .setrow{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;font-size:19px;border-bottom:2px dashed #dbe8f0}
 .tg{min-width:88px;min-height:44px;border:0;background:#cfd5db;color:#4a5560;font:18px Jua,sans-serif;cursor:pointer}
 .tg.on{background:#2fae74;color:#fff}
+.chipbtn{cursor:pointer;font:inherit;color:inherit;font-size:14px}.chipbtn:disabled{opacity:.5}
+.qchip{position:relative}.qchip .dot{position:absolute;right:-3px;top:-3px;width:10px;height:10px;background:#e8467a;border:2px solid #1b1f2b}
+.mbtn.claim::after{content:' ●';color:#ff6a8a}
+.toast{position:absolute;left:50%;bottom:14px;transform:translate(-50%,8px);max-width:92%;background:#0b2a3c;color:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;padding:6px 10px;font:14px/1.4 Jua,sans-serif;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.brow,.qrow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:2px dashed #dbe8f0}
+.brow.on{background:#eefaf3}.brow .btxt,.qrow .qtxt{flex:1;min-width:0}.brow p{margin:2px 0 0;font-size:12.5px;color:var(--mute)}
+.bbig{font-size:28px;width:40px;text-align:center}.bitem .bbig{grid-row:span 3;font-size:40px;width:64px}
+.qbar{height:10px;border:2px solid #1b1f2b;background:#eef3f6;margin:4px 0 2px}.qbar i{display:block;height:100%;background:#2fae74}
+.qrow.got{opacity:.55}.qrow small{color:var(--mute)}
+#baitList,#qList{max-height:60vh;overflow:auto}
 .modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .okbtn{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;cursor:pointer}
 .howto{cursor:pointer}
@@ -201,6 +212,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <p class="sub">방파제 바다낚시</p>
     <div class="menu-btns">
       <button id="mPlay" class="mbtn main" type="button">게임하기</button>
+      <button id="mQuest" class="mbtn" type="button">오늘의 퀘스트</button>
       <button id="mDex" class="mbtn" type="button">어종</button>
       <button id="mShop" class="mbtn" type="button">상점</button>
       <button id="mNick" class="mbtn" type="button">닉네임 설정</button>
@@ -217,6 +229,8 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div class="shop" id="shop"></div>
     <h2>코인 아이템 <small class="dexcount">보유 코인 <b id="shopCoins">0</b></small></h2>
     <div class="items" id="items"></div>
+    <h2>미끼·채비 <small class="dexcount">던지기 전에 위쪽 미끼 칩을 눌러 바꿔요</small></h2>
+    <div class="items" id="baitShop"></div>
   </div>
 </div>
 
@@ -250,6 +264,23 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
   </div>
 </div>
 
+<div id="baitModal" class="modal" hidden>
+  <div class="modal-card" role="dialog" aria-labelledby="baitTitle">
+    <h3 id="baitTitle">미끼·채비 고르기</h3>
+    <div id="baitList"></div>
+    <div class="modal-btns"><button type="button" id="baitClose" class="okbtn">닫기</button></div>
+  </div>
+</div>
+
+<div id="questModal" class="modal" hidden>
+  <div class="modal-card" role="dialog" aria-labelledby="qTitle">
+    <h3 id="qTitle">오늘의 퀘스트</h3>
+    <p class="mhelp">한국 시간 자정마다 새 퀘스트 3개로 바뀌어요. 다 하면 받기를 눌러 코인을 받으세요.</p>
+    <div id="qList"></div>
+    <div class="modal-btns"><button type="button" id="qClose" class="okbtn">닫기</button></div>
+  </div>
+</div>
+
 <div id="howto" class="modal howto" hidden>
   <div class="modal-card howto-card" role="dialog" aria-labelledby="howtoTitle">
     <h3 id="howtoTitle">게임 방법</h3>
@@ -257,6 +288,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
       <li><b>캐스팅</b><span>START를 누르면 게이지가 움직여요. 표시가 <em>금색 칸</em>에 올 때 한 번 더 누르면 퍼펙트! 정확할수록 멀리 던져지고 희귀·전설 어종이 더 자주 물어요.</span></li>
       <li><b>기다리기</b><span>찌가 살짝 흔들리는 건 탐색 입질이에요. <em>느낌표(!)</em>가 뜨면 바로 챔질하세요.</span></li>
       <li><b>감기</b><span>챔질 후 버튼을 <em>꾹 누르고 있으면</em> 릴이 감기고, 떼면 게이지가 줄어요.</span></li>
+      <li><b>날씨·미끼·퀘스트</b><span>날씨는 30분마다 바뀌고 잘 무는 어종이 달라져요. 위쪽 <em>날씨 칩</em>을 누르면 효과가 보여요. <em>미끼 칩</em>으로 미끼를 바꾸고, <em>📋 퀘스트</em>를 깨면 코인을 받아요.</span></li>
       <li><b>대물 주의</b><span>2kg 이상은 누르는 동안 줄 장력이 쌓여요. "저항 중!"일 땐 손을 떼서 장력을 낮추세요. 제한 시간은 14초예요.</span></li>
     </ol>
     <p class="howto-close">화면을 터치하면 닫혀요</p>
@@ -270,6 +302,9 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
       <span class="chip"><b id="nickChip">낚시꾼</b></span>
       <span class="chip">점수 <b id="pts">0</b></span>
       <span class="chip">코인 <b id="coins">0</b></span>
+      <button type="button" class="chip chipbtn" id="wxChip">☀️ 맑음</button>
+      <button type="button" class="chip chipbtn" id="baitChip">🦐 크릴</button>
+      <button type="button" class="chip chipbtn qchip" id="qChip">📋 퀘스트</button>
       <span class="chip xchip" id="xrayChip" hidden>투시 중</span>
       <span class="chip chumchip" id="chumChip" hidden>떡밥 효과 <b id="chumLeft">0</b>회</span>
       <span class="chip" id="todChip">☀️ 낮</span>
@@ -284,6 +319,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div id="grade"></div>
     <div id="res"></div>
     <div id="pop" class="pop" hidden>!</div>
+    <div id="toast" class="toast"></div>
     <div id="resist" class="resist" hidden>저항 중!</div>
     <div id="xtag" class="xtag" hidden></div>
   </div>
@@ -478,7 +514,7 @@ const fit=()=>{W=stage.clientWidth;H=stage.clientHeight;const dpr=window.deviceP
   PW=Math.ceil(W/PXS);PH=Math.max(90,Math.ceil(H/PXS));U=Math.min(2.4,Math.max(1,PW/180));
   cv.width=PW;cv.height=PH;cv.style.width=(PW*PXS)+'px';cv.style.height=(PH*PXS)+'px';};
 const ro=new ResizeObserver(fit);ro.observe(stage);fit();
-const wave=(x,z,t)=>.07*Math.sin(.55*x+1.3*t)+.05*Math.sin(.8*z-1.1*t+.15*x);
+const wave=(x,z,t)=>(.07*Math.sin(.55*x+1.3*t)+.05*Math.sin(.8*z-1.1*t+.15*x))*(typeof WXA==='number'?WXA:1);
 const PAL={sky:['#3466c4','#4a82d6','#68a1e6','#93c3f2','#c9e4f7'],sea:['#6fc3e3','#4aa6d4','#3790c4','#2b7db3','#2470a3','#1d6394'],
  con:'#a3a19a',con2:'#8c8a83',con3:'#c4c2ba',con4:'#74726c',white:'#fff7ec',red:'#e0453a',yel:'#ffd23f',ink:'#1b1f2b',
  isl:'#3f6f5a',isl2:'#335d4b',sun:'#fff3b0',sun2:'#ffe08a',skin:'#c48f6e',skin2:'#a87458',glove:'#2f3d4c',sleeve:'#d0561f',sleeve2:'#a9441a'};
@@ -672,6 +708,7 @@ function drawFrame(c,w,h,t,menu){
   const XR=!menu&&xray;
   if(XR)xrayWater(c,w,h,t);
   drawGlow(c,w,h,TD);
+  drawWeatherBack(c,w,h,t);
   // chum cloud
   if(!menu&&save.chumLeft>0){const q=proj(1.1,0,-2.8),r=q[2]*1.6;for(let i=0;i<60;i++){const a=i*2.4+t*.25,rr=(i%10)/10*r;px(c,q[0]+Math.cos(a)*rr*1.4,q[1]+Math.sin(a)*rr*.35,2,1,'rgba(122,79,38,.35)')}}
   // swimming shadows
@@ -720,11 +757,12 @@ function drawFrame(c,w,h,t,menu){
   // caught fish flying toward the viewer
   for(const o of sea)if(o.k==='catch'){const p=Math.min(1,o.t/o.dur),q=proj(lerp(o.x,1.2,p),Math.sin(Math.PI*p)*1.8+p*1.2,lerp(o.z,2.2,p));drawSprite(c,fishSprite(o.f,Math.min(w*.6,o.L*q[2])),q[0],q[1],false,Math.sin(p*12)*.3)}
   // aim marker on the water
+  drawWeatherFront(c,w,h,t);
   applyTOD(c,w,h,t,TD,bobGlow);
   if(XR)c.drawImage(vignette(w,h),0,0);
   if(!menu&&st==='aim'){const q=xray?proj(EYE.x,0,lerp(XZ0,XZ1,aimPos())):proj(1.2,0,lerp(-1.4,-4.6,aimPos()));if(xray){const r=Math.round(q[2]*.75);c.fillStyle='rgba(255,210,63,.9)';for(let i=0;i<20;i++){const a=i/20*Math.PI*2;c.fillRect(Math.round(q[0]+Math.cos(a)*r),Math.round(q[1]+Math.sin(a)*r*.3),1,1)}}c.fillStyle='rgba(255,255,255,.8)';c.fillRect(Math.round(q[0])-3,Math.round(q[1]),7,1);c.fillRect(Math.round(q[0]),Math.round(q[1])-2,1,5)}
 }
-let todT=0;function syncWorld(){if(T-todT>1||T<todT){todT=T;const el=$('todChip');if(el){const v=todLabel(kstHour());if(el.textContent!==v)el.textContent=v}}}
+let todT=0;function syncWorld(){WXA+=((WX.amp||1)-WXA)*.02;if(T-todT>1||T<todT){todT=T;tickWorld();const el=$('todChip');if(el){const v=todLabel(kstHour());if(el.textContent!==v)el.textContent=v}}}
 function render(){ctx.setTransform(1,0,0,1,0,0);drawFrame(ctx,PW,PH,T,false);
   if(st==='bite'){const b=bobPos(),s=toScreen([b[0],b[1]+.9,b[2]]);pop.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;pop.hidden=false}else pop.hidden=true;
   if(st==='fight'&&run>0){const rt=fish&&fish.kind==='squid'?'먹물 발사!':'저항 중!';if(resist.textContent!==rt)resist.textContent=rt;const b=bobPos(),s=toScreen([b[0],.9,b[2]]);resist.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;resist.hidden=false}else resist.hidden=true;
@@ -802,11 +840,82 @@ const SND=(()=>{
   function unlock(){if(!init())return;if(ac.state==='suspended')ac.resume();apply()}
   function pause(){if(ac&&ac.state==='running')ac.suspend()}
   function resume(){if(ac&&(save.snd.music||save.snd.sfx))ac.resume()}
-  return{fx,unlock,apply,pause,resume}})();
+  let rainSrc=null,rainG=null,ambId='';
+  function amb(id){ambId=id;if(!ac)return;if(!rainSrc){rainSrc=ac.createBufferSource();rainSrc.buffer=noiseBuf;rainSrc.loop=true;const fl=ac.createBiquadFilter();fl.type='bandpass';fl.frequency.value=2600;fl.Q.value=.4;rainG=ac.createGain();rainG.gain.value=0;rainSrc.connect(fl);fl.connect(rainG);rainG.connect(sfxG);rainSrc.start()}
+    rainG.gain.setTargetAtTime(id==='rain'?.09:id==='storm'?.03:0,ac.currentTime,.8);if(waveG)waveG.gain.setTargetAtTime(id==='storm'?.1:.05,ac.currentTime,.8)}
+  return{fx,unlock:()=>{unlock();if(ac&&!rainSrc&&typeof WX!=='undefined')amb(WX.id)},apply,pause,resume,amb}})();
 const sfx=SND.fx;
 ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>SND.unlock(),{once:false,passive:true}));
 document.addEventListener('visibilitychange',()=>{document.hidden?SND.pause():SND.resume()});
 window.appPause=()=>SND.pause();window.appResume=()=>SND.resume();
+/* ================= 날씨 · 미끼 · 일일 퀘스트 ================= */
+const hashRng=seed=>{let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}};
+const kstMin=()=>Date.now()/60000+540;
+const kstDay=()=>{const d=new Date(Date.now()+9*3600e3);return d.toISOString().slice(0,10)};
+const fmtHM=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0')};
+/* ---------- 날씨: 한국 시간 30분마다 바뀜 ---------- */
+const WX_SLOT=30;
+const WEATHERS={
+  clear:{name:'맑음',ico:'☀️',w:40,desc:'전갱이·고등어·학꽁치가 잘 물어요.',mul:{jg:1.5,gd:1.5,hk:1.5}},
+  cloudy:{name:'흐림',ico:'☁️',w:25,desc:'경계심 많은 벵에돔·감성돔·돌돔이 더 잘 물어요.',mul:{bd:1.7,gs:1.4,dl:1.3}},
+  rain:{name:'비',ico:'🌧️',w:15,desc:'감성돔·농어·우럭이 활발해지고, 입질도 빨리 와요.',mul:{gs:2.5,ny:1.8,ur:1.4},wait:.75},
+  fog:{name:'안개',ico:'🌫️',w:10,desc:'안개 속에서 희귀 등급 어종이 1.5배 잘 나와요.',tierMul:{2:1.5}},
+  storm:{name:'파도 높음',ico:'🌊',w:10,desc:'대물(방어·부시리·참다랑어·삼치·광어)이 2배! 대신 줄 장력이 빨리 올라요.',mul:{by:2,bs:2,cs:2,ss:2,gw:1.6,ny:1.5},tr:1.2,amp:1.9}};
+let WX_OVERRIDE=null;
+function wxAt(slot){const r=hashRng(slot*2654435761^0x5bd1e995),ks=Object.keys(WEATHERS),tot=ks.reduce((s,k)=>s+WEATHERS[k].w,0);let x=r()*tot;for(const k of ks){if((x-=WEATHERS[k].w)<=0)return k}return'clear'}
+function weather(){const m=kstMin(),slot=Math.floor(m/WX_SLOT),id=WX_OVERRIDE||wxAt(slot);let n=slot+1;while(!WX_OVERRIDE&&wxAt(n)===id&&n<slot+12)n++;return{id,...WEATHERS[id],until:n*WX_SLOT,next:WX_OVERRIDE?null:wxAt(n)}}
+let WX=weather(),WXA=1;
+const wxIco=w=>w.id==='clear'&&typeof tod==='function'&&tod().night>.5?'🌙':w.ico;
+function weatherMul(f){const w=WX;let m=(w.mul&&w.mul[f.id])||1;if(w.tierMul){const t=tierIx(f);if(w.tierMul[t])m*=w.tierMul[t]}return m}
+/* weather drawing: behind the pier/hands (sky cover, fog, whitecaps, rain rings) and in front (rain streaks) */
+function drawWeatherBack(c,w,h,t){const id=WX.id;
+  if(id==='cloudy'||id==='rain'||id==='storm'){c.fillStyle=id==='rain'?'rgba(96,106,122,.55)':id==='storm'?'rgba(110,122,138,.4)':'rgba(140,150,162,.42)';c.fillRect(0,0,w,yH);
+    const cc=id==='rain'?['#8c95a3','#737c8a']:['#c9cfd6','#a9b1bb'];
+    for(let i=0;i<9;i++){const cx=Math.round(((i*41*U+t*(id==='storm'?9:4)*U*(1+i*.15))%(w+80*U))-40*U),cy=Math.round(yH*(.05+((i*37)%9)/10));
+      c.fillStyle=cc[0];c.fillRect(cx,cy,u(34),u(7));c.fillRect(cx+u(6),cy-u(5),u(18),u(5));c.fillRect(cx+u(20),cy-u(3),u(10),u(3));c.fillStyle=cc[1];c.fillRect(cx+u(2),cy+u(7),u(30),u(3))}
+    if(id!=='cloudy'){c.fillStyle='rgba(40,60,80,.18)';c.fillRect(0,yH,w,h-yH)}}
+  if(id==='fog'){for(let y=0;y<h;y++){const d=(y-yH)/(h*.55),a=y<yH?.62*Math.max(0,1-(yH-y)/(yH*.9)):.62*Math.max(0,1-d);if(a<=.02)continue;c.fillStyle=`rgba(225,232,238,${a.toFixed(3)})`;c.fillRect(0,y,w,1)}
+    for(let i=0;i<5;i++){const fy=Math.round(yH+(h-yH)*(.05+i*.09)),fx=Math.round(((i*97*U+t*6*U)%(w+120*U))-60*U);c.fillStyle='rgba(240,244,248,.35)';c.fillRect(fx,fy,u(70),u(3));c.fillRect(fx+u(10),fy-u(2),u(40),u(2))}}
+  if(id==='storm'){for(let i=0;i<70;i++){const r=(i*7919)%1000/1000,z=-7+r*8.2,xw=EYE.x-6+((i*131)%1000)/1000*12+Math.sin(t*.7+i)*.4,q=proj(xw,0,z);if(q[1]<=yH+1||q[1]>h)continue;
+      const ph=(t*1.3+i*.37)%1;if(ph>.55)continue;const len=Math.max(1,Math.round(q[2]*.25*(1-ph)));px(c,q[0],q[1]-(ph<.2?1:0),len,1,'#f4fbff');if(len>2)px(c,q[0]+1,q[1]-1,len-2,1,'rgba(255,255,255,.7)')}}
+  if(id==='rain'){for(let i=0;i<40;i++){const ph=(t*1.8+i*.173)%1,z=-7+((i*613)%1000)/1000*8,xw=EYE.x-6+((i*367)%1000)/1000*12,q=proj(xw,0,z);if(q[1]<=yH+1||q[1]>h)continue;const r=Math.max(1,Math.round(q[2]*.25*ph));c.fillStyle=`rgba(230,240,250,${(.6*(1-ph)).toFixed(2)})`;c.fillRect(Math.round(q[0]-r),Math.round(q[1]),r*2+1,1)}}}
+function drawWeatherFront(c,w,h,t){if(WX.id!=='rain'&&WX.id!=='storm')return;const n=WX.id==='rain'?Math.round(w*h/260):Math.round(w*h/1400),len=u(WX.id==='rain'?6:4);
+  c.fillStyle=WX.id==='rain'?'rgba(205,220,240,.55)':'rgba(220,230,240,.4)';for(let i=0;i<n;i++){const sx=((i*73.7+t*(40+((i*13)%20))*U*.9)%(w+40))-20,sy=((i*191.3+t*(170+(i%30))*U)%(h+40))-20;for(let k=0;k<len;k++)c.fillRect(Math.round(sx-k*.35),Math.round(sy-k),1,1)}}
+/* ---------- 미끼 · 채비 ---------- */
+const BAITS=[
+  {id:'krill',name:'크릴',ico:'🦐',price:0,desc:'모든 어종이 고르게 무는 기본 미끼예요. 무제한.'},
+  {id:'worm',name:'갯지렁이',ico:'🪱',price:12,pack:10,desc:'바닥 고기(우럭·노래미·볼락·광어·도다리·감성돔·돌돔)가 2배 잘 물어요. 던질 때마다 1개씩 써요.',mul:{ur:2,nr:2,bl:2,gw:2,dd:2,gs:2,dl:2}},
+  {id:'egi',name:'에기',ico:'🦑',price:35,pack:1,lure:true,desc:'오징어 전용 루어. 오징어류가 5배 잘 물고 물고기는 잘 안 물어요. 줄이 끊어지면 잃어버려요.',squid:5,fish:.25},
+  {id:'jig',name:'메탈지그',ico:'🐟',price:45,pack:1,lure:true,desc:'회유어(고등어·삼치·방어·부시리·참다랑어)가 2.5배 잘 물고, 작은 고기는 덜 물어요. 줄이 끊어지면 잃어버려요.',mul:{gd:2.5,ss:2.5,by:2.5,bs:2.5,cs:2.5,jg:1.5},small:.5}];
+if(!save.baits||typeof save.baits!=='object')save.baits={};for(const b of BAITS)if(b.id!=='krill'&&typeof save.baits[b.id]!=='number')save.baits[b.id]=0;
+if(!BAITS.some(b=>b.id===save.bait))save.bait='krill';
+const bait=()=>BAITS.find(b=>b.id===save.bait)||BAITS[0];
+function baitMul(f){const b=bait();if(b.id==='krill')return 1;if(b.squid)return f.kind==='squid'?b.squid:b.fish;
+  if(b.mul&&b.mul[f.id])return b.mul[f.id];if(b.small&&f.max<1)return b.small;return 1}
+function setBait(id){if(id!=='krill'&&!(save.baits[id]>0))return;save.bait=id;store();renderSide()}
+/* ---------- 일일 퀘스트 (한국 시간 자정에 새로) ---------- */
+const QPOOL=['jg','gd','bl','nr','ur','hk','jc','yg','dd','gc','gs','gw','cd','ojg','gbo'];
+function makeQuests(day){const r=hashRng([...day].reduce((s,ch)=>s*31+ch.charCodeAt(0),7)),pick=a=>a[Math.floor(r()*a.length)];
+  const types=['species','weight','total','rare','perfect','squid'];const chosen=[];while(chosen.length<3){const t=pick(types);if(!chosen.includes(t))chosen.push(t)}
+  return chosen.map(t=>{
+    if(t==='species'){const id=pick(QPOOL),f=FISH.find(x=>x.id===id),need=f.rar>=12?3:f.rar>=7?2:1;return{t,id,need,reward:10+need*5+(f.rar<8?10:0)}}
+    if(t==='weight'){const w=pick([1,2,3]),need=w===1?3:w===2?2:1;return{t,w,need,reward:15+w*7}}
+    if(t==='total'){const need=pick([5,8]);return{t,need,reward:need===5?15:22}}
+    if(t==='rare')return{t,need:1,reward:40};
+    if(t==='perfect')return{t,need:3,reward:20};
+    return{t:'squid',need:2,reward:30}}).map(q=>({...q,have:0,claimed:false}))}
+function questText(q){const f=q.id&&FISH.find(x=>x.id===q.id);return{species:`${f?f.name:''} ${q.need}마리 낚기`,weight:`${q.w}kg 이상 고기 ${q.need}마리 낚기`,total:`아무 고기나 ${q.need}마리 낚기`,rare:'희귀 등급 이상 1마리 낚기',perfect:`퍼펙트 캐스팅 ${q.need}번`,squid:`오징어류 ${q.need}마리 낚기`}[q.t]}
+function ensureQuests(){const d=kstDay();if(!save.quest||save.quest.day!==d){save.quest={day:d,list:makeQuests(d)};store();if(typeof renderQuest==='function')renderQuest()}}
+ensureQuests();
+function questEvent(kind,f,w){ensureQuests();let done=[];
+  for(const q of save.quest.list){if(q.have>=q.need)continue;let hit=false;
+    if(kind==='catch'){if(q.t==='species'&&f.id===q.id)hit=true;if(q.t==='weight'&&w>=q.w)hit=true;if(q.t==='total')hit=true;if(q.t==='rare'&&tierIx(f)>=2)hit=true;if(q.t==='squid'&&f.kind==='squid')hit=true}
+    if(kind==='perfect'&&q.t==='perfect')hit=true;
+    if(hit){q.have++;if(q.have>=q.need)done.push(q)}}
+  store();renderQuest();for(const q of done){toast(`📋 퀘스트 완료! ${questText(q)} — 퀘스트 창에서 ${q.reward}코인 받기`);sfx.perfect()}}
+function claimQuest(i){const q=save.quest.list[i];if(!q||q.claimed||q.have<q.need)return;q.claimed=true;save.coins+=q.reward;store();renderSide();renderQuest();sfx.coin();buzz(20)}
+/* ---------- 작은 알림 ---------- */
+let toastT=null;function toast(msg,ms=2600){const el=$('toast');if(!el)return;el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),ms)}
 /* ---------- game ---------- */
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
 const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
@@ -816,7 +925,7 @@ const aimPos=()=>{const u=(aimT/.7)%2;return u<1?u:2-u};
 const CHUM={price:30,casts:5,legend:4};
 const XRAY={price:20,bite:1.5};let xray=false,xrayCast=false,waitT0=1;
 const nightMul=f=>{const n=(typeof tod==='function'?tod().night:0);return lerp(f.day||1,f.night||1,n)};
-function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1)*nightMul(f);
+function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1)*nightMul(f)*weatherMul(f)*baitMul(f);
   const tot=FISH.reduce((s,f)=>s+wt(f),0);let r=Math.random()*tot;
   for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
 }
@@ -830,11 +939,13 @@ function cast(){
   fish=pickFish(grade,chumUsed);fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),1.8)).toFixed(2);
   if(xray){bx0=EYE.x+rnd(-.12,.12);bz0=lerp(XZ0,XZ1,aimPos());xrayCast=true;const o=xrayCatch();if(o){fish=o.f;fw=o.w}xHideTags()}
   const far=grade==='perfect'?1:grade==='great'?.7:grade==='good'?.4:.1;
-  if(!xray){bx0=rnd(-.2,2.8);bz0=lerp(-1.4,-4.6,far)+rnd(-.4,.4)}castT=0;st='cast';waitT=rnd(2.2,6.5);waitT0=waitT;nibT=rnd(.6,1.4);nib=0;
+  if(!xray){bx0=rnd(-.2,2.8);bz0=lerp(-1.4,-4.6,far)+rnd(-.4,.4)}castT=0;st='cast';waitT=rnd(2.2,6.5)*(WX.wait||1);waitT0=waitT;
+  {const B=bait();if(B.id==='worm'){save.baits.worm=Math.max(0,save.baits.worm-1);if(save.baits.worm<=0){save.bait='krill';toast('🪱 갯지렁이를 다 썼어요. 크릴로 바꿨어요')}store();renderWX()}}
+  if(grade==='perfect')questEvent('perfect');nibT=rnd(.6,1.4);nib=0;
 }
 function startFight(){
   st='fight';heavy=fw>=2;gauge=0;zeroT=0;tens=0;clock=0;run=0;nextRun=rnd(1.2,2.6);
-  const R=rod();P=heavy?{drain:5+fw*1.4,up:34*R.up,tr:(6+fw*2.5)*R.tr*(fw>R.max?1.2:1)}:{drain:5+fw*2.5,up:27.5*R.up,tr:0};
+  const R=rod();P=heavy?{drain:5+fw*1.4,up:34*R.up,tr:(6+fw*2.5)*R.tr*(fw>R.max?1.2:1)*(WX.tr||1)}:{drain:5+fw*2.5,up:27.5*R.up,tr:0};
   const b=bobPos();splash(b[0],b[1],b[2],10);ripple(b[0],b[2],2);buzz(40);sfx.hook();
 }
 let holding=false;
@@ -853,13 +964,13 @@ function finish(ok,kind){
     const unl=RODS.filter(r=>prev<r.need&&save.pts>=r.need);
     save.log.unshift({id:f.id,w:fw,l:len,ok:1,t:Date.now()});
     html=`<h3>${esc(f.name)} 낚았다!</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · ${len}cm</p><p><span style="color:${t[1]}">●</span> ${t[0]} · +${pts}점 · <b style="color:#c98a00">+${coin}코인</b></p><p>캐스팅 <b style="color:${GRADES[grade].col}">${GRADES[grade].ko}</b>${chumUsed?' · 떡밥 효과':''}</p>${rec&&d.n>1?'<span class="badge">개인 최고 기록!</span>':d.n===1?'<span class="badge">도감 신규 등록!</span>':''}${unl.map(r=>`<p class="unl">${r.name} 해금! 상점에서 장착하세요</p>`).join('')}`;
-    const b=bobPos();splash(b[0],b[1],b[2],18);ripple(b[0],b[2],2.2);flyCatch();buzz([30,40,30]);sfx.catch(tierIx(f)>=2);setTimeout(()=>sfx.coin(),650);
+    const b=bobPos();splash(b[0],b[1],b[2],18);ripple(b[0],b[2],2.2);flyCatch();buzz([30,40,30]);setTimeout(()=>questEvent('catch',f,fw),900);sfx.catch(tierIx(f)>=2);setTimeout(()=>sfx.coin(),650);
   }else{
     const msg={miss:['미끼만 털렸어요','느낌표가 뜨면 바로 챔질하세요.'],early:['너무 일찍 챔질했어요','찌가 흔들리는 건 탐색 입질. 느낌표를 기다리세요.'],escape:['바늘이 빠졌어요','게이지가 0%인 채로 1.5초가 지났어요. 저항이 끝나면 바로 다시 감으세요.'],break:['줄이 끊어졌어요!','장력이 한계를 넘었어요. 저항할 땐 잠시 멈추세요.'],tired:['시간 초과','고기를 끌어내지 못했어요.']}[kind];
     const seen=kind!=='early'&&kind!=='miss';
     if(seen)save.log.unshift({id:f.id,w:fw,l:len,ok:0,t:Date.now(),k:kind});
     html=`<h3>${msg[0]}</h3>${seen?`<canvas id="rc"></canvas><p class="stat">놓친 고기: ${esc(f.name)} 약 ${fw.toFixed(1)}kg</p>`:''}<p>${msg[1]}</p>${seen&&fw>rod().max?`<p>${rod().name} 권장 무게(${rod().max}kg)를 넘는 대물이었어요. 상점에서 더 좋은 낚시대를 노려보세요.</p>`:''}`;
-    if(kind==='break'){buzz(120);sfx.snap()}else sfx.fail();
+    if(kind==='break'){buzz(120);sfx.snap();const B=bait();if(B.lure){save.baits[B.id]=Math.max(0,save.baits[B.id]-1);const left=save.baits[B.id];if(left<=0)save.bait='krill';setTimeout(()=>toast(`${B.ico} 줄이 끊어지며 ${B.name}을(를) 잃어버렸어요${left>0?` (남은 ${left}개)`:' — 크릴로 바꿨어요'}`,3600),700);renderWX()}}else sfx.fail();
     if(!seen)fish=null;
   }
   save.log=save.log.slice(0,20);store();
@@ -937,7 +1048,7 @@ act.addEventListener('pointerdown',e=>{e.preventDefault();try{act.setPointerCapt
 act.addEventListener('pointerup',up);window.addEventListener('pointerup',up);
 window.addEventListener('blur',up);
 act.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('keydown',e=>{if(!$('menu').hidden||!$('shopScreen').hidden||!$('dexScreen').hidden||!$('nickModal').hidden||!$('setModal').hidden||!$('howto').hidden)return;if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();down()}});
+document.addEventListener('keydown',e=>{if(!$('menu').hidden||!$('shopScreen').hidden||!$('dexScreen').hidden||!$('nickModal').hidden||!$('setModal').hidden||!$('baitModal').hidden||!$('questModal').hidden||!$('howto').hidden)return;if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();down()}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'||e.key==='Enter')up()});
 
 /* ---------- side panels ---------- */
@@ -999,6 +1110,7 @@ function renderMenu(){
     <b>투시 안경</b><p>쓰는 순간 바닷속이 훤히 보여요. 물고기 이름과 무게를 보고 <b style="font:inherit;color:#1f8fa6">원하는 물고기 위로 던지면</b> 그 고기가 물어요. 1번 던지면 끝나고, 챔질 시간도 <b style="font:inherit;color:#1f8fa6">${XRAY.bite}배</b> 넉넉해져요.</p>
     <p>가격 ${XRAY.price}코인 · 보유 ${save.items.xray}개</p>
     <button class="buy" type="button" id="buyXray" ${save.coins>=XRAY.price?'':'disabled'}>${save.coins>=XRAY.price?`${XRAY.price}코인으로 사기`:`코인이 부족해요 (${XRAY.price-save.coins}코인 더 필요)`}</button></div>`;
+  renderBaitShop();renderWX();renderQuest();
   $('nickChip').textContent=nick();$('dexCount').textContent=`${Object.keys(save.dex).length}/${FISH.length}종`;$('shopPts').textContent=save.pts.toLocaleString('ko-KR');
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
 }
@@ -1011,9 +1123,47 @@ $('setModal').addEventListener('click',e=>{if(e.target.id==='setModal')$('setMod
 $('tgMusic').addEventListener('click',()=>{save.snd.music=!save.snd.music;store();SND.unlock();SND.apply();renderSet()});
 $('tgSfx').addEventListener('click',()=>{save.snd.sfx=!save.snd.sfx;store();SND.unlock();SND.apply();renderSet();sfx.click()});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.mbtn,.hbtn,.ghost,.okbtn,.buy');if(b&&!b.disabled&&b.id!=='buyChum'&&b.id!=='buyXray')sfx.click()});
+/* ---------- 날씨·미끼·퀘스트 화면 ---------- */
+function baitIcon(b){return`<span class="bico">${b.ico}</span>`}
+function renderBaitShop(){const el=$('baitShop');if(!el)return;
+  el.innerHTML=BAITS.filter(b=>b.price>0).map(b=>{const can=save.coins>=b.price;return`<div class="item bitem"><div class="bbig">${b.ico}</div>
+    <b>${b.name}${b.pack>1?` ${b.pack}개 묶음`:''}</b><p>${b.desc}</p>
+    <p>가격 ${b.price}코인 · 보유 ${save.baits[b.id]}개${save.bait===b.id?' · <b style="font:inherit;color:#2fae74">사용 중</b>':''}</p>
+    <button class="buy" type="button" data-buybait="${b.id}" ${can?'':'disabled'}>${can?`${b.price}코인으로 사기`:`코인이 부족해요 (${b.price-save.coins}코인 더 필요)`}</button></div>`}).join('')}
+function renderBaitList(){const el=$('baitList');if(!el)return;
+  el.innerHTML=BAITS.map(b=>{const n=b.id==='krill'?'무제한':`${save.baits[b.id]}개`,on=save.bait===b.id,can=b.id==='krill'||save.baits[b.id]>0;
+    return`<div class="brow${on?' on':''}"><div class="bbig">${b.ico}</div><div class="btxt"><b>${b.name}</b> <small>${n}</small><p>${b.desc}</p></div>
+    <button type="button" class="tg${on?' on':''}" data-usebait="${b.id}" ${can&&!on?'':'disabled'}>${on?'사용 중':can?'쓰기':'없음'}</button></div>`}).join('')+
+    '<p class="mhelp" style="margin-top:10px">미끼는 상점의 <b>미끼·채비</b>에서 살 수 있어요.</p>'}
+function renderQuest(){if(!save.quest)return;const L=save.quest.list,done=L.filter(q=>q.have>=q.need).length,claim=L.some(q=>q.have>=q.need&&!q.claimed);
+  const c=$('qChip');if(c){c.innerHTML=`📋 퀘스트 <b>${done}/3</b>${claim?'<i class="dot"></i>':''}`}
+  const mq=$('mQuest');if(mq)mq.classList.toggle('claim',claim);
+  const el=$('qList');if(!el)return;
+  el.innerHTML=L.map((q,i)=>{const p=Math.min(1,q.have/q.need),ok=q.have>=q.need;
+    return`<div class="qrow${q.claimed?' got':''}"><div class="qtxt"><b>${questText(q)}</b><div class="qbar"><i style="width:${p*100}%"></i></div><small>${Math.min(q.have,q.need)}/${q.need} · 보상 ${q.reward}코인</small></div>
+    <button type="button" class="tg${ok&&!q.claimed?' on':''}" data-claim="${i}" ${ok&&!q.claimed?'':'disabled'}>${q.claimed?'받음':ok?'받기':'진행 중'}</button></div>`}).join('')}
+function renderWX(){const c=$('wxChip');if(c){const v=`${wxIco(WX)} ${WX.name}`;if(c.textContent!==v)c.textContent=v}
+  const b=$('baitChip');if(b){const B=bait(),v=`${B.ico} ${B.name}${B.id==='krill'?'':' '+save.baits[B.id]}`;if(b.textContent!==v)b.textContent=v}}
+const idleNow=()=>st==='idle'||st==='result';
+function openModal(id){$(id).hidden=false}
+$('wxChip').addEventListener('click',()=>toast(`${wxIco(WX)} ${WX.name}: ${WX.desc}${WX.next?` · ${fmtHM(WX.until)}부터 ${WEATHERS[WX.next].ico} ${WEATHERS[WX.next].name}`:''}`,4200));
+$('baitChip').addEventListener('click',()=>{if(!idleNow()){toast('던지기 전에 미끼를 바꿀 수 있어요');return}renderBaitList();openModal('baitModal')});
+$('qChip').addEventListener('click',()=>{ensureQuests();renderQuest();openModal('questModal')});
+$('mQuest').addEventListener('click',()=>{ensureQuests();renderQuest();openModal('questModal')});
+for(const id of['baitModal','questModal']){$(id).addEventListener('click',e=>{if(e.target.id===id)$(id).hidden=true})}
+$('baitClose').addEventListener('click',()=>{$('baitModal').hidden=true});$('qClose').addEventListener('click',()=>{$('questModal').hidden=true});
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-usebait],[data-claim],[data-buybait]');if(!t||t.disabled)return;
+  if(t.dataset.usebait){setBait(t.dataset.usebait);renderBaitList();renderWX();sfx.click()}
+  else if(t.dataset.claim!=null)claimQuest(+t.dataset.claim);
+  else if(t.dataset.buybait){const b=BAITS.find(x=>x.id===t.dataset.buybait);if(!b||save.coins<b.price)return;save.coins-=b.price;save.baits[b.id]+=b.pack||1;
+    if(save.bait==='krill'&&b.id!=='worm'||save.bait==='krill')save.bait=b.id;store();renderSide();sfx.coin();buzz(20);toast(`${b.ico} ${b.name} 구입! 지금 쓰는 미끼: ${bait().name}`)}});
+let wxPrev=WX.id;
+function tickWorld(){WX=weather();if(WX.id!==wxPrev){wxPrev=WX.id;toast(`날씨가 바뀌었어요 — ${wxIco(WX)} ${WX.name}: ${WX.desc}`,4200);SND.amb(WX.id)}ensureQuests();renderWX()}
 window.appBack=()=>{
   if(!howEl.hidden){howEl.hidden=true;return true}
   if(!$('setModal').hidden){$('setModal').hidden=true;return true}
+  if(!$('baitModal').hidden){$('baitModal').hidden=true;return true}
+  if(!$('questModal').hidden){$('questModal').hidden=true;return true}
   if(!nickEl.hidden){nickEl.hidden=true;return true}
   if(!shopEl.hidden){shopEl.hidden=true;return true}
   if(!dexEl.hidden){dexEl.hidden=true;return true}
