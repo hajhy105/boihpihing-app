@@ -1015,7 +1015,7 @@ const act=$('act'),hint=$('hint');
 function hud(){
   {const cb=$('chumBtn'),en=(st==='idle'||st==='result')&&save.items.chum>0;if(cb.disabled===en)cb.disabled=!en}
   {const xb=$('xrayBtn'),en=(st==='idle'||st==='result')&&save.items.xray>0&&!(xray&&!xrayCast);if(xb.disabled===en)xb.disabled=!en;xb.classList.toggle('armed',xray&&!xrayCast);$('xrayChip').hidden=!(xray&&!xrayCast)}
-  {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok;$('toDex').disabled=!ok;$('helpBtn').disabled=!ok}}
+  {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok}}
   const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
   const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중…':'꾹 눌러 감기'}[st];
   if(act.textContent!==lab)act.textContent=lab;
@@ -1078,13 +1078,13 @@ function openNick(){$('nickInput').value=save.nick||'';$('nickErr').textContent=
 let howtoShown=false;const howEl=$('howto');
 function openHow(){howEl.hidden=false}
 howEl.addEventListener('pointerdown',e=>{e.preventDefault();howEl.hidden=true});
-$('helpBtn').addEventListener('click',()=>{if(canLeave())openHow()});
+$('helpBtn').addEventListener('click',()=>{holding=false;openHow()});
 $('mPlay').addEventListener('click',()=>{menuEl.hidden=true;setTimeout(fitTitle,0);try{window.scrollTo(0,0)}catch(e){}if(!howtoShown){howtoShown=true;openHow()}});
 $('mShop').addEventListener('click',openShop);
 const dexEl=$('dexScreen');
 function openDex(){renderSide();dexEl.hidden=false;dexEl.scrollTop=0}
 $('mDex').addEventListener('click',openDex);
-$('toDex').addEventListener('click',()=>{if(canLeave())openDex()});
+$('toDex').addEventListener('click',()=>{holding=false;openDex()});
 $('dexClose').addEventListener('click',()=>{dexEl.hidden=true});
 $('mNick').addEventListener('click',openNick);
 $('toShop').addEventListener('click',()=>{if(canLeave())openShop()});
@@ -1193,7 +1193,8 @@ renderSide();
 
 if(!gl){hint.textContent='이 기기에서는 3D 화면을 열 수 없어요';}
 let last=performance.now();
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;update(dt);if(gl){syncWorld();render()}hud();requestAnimationFrame(loop)}
+const gamePaused=()=>!$('dexScreen').hidden||!$('howto').hidden||!$('setModal').hidden||!$('questModal').hidden||!$('baitModal').hidden;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;const pz=gamePaused()&&!(st==='idle'||st==='result');if(pz)holding=false;else{T+=dt;update(dt)}if(gl){syncWorld();render()}hud();requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 }
 </script>
