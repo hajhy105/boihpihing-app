@@ -98,7 +98,8 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .okbtn{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;cursor:pointer}
 .howto{cursor:pointer}
-.howto-card{width:min(400px,100%)}
+.howto-card{width:min(400px,100%);max-height:calc(100dvh - 40px);overflow-y:auto}
+.howto .steps{gap:9px}.howto .steps span{font-size:14.5px;line-height:1.45}.howto .modal-card h3{margin-bottom:2px}
 .steps{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:12px;counter-reset:st}
 .steps li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:2px 10px;align-items:start;counter-increment:st}
 .steps li::before{content:counter(st);grid-row:span 2;width:34px;height:34px;border-radius:50%;background:var(--org);color:#fff;font:18px/34px Jua,sans-serif;text-align:center}
@@ -298,12 +299,11 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
   <div class="modal-card howto-card" role="dialog" aria-labelledby="howtoTitle">
     <h3 id="howtoTitle">게임 방법</h3>
     <ol class="steps">
-      <li><b>캐스팅</b><span>START를 누르면 게이지가 움직여요. 표시가 <em>금색 칸</em>에 올 때 한 번 더 누르면 퍼펙트! 정확할수록 멀리 던져지고 희귀·전설 어종이 더 자주 물어요.</span></li>
-      <li><b>기다리기</b><span>찌가 살짝 흔들리는 건 탐색 입질이에요. <em>느낌표(!)</em>가 뜨면 바로 챔질하세요.</span></li>
-      <li><b>감기</b><span>챔질 후 버튼을 <em>꾹 누르고 있으면</em> 릴이 감기고, 떼면 게이지가 줄어요.</span></li>
-      <li><b>낚시터</b><span>게임하기를 누르면 <em>낚시터</em>를 골라요. 갯바위·배낚시·먼바다·집어등 배는 점수나 코인으로 열리고, 장소마다 잘 나오는 어종이 달라요. 위쪽 <em>장소 칩</em>으로 옮길 수 있어요.</span></li>
-      <li><b>날씨·미끼·퀘스트</b><span>날씨는 30분마다 바뀌고 잘 무는 어종이 달라져요. 위쪽 <em>날씨 칩</em>을 누르면 효과가 보여요. <em>미끼 칩</em>으로 미끼를 바꾸고, <em>📋 퀘스트</em>를 깨면 코인을 받아요.</span></li>
-      <li><b>대물 주의</b><span>2kg 이상은 누르는 동안 줄 장력이 쌓여요. "저항 중!"일 땐 손을 떼서 장력을 낮추세요. 제한 시간은 14초예요.</span></li>
+      <li><b>던지기</b><span>START 후 표시가 <em>금색 칸</em>에 올 때 한 번 더! 정확할수록 귀한 고기가 와요.</span></li>
+      <li><b>챔질</b><span><em>느낌표(!)</em>가 뜨면 바로 누르세요. 찌만 흔들릴 땐 기다려요.</span></li>
+      <li><b>감기</b><span><em>꾹 누르면</em> 감기고, 떼면 게이지가 줄어요.</span></li>
+      <li><b>대물</b><span>2kg 이상은 장력이 쌓여요. "저항 중!"일 땐 손을 떼세요.</span></li>
+      <li><b>더 알아보기</b><span>위쪽 칩을 누르면 <em>장소·날씨·미끼·퀘스트</em>를 보고 바꿀 수 있어요.</span></li>
     </ol>
     <p class="howto-close">화면을 터치하면 닫혀요</p>
   </div>
