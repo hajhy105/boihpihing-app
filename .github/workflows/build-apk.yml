@@ -23,13 +23,42 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
+      # 앱 안에 한글 글꼴(Jua, Gowun Dodum)을 넣어서 인터넷 없이도 같은 글꼴로 보이게 한다
+      - name: Bundle fonts into the dot game
+        run: |
+          mkdir -p app/src/dot/assets/fonts
+          curl -fsSL -o app/src/dot/assets/fonts/Jua-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/jua/Jua-Regular.ttf || echo "글꼴 내려받기 실패"
+          curl -fsSL -o app/src/dot/assets/fonts/GowunDodum-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/gowundodum/GowunDodum-Regular.ttf || echo "글꼴 내려받기 실패"
+          curl -fsSL -o app/src/dot/assets/fonts/OFL.txt https://raw.githubusercontent.com/google/fonts/main/ofl/jua/OFL.txt || echo "글꼴 내려받기 실패"
+          python3 - <<'PY'
+          p='app/src/dot/assets/index.html'
+          s=open(p,encoding='utf-8').read()
+          import re
+          s=re.sub(r'<link rel="preconnect"[^>]*>\s*','',s)
+          s=re.sub(r'<link href="https://fonts.googleapis.com[^>]*>','<style>@font-face{font-family:Jua;src:url(fonts/Jua-Regular.ttf)}@font-face{font-family:"Gowun Dodum";src:url(fonts/GowunDodum-Regular.ttf)}</style>',s)
+          open(p,'w',encoding='utf-8').write(s)
+          PY
+
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+        run: gradle assembleClassicDebug assembleDotDebug --no-daemon
 
       - name: Rename APKs
         run: |
           cp app/build/outputs/apk/classic/debug/app-classic-debug.apk boihpihing-${{ github.run_number }}.apk
           cp app/build/outputs/apk/dot/debug/app-dot-debug.apk boihpihing-dot-${{ github.run_number }}.apk
+
+      # 구글 플레이 업로드용 AAB. 업로드 키 비밀값이 등록돼 있을 때만 만든다
+      - name: Build signed store AAB
+        env:
+          KS_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KS_B64" ]; then echo "업로드 키 비밀값이 없어서 AAB는 건너뜀"; exit 0; fi
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export UPLOAD_KEYSTORE_FILE="$RUNNER_TEMP/upload.jks"
+          gradle bundleStoreRelease --no-daemon
+          cp app/build/outputs/bundle/storeRelease/app-store-release.aab boihpihing-store-${{ github.run_number }}.aab
+          rm -f "$RUNNER_TEMP/upload.jks"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -37,6 +66,8 @@ jobs:
           path: |
             boihpihing-${{ github.run_number }}.apk
             boihpihing-dot-${{ github.run_number }}.apk
+            boihpihing-store-${{ github.run_number }}.aab
+          if-no-files-found: warn
 
       - name: Publish release (direct download link for phones)
         uses: softprops/action-gh-release@v2
@@ -45,6 +76,9 @@ jobs:
           name: 보이흐피힝 빌드 ${{ github.run_number }}
           body: |
             boihpihing-N.apk = 3D 버전, boihpihing-dot-N.apk = 도트 버전 (둘은 따로 설치돼요)
+            boihpihing-store-N.aab = 구글 플레이 업로드용 (휴대폰에 직접 설치하는 파일이 아니에요)
           files: |
             boihpihing-${{ github.run_number }}.apk
             boihpihing-dot-${{ github.run_number }}.apk
+            boihpihing-store-${{ github.run_number }}.aab
+          fail_on_unmatched_files: false
