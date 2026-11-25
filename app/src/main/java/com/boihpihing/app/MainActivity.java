@@ -73,6 +73,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        webView.evaluateJavascript("window.appPause && window.appPause()", null);   // 앱이 가려지면 소리 멈춤
         webView.onPause();
     }
 
@@ -80,6 +81,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         webView.onResume();
+        webView.evaluateJavascript("window.appResume && window.appResume()", null);
         hideSystemBars();
     }
 
