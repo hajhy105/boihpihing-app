@@ -103,6 +103,7 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .upg{margin-top:10px;border-top:2px dashed #dbe8f0;padding-top:8px}.upgbar{display:flex;gap:3px;margin-bottom:6px}.upgbar i{flex:1;height:8px;background:#e3e9ee;border:2px solid #1b1f2b}.upgbar i.on{background:#ffd23f}
 .upbtn{width:100%;background:#7a4fd0!important}.lvb{font-style:normal;color:#7a4fd0}
 .rod.flash-ok{animation:fok .7s}.rod.flash-ng{animation:fng .5s}@keyframes fok{0%,100%{background:#fff}40%{background:#fff4c2}}@keyframes fng{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.wxsel{min-width:96px;min-height:40px;font:17px Jua,sans-serif;border:3px solid #1b1f2b;background:#fff;padding:0 6px}
 .modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .okbtn{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;cursor:pointer}
 .howto{cursor:pointer}
@@ -281,9 +282,13 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 <div id="setModal" class="modal" hidden>
   <div class="modal-card" role="dialog" aria-labelledby="setTitle">
     <h3 id="setTitle">설정</h3>
-    <p class="mhelp">소리를 켜고 끌 수 있어요. 바꾼 설정은 저장돼요.</p>
+    <p class="mhelp">소리와 날씨를 설정할 수 있어요. 바꾼 설정은 저장돼요.</p>
     <div class="setrow"><span>🎵 배경음악</span><button id="tgMusic" class="tg" type="button"></button></div>
     <div class="setrow"><span>🔊 효과음</span><button id="tgSfx" class="tg" type="button"></button></div>
+    <div class="setrow"><span>🌦️ 실제 날씨</span><button id="tgRealWx" class="tg" type="button"></button></div>
+    <div class="setrow"><span>📍 날씨 지역</span><select id="wxRegion" class="wxsel"></select></div>
+    <p class="mhelp" id="wxInfo" style="margin:8px 0 0"></p>
+    <p class="mhelp" style="margin:4px 0 0;font-size:11.5px">날씨 데이터: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0)</p>
     <div class="modal-btns"><button type="button" id="setClose" class="okbtn">닫기</button></div>
   </div>
 </div>
@@ -968,26 +973,64 @@ const WEATHERS={
   cloudy:{name:'흐림',ico:'☁️',w:25,desc:'경계심 많은 벵에돔·감성돔·돌돔이 더 잘 물어요.',mul:{bd:1.7,gs:1.4,dl:1.3}},
   rain:{name:'비',ico:'🌧️',w:15,desc:'감성돔·농어·우럭이 활발해지고, 입질도 빨리 와요.',mul:{gs:2.5,ny:1.8,ur:1.4},wait:.75},
   fog:{name:'안개',ico:'🌫️',w:10,desc:'안개 속에서 희귀 등급 어종이 1.5배 잘 나와요.',tierMul:{2:1.5}},
+  snow:{name:'눈',ico:'❄️',w:0,desc:'겨울 손님 대구·방어가 잘 나와요.',mul:{dg:2,by:1.5,bs:1.3,mn:1.3}},
   storm:{name:'파도 높음',ico:'🌊',w:10,desc:'대물(방어·부시리·참다랑어·삼치·광어)이 2배! 대신 줄 장력이 빨리 올라요.',mul:{by:2,bs:2,cs:2,ss:2,gw:1.6,ny:1.5},tr:1.2,amp:1.9}};
 let WX_OVERRIDE=null;
+/* ---------- 실제 한국 날씨 (Open-Meteo, 지역 선택) ---------- */
+const WX_REGIONS=[
+  {id:'incheon',name:'인천',lat:37.45,lon:126.6,slat:37.4,slon:126.3},
+  {id:'taean',name:'태안',lat:36.75,lon:126.3,slat:36.75,slon:126.1},
+  {id:'gangneung',name:'강릉',lat:37.75,lon:128.9,slat:37.8,slon:129.1},
+  {id:'pohang',name:'포항',lat:36.03,lon:129.37,slat:36.05,slon:129.5},
+  {id:'busan',name:'부산',lat:35.1,lon:129.04,slat:35.05,slon:129.15},
+  {id:'tongyeong',name:'통영',lat:34.85,lon:128.43,slat:34.75,slon:128.45},
+  {id:'yeosu',name:'여수',lat:34.76,lon:127.66,slat:34.65,slon:127.75},
+  {id:'mokpo',name:'목포',lat:34.81,lon:126.39,slat:34.75,slon:126.2},
+  {id:'jeju',name:'제주',lat:33.5,lon:126.53,slat:33.55,slon:126.5}];
+if(!save.wxSet||typeof save.wxSet!=='object')save.wxSet={real:true,region:'busan'};
+let WX_REAL=null;try{const c=JSON.parse(localStorage.getItem('seafish.wx')||'null');if(c&&c.region===save.wxSet.region)WX_REAL=c}catch(e){}
+const wxRegion=()=>WX_REGIONS.find(r=>r.id===save.wxSet.region)||WX_REGIONS[4];
+function codeToWx(code,wind,wave){ // WMO weather code → 게임 날씨
+  if(wave>=1.5||wind>=36)return'storm';
+  if([71,73,75,77,85,86].includes(code))return'snow';
+  if((code>=51&&code<=67)||(code>=80&&code<=82)||code>=95)return'rain';
+  if(code===45||code===48)return'fog';
+  if(code===3)return'cloudy';
+  return'clear'}
+let wxFetching=false,wxLastTry=0;
+async function fetchRealWx(force){if(!save.wxSet.real||wxFetching)return;const now=Date.now();
+  if(!force&&WX_REAL&&WX_REAL.region===save.wxSet.region&&now-WX_REAL.at<30*60e3)return;if(!force&&now-wxLastTry<5*60e3)return;
+  wxFetching=true;wxLastTry=now;const R=wxRegion();
+  try{const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),8000);
+    const a=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${R.lat}&longitude=${R.lon}&current=temperature_2m,weather_code,wind_speed_10m&timezone=Asia%2FSeoul`,{signal:ctl.signal}).then(r=>r.json());
+    let wave=0;try{const m=await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${R.slat}&longitude=${R.slon}&current=wave_height`,{signal:ctl.signal}).then(r=>r.json());wave=(m.current&&m.current.wave_height)||0}catch(e){}
+    clearTimeout(to);const cur=a.current;if(!cur)throw 0;
+    WX_REAL={region:R.id,at:Date.now(),id:codeToWx(cur.weather_code,cur.wind_speed_10m,wave),temp:Math.round(cur.temperature_2m),wind:Math.round(cur.wind_speed_10m/3.6*10)/10,wave:Math.round(wave*10)/10};
+    try{localStorage.setItem('seafish.wx',JSON.stringify(WX_REAL))}catch(e){}
+    if(typeof tickWorld==='function')tickWorld();if(typeof renderSetWx==='function')renderSetWx()}
+  catch(e){}finally{wxFetching=false}}
+const realFresh=()=>save.wxSet.real&&WX_REAL&&WX_REAL.region===save.wxSet.region&&Date.now()-WX_REAL.at<3*3600e3;
+
 function wxAt(slot){const r=hashRng(slot*2654435761^0x5bd1e995),ks=Object.keys(WEATHERS),tot=ks.reduce((s,k)=>s+WEATHERS[k].w,0);let x=r()*tot;for(const k of ks){if((x-=WEATHERS[k].w)<=0)return k}return'clear'}
-function weather(){const m=kstMin(),slot=Math.floor(m/WX_SLOT),id=WX_OVERRIDE||wxAt(slot);let n=slot+1;while(!WX_OVERRIDE&&wxAt(n)===id&&n<slot+12)n++;return{id,...WEATHERS[id],until:n*WX_SLOT,next:WX_OVERRIDE?null:wxAt(n)}}
+function weather(){if(!WX_OVERRIDE&&realFresh()){const r=WX_REAL,R=wxRegion();return{id:r.id,...WEATHERS[r.id],real:true,temp:r.temp,wind:r.wind,wave:r.wave,region:R.name,until:null,next:null}}
+  const m=kstMin(),slot=Math.floor(m/WX_SLOT),id=WX_OVERRIDE||wxAt(slot);let n=slot+1;while(!WX_OVERRIDE&&wxAt(n)===id&&n<slot+12)n++;return{id,...WEATHERS[id],until:n*WX_SLOT,next:WX_OVERRIDE?null:wxAt(n)}}
 let WX=weather(),WXA=1;
 const wxIco=w=>w.id==='clear'&&typeof tod==='function'&&tod().night>.5?'🌙':w.ico;
 function weatherMul(f){const w=WX;let m=(w.mul&&w.mul[f.id])||1;if(w.tierMul){const t=tierIx(f);if(w.tierMul[t])m*=w.tierMul[t]}return m}
 /* weather drawing: behind the pier/hands (sky cover, fog, whitecaps, rain rings) and in front (rain streaks) */
 function drawWeatherBack(c,w,h,t){const id=WX.id;
-  if(id==='cloudy'||id==='rain'||id==='storm'){c.fillStyle=id==='rain'?'rgba(96,106,122,.55)':id==='storm'?'rgba(110,122,138,.4)':'rgba(140,150,162,.42)';c.fillRect(0,0,w,yH);
+  if(id==='cloudy'||id==='rain'||id==='storm'||id==='snow'){c.fillStyle=id==='snow'?'rgba(150,158,170,.45)':id==='rain'?'rgba(96,106,122,.55)':id==='storm'?'rgba(110,122,138,.4)':'rgba(140,150,162,.42)';c.fillRect(0,0,w,yH);
     const cc=id==='rain'?['#8c95a3','#737c8a']:['#c9cfd6','#a9b1bb'];
     for(let i=0;i<9;i++){const cx=Math.round(((i*41*U+t*(id==='storm'?9:4)*U*(1+i*.15))%(w+80*U))-40*U),cy=Math.round(yH*(.05+((i*37)%9)/10));
       c.fillStyle=cc[0];c.fillRect(cx,cy,u(34),u(7));c.fillRect(cx+u(6),cy-u(5),u(18),u(5));c.fillRect(cx+u(20),cy-u(3),u(10),u(3));c.fillStyle=cc[1];c.fillRect(cx+u(2),cy+u(7),u(30),u(3))}
-    if(id!=='cloudy'){c.fillStyle='rgba(40,60,80,.18)';c.fillRect(0,yH,w,h-yH)}}
+    if(id!=='cloudy'&&id!=='snow'){c.fillStyle='rgba(40,60,80,.18)';c.fillRect(0,yH,w,h-yH)}}
   if(id==='fog'){for(let y=0;y<h;y++){const d=(y-yH)/(h*.55),a=y<yH?.62*Math.max(0,1-(yH-y)/(yH*.9)):.62*Math.max(0,1-d);if(a<=.02)continue;c.fillStyle=`rgba(225,232,238,${a.toFixed(3)})`;c.fillRect(0,y,w,1)}
     for(let i=0;i<5;i++){const fy=Math.round(yH+(h-yH)*(.05+i*.09)),fx=Math.round(((i*97*U+t*6*U)%(w+120*U))-60*U);c.fillStyle='rgba(240,244,248,.35)';c.fillRect(fx,fy,u(70),u(3));c.fillRect(fx+u(10),fy-u(2),u(40),u(2))}}
   if(id==='storm'){for(let i=0;i<70;i++){const r=(i*7919)%1000/1000,z=-7+r*8.2,xw=EYE.x-6+((i*131)%1000)/1000*12+Math.sin(t*.7+i)*.4,q=proj(xw,0,z);if(q[1]<=yH+1||q[1]>h)continue;
       const ph=(t*1.3+i*.37)%1;if(ph>.55)continue;const len=Math.max(1,Math.round(q[2]*.25*(1-ph)));px(c,q[0],q[1]-(ph<.2?1:0),len,1,'#f4fbff');if(len>2)px(c,q[0]+1,q[1]-1,len-2,1,'rgba(255,255,255,.7)')}}
   if(id==='rain'){for(let i=0;i<40;i++){const ph=(t*1.8+i*.173)%1,z=-7+((i*613)%1000)/1000*8,xw=EYE.x-6+((i*367)%1000)/1000*12,q=proj(xw,0,z);if(q[1]<=yH+1||q[1]>h)continue;const r=Math.max(1,Math.round(q[2]*.25*ph));c.fillStyle=`rgba(230,240,250,${(.6*(1-ph)).toFixed(2)})`;c.fillRect(Math.round(q[0]-r),Math.round(q[1]),r*2+1,1)}}}
-function drawWeatherFront(c,w,h,t){if(WX.id!=='rain'&&WX.id!=='storm')return;const n=WX.id==='rain'?Math.round(w*h/260):Math.round(w*h/1400),len=u(WX.id==='rain'?6:4);
+function drawWeatherFront(c,w,h,t){if(WX.id==='snow'){const n=Math.round(w*h/500);c.fillStyle='rgba(255,255,255,.9)';for(let i=0;i<n;i++){const sx=((i*73.7+Math.sin(t*.8+i)*12*U+t*6*U)%(w+20)+w+20)%(w+20)-10,sy=((i*191.3+t*(22+(i%15))*U)%(h+20))-10,sz=i%4===0?u(2):1;c.fillRect(Math.round(sx),Math.round(sy),sz,sz)}return}
+  if(WX.id!=='rain'&&WX.id!=='storm')return;const n=WX.id==='rain'?Math.round(w*h/260):Math.round(w*h/1400),len=u(WX.id==='rain'?6:4);
   c.fillStyle=WX.id==='rain'?'rgba(205,220,240,.55)':'rgba(220,230,240,.4)';for(let i=0;i<n;i++){const sx=((i*73.7+t*(40+((i*13)%20))*U*.9)%(w+40))-20,sy=((i*191.3+t*(170+(i%30))*U)%(h+40))-20;for(let k=0;k<len;k++)c.fillRect(Math.round(sx-k*.35),Math.round(sy-k),1,1)}}
 /* ---------- 미끼 · 채비 ---------- */
 const BAITS=[
@@ -1267,7 +1310,11 @@ function renderMenu(){
 }
 /* Android back button: returns true when handled */
 function renderSet(){for(const [id,k] of [['tgMusic','music'],['tgSfx','sfx']]){const b=$(id);b.textContent=save.snd[k]?'켜짐':'꺼짐';b.classList.toggle('on',save.snd[k]);b.setAttribute('aria-pressed',save.snd[k])}}
-function openSet(){renderSet();$('setModal').hidden=false}
+function renderSetWx(){const b=$('tgRealWx');b.textContent=save.wxSet.real?'켜짐':'꺼짐';b.classList.toggle('on',save.wxSet.real);const sel=$('wxRegion');if(!sel.options.length)sel.innerHTML=WX_REGIONS.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');sel.value=save.wxSet.region;sel.disabled=!save.wxSet.real;
+  $('wxInfo').textContent=!save.wxSet.real?'게임 날씨(30분마다 바뀜)를 쓰고 있어요.':realFresh()?`${wxRegion().name}: ${WEATHERS[WX_REAL.id].ico} ${WEATHERS[WX_REAL.id].name} · ${WX_REAL.temp}°C · 바람 ${WX_REAL.wind}m/s${WX_REAL.wave?` · 파고 ${WX_REAL.wave}m`:''} (${new Date(WX_REAL.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준)`:wxFetching?'날씨를 불러오는 중…':'인터넷에 연결되면 실제 날씨를 불러와요. 그전까지는 게임 날씨를 써요.'}
+$('tgRealWx').addEventListener('click',()=>{save.wxSet.real=!save.wxSet.real;store();if(save.wxSet.real)fetchRealWx(true);tickWorld();renderSetWx();sfx.click()});
+$('wxRegion').addEventListener('change',e=>{save.wxSet.region=e.target.value;WX_REAL=null;store();fetchRealWx(true);tickWorld();renderSetWx()});
+function openSet(){renderSet();renderSetWx();$('setModal').hidden=false}
 $('mSet').addEventListener('click',openSet);$('setBtn').addEventListener('click',openSet);
 $('setClose').addEventListener('click',()=>{$('setModal').hidden=true});
 $('setModal').addEventListener('click',e=>{if(e.target.id==='setModal')$('setModal').hidden=true});
@@ -1293,11 +1340,11 @@ function renderQuest(){if(!save.quest)return;const L=save.quest.list,done=L.filt
   el.innerHTML=L.map((q,i)=>{const p=Math.min(1,q.have/q.need),ok=q.have>=q.need;
     return`<div class="qrow${q.claimed?' got':''}"><div class="qtxt"><b>${questText(q)}</b><div class="qbar"><i style="width:${p*100}%"></i></div><small>${Math.min(q.have,q.need)}/${q.need} · 보상 ${q.reward}코인</small></div>
     <button type="button" class="tg${ok&&!q.claimed?' on':''}" data-claim="${i}" ${ok&&!q.claimed?'':'disabled'}>${q.claimed?'받음':ok?'받기':'진행 중'}</button></div>`}).join('')}
-function renderWX(){const c=$('wxChip');if(c){const v=`${wxIco(WX)} ${WX.name}`;if(c.textContent!==v)c.textContent=v}
+function renderWX(){const c=$('wxChip');if(c){const v=`${wxIco(WX)} ${WX.name}${WX.real?` ${WX.temp}°`:''}`;if(c.textContent!==v)c.textContent=v}
   const b=$('baitChip');if(b){const B=bait(),v=`${B.ico} ${B.name}${B.id==='krill'?'':' '+save.baits[B.id]}`;if(b.textContent!==v)b.textContent=v}}
 const idleNow=()=>st==='idle'||st==='result';
 function openModal(id){$(id).hidden=false}
-$('wxChip').addEventListener('click',()=>toast(`${wxIco(WX)} ${WX.name}: ${WX.desc}${WX.next?` · ${fmtHM(WX.until)}부터 ${WEATHERS[WX.next].ico} ${WEATHERS[WX.next].name}`:''}`,4200));
+$('wxChip').addEventListener('click',()=>{fetchRealWx();toast(WX.real?`${wxIco(WX)} ${WX.region} 실제 날씨: ${WX.name} · ${WX.temp}°C · 바람 ${WX.wind}m/s${WX.wave?` · 파고 ${WX.wave}m`:''} — ${WX.desc}`:`${wxIco(WX)} ${WX.name}: ${WX.desc}${WX.next?` · ${fmtHM(WX.until)}부터 ${WEATHERS[WX.next].ico} ${WEATHERS[WX.next].name}`:''}${save.wxSet.real?' (실제 날씨를 못 불러와서 게임 날씨로 보여요)':''}`,4600)});
 $('baitChip').addEventListener('click',()=>{if(!idleNow()){toast('던지기 전에 미끼를 바꿀 수 있어요');return}renderBaitList();openModal('baitModal')});
 $('qChip').addEventListener('click',()=>{ensureQuests();renderQuest();openModal('questModal')});
 $('mQuest').addEventListener('click',()=>{ensureQuests();renderQuest();openModal('questModal')});
@@ -1309,7 +1356,7 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   else if(t.dataset.buybait){const b=BAITS.find(x=>x.id===t.dataset.buybait);if(!b||save.coins<b.price)return;save.coins-=b.price;save.baits[b.id]+=b.pack||1;
     if(save.bait==='krill'&&b.id!=='worm'||save.bait==='krill')save.bait=b.id;store();renderSide();sfx.coin();buzz(20);toast(`${b.ico} ${b.name} 구입! 지금 쓰는 미끼: ${bait().name}`)}});
 let wxPrev=WX.id;
-function tickWorld(){WX=weather();if(WX.id!==wxPrev){wxPrev=WX.id;toast(`날씨가 바뀌었어요 — ${wxIco(WX)} ${WX.name}: ${WX.desc}`,4200);SND.amb(WX.id)}ensureQuests();renderWX()}
+function tickWorld(){fetchRealWx();WX=weather();if(WX.id!==wxPrev){wxPrev=WX.id;toast(`날씨가 바뀌었어요 — ${wxIco(WX)} ${WX.real?WX.region+' ':''}${WX.name}: ${WX.desc}`,4200);SND.amb(WX.id)}ensureQuests();renderWX()}
 function fitTitle(){const h=$('gTitle');if(!h)return;const row=h.parentElement;h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize),n=0;
   while(row.scrollWidth>row.clientWidth+1&&f>13&&n++<20){f-=1;h.style.fontSize=f+'px'}}
 addEventListener('resize',fitTitle);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitTitle);setTimeout(fitTitle,50);
@@ -1422,7 +1469,7 @@ $('chumBtn').addEventListener('click',()=>{if(!(st==='idle'||st==='result')||sav
 let armed=false;
 $('reset').addEventListener('click',e=>{
   if(!armed){armed=true;e.target.textContent='한 번 더 누르면 초기화';setTimeout(()=>{armed=false;e.target.textContent='기록 초기화'},2500);return}
-  save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0,xray:0},chumLeft:0,xrayArmed:false,nick:save.nick||'',snd:save.snd};xrayEnd();store();renderSide();armed=false;e.target.textContent='기록 초기화';
+  save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0,xray:0},chumLeft:0,xrayArmed:false,nick:save.nick||'',snd:save.snd,wxSet:save.wxSet};xrayEnd();store();renderSide();armed=false;e.target.textContent='기록 초기화';
 });
 $('shop').addEventListener('click',e=>{const b=e.target.closest('[data-eq]');if(!b||b.disabled)return;const r=RODS.find(x=>x.id===b.dataset.eq);if(save.pts<r.need)return;save.rod=r.id;store();renderSide()});
 stage.addEventListener('pointerdown',()=>{const r=$('res');if(r.classList.contains('on')){r.classList.remove('on');hint.textContent=''}});
