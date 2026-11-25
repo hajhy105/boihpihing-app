@@ -111,6 +111,12 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .chumbtn small{font:13px 'Gowun Dodum',sans-serif;opacity:.9}
 .chumbtn:disabled{opacity:.45;cursor:default}
 .chumbtn:active:not(:disabled){transform:translateY(4px);box-shadow:0 3px 0 #5f3c1b}
+.actrow .chumbtn{width:72px}
+.xraybtn{background:#1f8fa6!important;box-shadow:0 7px 0 #136578}
+.xraybtn.armed{background:#ffd23f!important;color:#1b1f2b}
+.xchip{background:#1f8fa6;color:#fff;border-color:#1f8fa6}
+.xtag{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;background:#0b2a3c;color:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;padding:2px 8px;font:15px Jua,sans-serif}
+.xtag b{font-weight:400}
 .chumchip{background:#8a5a2b;color:#fff;border-color:#8a5a2b}.chumchip b{color:#ffd166}
 .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .item{background:#fff;border-radius:22px;padding:14px;box-shadow:0 4px 0 #a9d8f2;display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 12px;align-items:center}
@@ -248,6 +254,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
       <span class="chip"><b id="nickChip">낚시꾼</b></span>
       <span class="chip">점수 <b id="pts">0</b></span>
       <span class="chip">코인 <b id="coins">0</b></span>
+      <span class="chip xchip" id="xrayChip" hidden>투시 준비 완료</span>
       <span class="chip chumchip" id="chumChip" hidden>떡밥 효과 <b id="chumLeft">0</b>회</span>
       <span class="chip">🎣 <b id="rodName">일반 낚시대</b> · 권장 <span id="rodMax">8</span>kg 이하</span>
     </div>
@@ -261,6 +268,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div id="res"></div>
     <div id="pop" class="pop" hidden>!</div>
     <div id="resist" class="resist" hidden>저항 중!</div>
+    <div id="xtag" class="xtag" hidden></div>
   </div>
 
   <div class="hud">
@@ -271,6 +279,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 
   <div class="actrow">
     <button id="chumBtn" class="chumbtn" type="button" aria-label="떡밥 뿌리기"><span>떡밥</span><small id="chumCnt">0개</small></button>
+    <button id="xrayBtn" class="chumbtn xraybtn" type="button" aria-label="투시 안경 쓰기"><span>투시</span><small id="xrayCnt">0개</small></button>
     <button id="act" type="button">START</button>
   </div>
 
@@ -303,9 +312,9 @@ const FISH=[
 const LIMIT=14;
 const tier=f=>f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
 const KEY='seafish.v1';
-let save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0},chumLeft:0};
+let save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0,xray:0},chumLeft:0,xrayArmed:false};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.dex)save=s}catch(e){}
-if(typeof save.coins!=='number')save.coins=0;if(!save.items)save.items={chum:0};if(typeof save.items.chum!=='number')save.items.chum=0;if(typeof save.chumLeft!=='number')save.chumLeft=0;
+if(typeof save.coins!=='number')save.coins=0;if(!save.items)save.items={chum:0};if(typeof save.items.chum!=='number')save.items.chum=0;if(typeof save.chumLeft!=='number')save.chumLeft=0;if(typeof save.items.xray!=='number')save.items.xray=0;save.xrayArmed=!!save.xrayArmed;
 const store=()=>{try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -480,19 +489,59 @@ function drawHands(c,w,h,hand,grip,happy,up){
   arm(q[0]+4,q[1],q[0]+Math.round(w*.24),13);
   px(c,q[0]-1,q[1],9,7,PAL.glove);px(c,q[0],q[1]-1,7,1,PAL.glove);px(c,q[0]-1,q[1]+1,1,4,'#3d5064');px(c,q[0]+7,q[1]+2,1,3,'#1f2833');
   if(happy){px(c,q[0]+9,q[1]-5,2,2,PAL.yel);px(c,q[0]-6,q[1]-3,1,1,PAL.yel)}}
+/* ---------- 투시 안경 (x-ray) underwater view ---------- */
+const BED=-2.4;let xFish=[],xBed=[];
+function xrayInit(){xFish=[];const n=7;for(let i=0;i<n;i++){const f=FISH[Math.floor(Math.random()*FISH.length)];
+  xFish.push({f,x0:rnd(-4,6),z:rnd(-6.5,.8),y:rnd(-2,-.9),dir:Math.random()<.5?-1:1,v:rnd(.25,.7),ph:rnd(0,6),L:Math.min(1.8,(.3+f.max*.06)*1.4)})}
+  if(!xBed.length){for(let i=0;i<46;i++)xBed.push({x:rnd(-5,7),z:rnd(-7.5,1.6),k:Math.random()<.45?'rock':Math.random()<.6?'weed':'shell',s:rnd(.6,1.3),ph:rnd(0,6)});xBed.sort((a,b)=>a.z-b.z)}}
+const lerpC=(a,b,k)=>{const p=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)),A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*k).toString(16).padStart(2,'0')).join('')};
+let vigC=null;
+function vignette(w,h){if(vigC&&vigC.width===w&&vigC.height===h)return vigC;vigC=document.createElement('canvas');vigC.width=w;vigC.height=h;const c=vigC.getContext('2d');
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const ex=(x-w/2)/(w*.56),ey=(y-h*.5)/(h*.55),r=ex*ex+ey*ey;
+    if(r>1.06)px(c,x,y,1,1,'#0b1b26');else if(r>.9&&BY[(y&3)*4+(x&3)]/16<(r-.9)/.16)px(c,x,y,1,1,'#0b1b26');else if(r>.84&&r<.9&&((x+y)&1))px(c,x,y,1,1,'rgba(63,198,220,.5)')}
+  return vigC}
+function xrayWater(c,w,h,t){
+  // seabed seen through the water: each screen row maps to a seabed distance
+  for(let y=yH+1;y<h;y++){const d=FY*(EYE.y-BED)/(y-yH),fog=Math.min(1,Math.max(0,(d-2.5)/8.5)),base=lerpC('#9bc7a8','#2d86a8',fog);
+    px(c,0,y,w,1,base);if(fog<.95){c.fillStyle=lerpC('#c2b07c','#3a8fae',fog);const z=EYE.z-d;for(let x=0;x<w;x++){const wx=EYE.x+(x-CX)*d/FX;if(Math.sin(wx*3.1+Math.sin(z*2.3)*1.5)>.55&&BY[(y&3)*4+(x&3)]/16<(1-fog)*.8)c.fillRect(x,y,1,1)}}}
+  // caustic light sparkles
+  for(let i=0;i<40;i++){const x=Math.round((i*47+Math.sin(t*.8+i)*6)%w),y=Math.round(yH+4+((i*29)%(h-yH-4)));if(Math.sin(t*3+i*1.7)>.4)px(c,x,y,2,1,'rgba(230,255,245,.35)')}
+  for(const o of xBed){const q=proj(o.x,BED,o.z);if(q[1]<=yH+1||q[1]>h+10)continue;const fog=Math.min(1,Math.max(0,(dist(o.z)-2.5)/8.5)),s=q[2]*o.s;
+    if(o.k==='rock'){const rw=Math.max(2,Math.round(s*.5)),rh=Math.max(1,Math.round(s*.28));c.fillStyle=lerpC('#6d6a66','#2d86a8',fog);c.fillRect(Math.round(q[0]-rw/2),Math.round(q[1]-rh),rw,rh);c.fillStyle=lerpC('#8f8b85','#3a8fae',fog);c.fillRect(Math.round(q[0]-rw/2+1),Math.round(q[1]-rh),Math.max(1,rw-3),1)}
+    else if(o.k==='weed'){const hh=Math.max(3,Math.round(s*.9));for(let k=0;k<hh;k++){px(c,q[0]+Math.sin(t*1.5+o.ph+k*.35)*k*.12,q[1]-k,Math.max(1,Math.round(s*.04)),1,lerpC(k%2?'#3f8f52':'#2e6e3e','#2d86a8',fog))}}
+    else{px(c,q[0],q[1]-1,Math.max(1,Math.round(s*.1)),1,lerpC('#f2d4c4','#3a8fae',fog))}}
+  // bubbles
+  for(let i=0;i<14;i++){const x=Math.round((i*61)%w),y=Math.round(h-((t*14+i*37)%(h-yH)));if(y>yH+2)px(c,x+Math.round(Math.sin(t*2+i)*2),y,1,1,'rgba(255,255,255,.6)')}
+  // wandering fish
+  const list=xFish.map(o=>({o,x:((o.x0+o.dir*o.v*t)%11+11)%11-4.5})).sort((a,b)=>a.o.z-b.o.z);
+  for(const {o,x} of list){const q=proj(x,o.y+Math.sin(t*1.2+o.ph)*.1,o.z);if(q[1]<=yH+1)continue;const fog=Math.min(1,Math.max(0,(dist(o.z)-3)/8));c.globalAlpha=1-fog*.7;drawSprite(c,fishSprite(o.f,o.L*q[2]),q[0],q[1],o.dir<0,0);c.globalAlpha=1}
+  // surface seen from just above: keep a thin wavy sheen
+  for(let x=0;x<w;x++){if(((x*13+Math.floor(t*6))%9)===0)px(c,x,yH+1+Math.round(Math.sin(x*.2+t*2)),1,1,'rgba(255,255,255,.7)')}}
+const xtag=$('xtag');
+function xTarget(b){ // where the biting fish is under the water
+  if(st==='wait'){const p=Math.min(1,Math.max(0,1-waitT/waitT0)),r=(1-p)*3+.35,a=T*.7;return[b[0]+Math.cos(a)*r,-1.6+p*1.1,b[2]+Math.sin(a)*r*.7,Math.sin(a)>0]}
+  return[b[0]+.3,-.45,b[2]-.1,false]}
 function drawFrame(c,w,h,t,menu){
   c.imageSmoothingEnabled=false;
   drawWorld(c,w,h,t);
+  const XR=!menu&&xray&&(st==='cast'||st==='wait'||st==='bite'||st==='fight');
+  if(XR)xrayWater(c,w,h,t);
   // chum cloud
   if(!menu&&save.chumLeft>0){const q=proj(1.1,0,-2.8),r=q[2]*1.6;for(let i=0;i<60;i++){const a=i*2.4+t*.25,rr=(i%10)/10*r;px(c,q[0]+Math.cos(a)*rr*1.4,q[1]+Math.sin(a)*rr*.35,2,1,'rgba(122,79,38,.35)')}}
   // swimming shadows
-  for(const o of sea)if(o.k==='swim'){const q=proj(o.x,-.2,o.z);if(q[1]<=yH)continue;c.globalAlpha=.45;drawSprite(c,fishShadow(o.f,o.L*q[2]),q[0],q[1]+Math.sin(T*2+o.t),o.dir<0,0);c.globalAlpha=1}
+  for(const o of sea)if(o.k==='swim'){const q=proj(o.x,-.2,o.z);if(q[1]<=yH)continue;c.globalAlpha=XR?1:.45;drawSprite(c,(XR?fishSprite:fishShadow)(o.f,o.L*q[2]),q[0],q[1]+Math.sin(T*2+o.t),o.dir<0,0);c.globalAlpha=1}
   // ripples (perspective ellipses)
   for(const r of ripples){const q=proj(r.x,0,r.z),rx=r.r*r.s*q[2],ry=Math.max(1,rx*.28);c.fillStyle=`rgba(255,255,255,${Math.max(0,r.a)})`;
     for(let i=0;i<24;i++){const a=i/24*Math.PI*2;c.fillRect(Math.round(q[0]+Math.cos(a)*rx),Math.round(q[1]+Math.sin(a)*ry),1,1)}}
   // fish near the hook (shadow under the surface)
   const b=bobPos(),bq=proj(b[0],b[1],b[2]),sc=bq[2];
-  if(!menu&&fish&&(st==='bite'||st==='fight'||(st==='wait'&&nib>0))){const L=Math.min(1.6,.35+fw*.07)*sc,wq=proj(b[0]+.35,-.3,b[2]-.25);
+  if(XR&&fish&&st!=='cast'){const tg=xTarget(b),L=Math.min(2.4,(.35+fw*.07)*1.8),q=proj(tg[0],tg[1],tg[2]);
+    // line and hook under the water
+    const hq=proj(b[0],-.5,b[2]);c.fillStyle='rgba(230,240,250,.7)';for(let y=Math.round(bq[1]+1);y<hq[1];y+=2)c.fillRect(Math.round(bq[0]),y,1,1);px(c,hq[0],hq[1],1,2,'#c9ccce');px(c,hq[0]-1,hq[1]+2,2,1,'#c9ccce');
+    drawSprite(c,fishSprite(fish,L*q[2]),q[0]+(st==='fight'?Math.sin(T*(run>0?10:4))*q[2]*.1:0),q[1],st==='wait'?!tg[3]:false,st==='fight'?Math.sin(T*(run>0?14:6))*.25:0);
+    if(st==='wait'||st==='bite'){const s=W/PW,tt=tier(fish);xtag.innerHTML=`<b style="color:${tt[1]}">●</b> ${esc(fish.name)} <b style="color:#9fe7f2">${tt[0]}</b>`;xtag.style.transform=`translate(${q[0]*s}px,${(q[1]-L*q[2]*.45)*s}px) translate(-50%,-115%)`;xtag.hidden=false}else xtag.hidden=true}
+  else if(xtag&&!xtag.hidden)xtag.hidden=true;
+  if(!XR&&!menu&&fish&&(st==='bite'||st==='fight'||(st==='wait'&&nib>0))){const L=Math.min(1.6,.35+fw*.07)*sc,wq=proj(b[0]+.35,-.3,b[2]-.25);
     c.globalAlpha=st==='wait'?.3:.6;drawSprite(c,fishShadow(fish,L),wq[0]+(st==='fight'?Math.sin(T*(run>0?10:4))*sc*.12:0),wq[1],false,st==='fight'?Math.sin(T*(run>0?14:6))*.2:0);c.globalAlpha=1;
     if(st==='fight'&&run>0&&Math.sin(T*5)>.6){const sp=fishSprite(fish,L);drawSprite(c,sp,wq[0],bq[1]-sp.height*.4,Math.sin(T*2)>0,Math.sin(T*9)*.4)}}
   // jumping fish
@@ -531,6 +580,7 @@ function drawFrame(c,w,h,t,menu){
   // caught fish flying toward the viewer
   for(const o of sea)if(o.k==='catch'){const p=Math.min(1,o.t/o.dur),q=proj(lerp(o.x,1.2,p),Math.sin(Math.PI*p)*1.8+p*1.2,lerp(o.z,2.2,p));drawSprite(c,fishSprite(o.f,Math.min(w*.6,o.L*q[2])),q[0],q[1],false,Math.sin(p*12)*.3)}
   // aim marker on the water
+  if(XR)c.drawImage(vignette(w,h),0,0);
   if(!menu&&st==='aim'){const q=proj(1.2,0,lerp(-1.4,-4.6,aimPos()));c.fillStyle='rgba(255,255,255,.8)';c.fillRect(Math.round(q[0])-3,Math.round(q[1]),7,1);c.fillRect(Math.round(q[0]),Math.round(q[1])-2,1,5)}
 }
 function syncWorld(){}
@@ -551,11 +601,12 @@ let aimT=0,aimZ=.75,grade='good',chumUsed=false;
 const tierIx=f=>f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
 const aimPos=()=>{const u=(aimT/.7)%2;return u<1?u:2-u};
 const CHUM={price:30,casts:5,legend:4};
+const XRAY={price:20,bite:1.5};let xray=false,waitT0=1;
 function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1);
   const tot=FISH.reduce((s,f)=>s+wt(f),0);let r=Math.random()*tot;
   for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
 }
-function startAim(){$('res').classList.remove('on');st='aim';aimT=rnd(0,.7);aimZ=rnd(.58,.9);
+function startAim(){$('res').classList.remove('on');st='aim';xray=false;aimT=rnd(0,.7);aimZ=rnd(.58,.9);
   const z=$('aimz');for(const k of['good','great','perfect']){const e=z.querySelector('.'+k),w=GRADES[k].w;e.style.left=((aimZ-w)*100)+'%';e.style.width=(w*200)+'%'}}
 function cast(){
   const d=Math.abs(aimPos()-aimZ);grade=d<=GRADES.perfect.w?'perfect':d<=GRADES.great.w?'great':d<=GRADES.good.w?'good':'miss';
@@ -564,7 +615,8 @@ function cast(){
   chumUsed=save.chumLeft>0;if(chumUsed){save.chumLeft--;store();renderSide()}
   fish=pickFish(grade,chumUsed);fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),1.8)).toFixed(2);
   const far=grade==='perfect'?1:grade==='great'?.7:grade==='good'?.4:.1;
-  bx0=rnd(-.2,2.8);bz0=lerp(-1.4,-4.6,far)+rnd(-.4,.4);castT=0;st='cast';waitT=rnd(2.2,6.5);nibT=rnd(.6,1.4);nib=0;
+  bx0=rnd(-.2,2.8);bz0=lerp(-1.4,-4.6,far)+rnd(-.4,.4);castT=0;st='cast';waitT=rnd(2.2,6.5);waitT0=waitT;nibT=rnd(.6,1.4);nib=0;
+  xray=save.xrayArmed;if(xray){save.xrayArmed=false;store();renderSide();xrayInit()}
 }
 function startFight(){
   st='fight';heavy=fw>=2;gauge=0;zeroT=0;tens=0;clock=0;run=0;nextRun=rnd(1.2,2.6);
@@ -614,7 +666,7 @@ function update(dt){
   else if(st==='wait'){
     landAge+=dt;waitT-=dt;nibT-=dt;
     if(nibT<=0){nib=rnd(.5,.9);ripple(bx0,bz0,.7);nibT=Math.random()<.35?rnd(.15,.3):rnd(.7,1.8)}
-    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=Math.max(.75,1.25-fw*.03);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(60)}
+    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=Math.max(.75,1.25-fw*.03)*(xray?XRAY.bite:1);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(60)}
   }else if(st==='bite'){biteAge+=dt;bRip-=dt;if(bRip<=0){const b=bobPos();ripple(b[0],b[2],1.2+Math.random());if(Math.random()<.4)splash(b[0],0,b[2],3);bRip=rnd(.1,.2)}biteT-=dt;if(biteT<=0)finish(false,'miss')}
   else if(st==='fight'){
     clock+=dt;
@@ -634,15 +686,18 @@ function update(dt){
 const act=$('act'),hint=$('hint');
 function hud(){
   {const cb=$('chumBtn'),en=(st==='idle'||st==='result')&&save.items.chum>0;if(cb.disabled===en)cb.disabled=!en}
+  {const xb=$('xrayBtn'),en=(st==='idle'||st==='result')&&save.items.xray>0&&!save.xrayArmed;if(xb.disabled===en)xb.disabled=!en;xb.classList.toggle('armed',save.xrayArmed)}
   {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok;$('toDex').disabled=!ok;$('helpBtn').disabled=!ok}}
   const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
-  const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중… (떼면 멈춤)':'꾹 눌러서 감기'}[st];
+  const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중…':'꾹 눌러 감기'}[st];
   if(act.textContent!==lab)act.textContent=lab;
   act.className=st==='result'?'':st;
   const h={idle:save.chumLeft>0?`떡밥 효과 중! 남은 ${save.chumLeft}회 — START를 눌러 캐스팅하세요`:'START를 눌러 캐스팅하세요',aim:'표시가 금색 칸에 올 때 누르면 귀한 고기가 와요!',cast:'휘익—',wait:'찌를 지켜보세요… 느낌표가 뜨면 챔질!',bite:'입질! 지금 챔질!',result:ok=>''}[st];
   if(st==='fight')hint.textContent=(heavy?(run>0?'저항 중! 손을 떼고 장력을 낮추세요':'꾹 눌러 감되, 장력이 높으면 떼세요'):'꾹 누르고 있으면 감겨요')+' · '+feel(fw);
   else if(st==='result')hint.textContent=$('res').classList.contains('on')?'':'다시 던지기를 눌러 캐스팅하세요';
   else hint.textContent=h;
+  if(xray&&fish&&st==='wait')hint.textContent=`투시 중! ${fish.name}(이)가 미끼로 다가오고 있어요…`;
+  else if(save.xrayArmed&&(st==='idle'||st==='result')&&!$('res').classList.contains('on'))hint.textContent='투시 안경 준비 완료! 다음 캐스팅에서 바닷속이 보여요';
   const g=st==='fight'?gauge:st==='result'&&$('res').classList.contains('on')?0:0;
   $('gbar').firstElementChild.style.width=g+'%';$('gval').textContent=Math.round(g)+'%';
   const tOn=st==='fight'&&heavy;
@@ -717,12 +772,16 @@ function renderMenu(){
   $('hello').textContent=save.nick?`반가워요, ${save.nick}님`:'반가워요! 닉네임을 정해 보세요';
   $('mStat').textContent=`점수 ${save.pts.toLocaleString('ko-KR')} · 코인 ${save.coins.toLocaleString('ko-KR')} · ${rod().name} · 도감 ${Object.keys(save.dex).length}/${FISH.length}`;
   $('coins').textContent=save.coins.toLocaleString('ko-KR');$('shopCoins').textContent=save.coins.toLocaleString('ko-KR');
-  $('chumCnt').textContent=save.items.chum+'개';$('chumChip').hidden=save.chumLeft<=0;$('chumLeft').textContent=save.chumLeft;
+  $('chumCnt').textContent=save.items.chum+'개';$('xrayCnt').textContent=save.items.xray+'개';$('xrayChip').hidden=!save.xrayArmed;$('chumChip').hidden=save.chumLeft<=0;$('chumLeft').textContent=save.chumLeft;
   const can=save.coins>=CHUM.price;
   $('items').innerHTML=`<div class="item"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#f3e6d3"/><path d="M18 26h28l-3 24H21z" fill="#8a5a2b"/><path d="M16 22h32v6H16z" fill="#6b431e"/><g fill="#c48a4a"><circle cx="26" cy="16" r="3"/><circle cx="34" cy="11" r="2.5"/><circle cx="41" cy="17" r="2"/><circle cx="30" cy="8" r="1.8"/></g></svg>
     <b>떡밥 뿌리기</b><p>뿌리면 다음 <b style="font:inherit;color:#e2603f">${CHUM.casts}번</b> 캐스팅 동안 전설 어종(부시리·참다랑어)이 나올 확률이 <b style="font:inherit;color:#e2603f">${CHUM.legend}배</b>로 올라가요.</p>
     <p>가격 ${CHUM.price}코인 · 보유 ${save.items.chum}개</p>
-    <button class="buy" type="button" id="buyChum" ${can?'':'disabled'}>${can?`${CHUM.price}코인으로 사기`:`코인이 부족해요 (${CHUM.price-save.coins}코인 더 필요)`}</button></div>`;
+    <button class="buy" type="button" id="buyChum" ${can?'':'disabled'}>${can?`${CHUM.price}코인으로 사기`:`코인이 부족해요 (${CHUM.price-save.coins}코인 더 필요)`}</button></div>`+
+    `<div class="item"><svg viewBox="0 0 64 64" aria-hidden="true" shape-rendering="crispEdges"><rect x="2" y="2" width="60" height="60" fill="#d7f1f6"/><rect x="6" y="24" width="52" height="4" fill="#1b1f2b"/><rect x="8" y="22" width="22" height="20" fill="#1b1f2b"/><rect x="34" y="22" width="22" height="20" fill="#1b1f2b"/><rect x="11" y="25" width="16" height="14" fill="#3fc6dc"/><rect x="37" y="25" width="16" height="14" fill="#3fc6dc"/><rect x="13" y="27" width="4" height="4" fill="#fff"/><rect x="39" y="27" width="4" height="4" fill="#fff"/><rect x="30" y="28" width="4" height="4" fill="#1b1f2b"/></svg>
+    <b>투시 안경</b><p>쓰고 던지면 <b style="font:inherit;color:#1f8fa6">그 1번 캐스팅 동안</b> 바닷속이 훤히 보여요. 어떤 물고기가 미끼로 다가오는지 미리 알 수 있고, 챔질 시간도 <b style="font:inherit;color:#1f8fa6">${XRAY.bite}배</b> 넉넉해져요.</p>
+    <p>가격 ${XRAY.price}코인 · 보유 ${save.items.xray}개</p>
+    <button class="buy" type="button" id="buyXray" ${save.coins>=XRAY.price?'':'disabled'}>${save.coins>=XRAY.price?`${XRAY.price}코인으로 사기`:`코인이 부족해요 (${XRAY.price-save.coins}코인 더 필요)`}</button></div>`;
   $('nickChip').textContent=nick();$('dexCount').textContent=`${Object.keys(save.dex).length}/${FISH.length}종`;$('shopPts').textContent=save.pts.toLocaleString('ko-KR');
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
 }
@@ -735,6 +794,10 @@ window.appBack=()=>{
   if(menuEl.hidden){if(canLeave()){$('res').classList.remove('on');menuEl.hidden=false}return true}
   return false;
 };
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='buyXray'){if(save.coins<XRAY.price)return;save.coins-=XRAY.price;save.items.xray++;store();renderSide();buzz(20)}});
+$('xrayBtn').addEventListener('click',()=>{if(!(st==='idle'||st==='result')||save.items.xray<=0||save.xrayArmed)return;
+  save.items.xray--;save.xrayArmed=true;store();renderSide();buzz([10,20,10]);
+  const gEl=$('grade');gEl.textContent='투시 안경 착용!';gEl.style.color='#1f8fa6';gEl.classList.remove('show');void gEl.offsetWidth;gEl.classList.add('show')});
 document.addEventListener('click',e=>{if(e.target&&e.target.id==='buyChum'){if(save.coins<CHUM.price)return;save.coins-=CHUM.price;save.items.chum++;store();renderSide();buzz(20)}});
 $('chumBtn').addEventListener('click',()=>{if(!(st==='idle'||st==='result')||save.items.chum<=0)return;
   save.items.chum--;save.chumLeft+=CHUM.casts;store();renderSide();throwChum();buzz([15,30,15]);
@@ -742,7 +805,7 @@ $('chumBtn').addEventListener('click',()=>{if(!(st==='idle'||st==='result')||sav
 let armed=false;
 $('reset').addEventListener('click',e=>{
   if(!armed){armed=true;e.target.textContent='한 번 더 누르면 초기화';setTimeout(()=>{armed=false;e.target.textContent='기록 초기화'},2500);return}
-  save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0},chumLeft:0,nick:save.nick||''};store();renderSide();armed=false;e.target.textContent='기록 초기화';
+  save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0,xray:0},chumLeft:0,xrayArmed:false,nick:save.nick||''};xray=false;store();renderSide();armed=false;e.target.textContent='기록 초기화';
 });
 $('shop').addEventListener('click',e=>{const b=e.target.closest('[data-eq]');if(!b||b.disabled)return;const r=RODS.find(x=>x.id===b.dataset.eq);if(save.pts<r.need)return;save.rod=r.id;store();renderSide()});
 stage.addEventListener('pointerdown',()=>{const r=$('res');if(r.classList.contains('on')){r.classList.remove('on');hint.textContent=''}});
