@@ -192,7 +192,8 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 
 /* ===== pixel (도트) theme ===== */
 .hrow h1{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:clip}.hbtn{white-space:nowrap}
-@media (max-width:520px){.hrow{gap:5px}.hrow h1{font-size:20px}.hrow .hbtn{padding:0 9px;font-size:15px}#helpBtn,#setBtn{width:36px;padding:0}}
+@media (max-width:520px){.hrow{gap:5px}.hrow h1{font-size:20px}.hrow .hbtn{padding:0 8px;font-size:14px}#helpBtn,#setBtn{width:34px;padding:0}}
+.hrow h1{flex:0 0 auto;overflow:visible;margin:0}.hrow .hbtn{flex:0 0 auto}
 #cv,#menuCv{image-rendering:pixelated;image-rendering:crisp-edges}
 *{border-radius:0!important}
 button,.chip,.card,.rod,.item,.modal>div,#res,#howto>div,.menu button,.box,.panel{box-shadow:4px 4px 0 #1b1f2b!important;border:3px solid #1b1f2b!important}
@@ -297,8 +298,9 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 
 <div class="wrap">
   <header>
-    <div class="hrow"><button id="toMenu" class="hbtn" type="button">‹ 메뉴</button><h1>보이흐피힝</h1><span class="hsp"></span><button id="toDex" class="hbtn" type="button">어종</button><button id="toShop" class="hbtn" type="button">상점</button><button id="setBtn" class="hbtn" type="button" aria-label="설정">⚙</button><button id="helpBtn" class="hbtn" type="button" aria-label="게임 방법">?</button></div>
+    <div class="hrow"><h1 id="gTitle">보이흐피힝</h1><button id="toMenu" class="hbtn" type="button">‹ 메뉴</button><span class="hsp"></span><button id="toDex" class="hbtn" type="button">어종</button><button id="toShop" class="hbtn" type="button">상점</button><button id="setBtn" class="hbtn" type="button" aria-label="설정">⚙</button><button id="helpBtn" class="hbtn" type="button" aria-label="게임 방법">?</button></div>
     <div class="chips">
+      <span class="chip" id="todChip">☀️ 낮</span>
       <span class="chip"><b id="nickChip">낚시꾼</b></span>
       <span class="chip">점수 <b id="pts">0</b></span>
       <span class="chip">코인 <b id="coins">0</b></span>
@@ -307,7 +309,6 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
       <button type="button" class="chip chipbtn qchip" id="qChip">📋 퀘스트</button>
       <span class="chip xchip" id="xrayChip" hidden>투시 중</span>
       <span class="chip chumchip" id="chumChip" hidden>떡밥 효과 <b id="chumLeft">0</b>회</span>
-      <span class="chip" id="todChip">☀️ 낮</span>
       <span class="chip">🎣 <b id="rodName">일반 낚시대</b> · 권장 <span id="rodMax">8</span>kg 이하</span>
     </div>
   </header>
@@ -1078,7 +1079,7 @@ let howtoShown=false;const howEl=$('howto');
 function openHow(){howEl.hidden=false}
 howEl.addEventListener('pointerdown',e=>{e.preventDefault();howEl.hidden=true});
 $('helpBtn').addEventListener('click',()=>{if(canLeave())openHow()});
-$('mPlay').addEventListener('click',()=>{menuEl.hidden=true;try{window.scrollTo(0,0)}catch(e){}if(!howtoShown){howtoShown=true;openHow()}});
+$('mPlay').addEventListener('click',()=>{menuEl.hidden=true;setTimeout(fitTitle,0);try{window.scrollTo(0,0)}catch(e){}if(!howtoShown){howtoShown=true;openHow()}});
 $('mShop').addEventListener('click',openShop);
 const dexEl=$('dexScreen');
 function openDex(){renderSide();dexEl.hidden=false;dexEl.scrollTop=0}
@@ -1159,6 +1160,9 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
     if(save.bait==='krill'&&b.id!=='worm'||save.bait==='krill')save.bait=b.id;store();renderSide();sfx.coin();buzz(20);toast(`${b.ico} ${b.name} 구입! 지금 쓰는 미끼: ${bait().name}`)}});
 let wxPrev=WX.id;
 function tickWorld(){WX=weather();if(WX.id!==wxPrev){wxPrev=WX.id;toast(`날씨가 바뀌었어요 — ${wxIco(WX)} ${WX.name}: ${WX.desc}`,4200);SND.amb(WX.id)}ensureQuests();renderWX()}
+function fitTitle(){const h=$('gTitle');if(!h)return;const row=h.parentElement;h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize),n=0;
+  while(row.scrollWidth>row.clientWidth+1&&f>13&&n++<20){f-=1;h.style.fontSize=f+'px'}}
+addEventListener('resize',fitTitle);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitTitle);setTimeout(fitTitle,50);
 window.appBack=()=>{
   if(!howEl.hidden){howEl.hidden=true;return true}
   if(!$('setModal').hidden){$('setModal').hidden=true;return true}
