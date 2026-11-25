@@ -292,24 +292,27 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 const FISH=[
  {id:'jg',name:'전갱이',min:.1,max:.5,rar:18,h:.3,col:'#5f8197',belly:'#e8eff3',fin:'#8aa3b1',pat:'line2',c:42},
  {id:'gd',name:'고등어',min:.2,max:.9,rar:18,h:.27,col:'#2c6a68',belly:'#eef3f3',fin:'#4f8a86',pat:'mack',c:45},
- {id:'bl',name:'볼락',min:.1,max:.5,rar:15,h:.36,col:'#6a4a3a',belly:'#caa78d',fin:'#7b5845',pat:'spot',c:38},
+ {id:'bl',name:'볼락',min:.1,max:.5,rar:15,h:.36,col:'#6a4a3a',belly:'#caa78d',fin:'#7b5845',pat:'spot',c:38,night:2.5},
  {id:'nr',name:'노래미',min:.3,max:1.5,rar:12,h:.3,col:'#7a5a33',belly:'#d9c290',fin:'#8e6c3f',pat:'spot',c:42},
- {id:'ur',name:'우럭',min:.3,max:3,rar:13,h:.38,col:'#3b3b3a',belly:'#9c9b93',fin:'#4a4a48',pat:'spot',c:40},
+ {id:'ur',name:'우럭',min:.3,max:3,rar:13,h:.38,col:'#3b3b3a',belly:'#9c9b93',fin:'#4a4a48',pat:'spot',c:40,night:2},
  {id:'gs',name:'감성돔',min:.5,max:3.5,rar:7,h:.44,col:'#46525d',belly:'#cdd3d8',fin:'#38424b',pat:'band',c:36},
  {id:'gw',name:'광어',min:.5,max:6,rar:8,h:.5,col:'#6b5a40',belly:'#a99670',fin:'#5c4c35',pat:'spot',c:40},
  {id:'cd',name:'참돔',min:.8,max:7,rar:6,h:.44,col:'#e0566a',belly:'#ffd6d8',fin:'#d04358',pat:'dots',c:36},
- {id:'ny',name:'농어',min:1,max:8,rar:5,h:.3,col:'#56656f',belly:'#e5eaed',fin:'#46535b',pat:'freck',c:42},
+ {id:'ny',name:'농어',min:1,max:8,rar:5,h:.3,col:'#56656f',belly:'#e5eaed',fin:'#46535b',pat:'freck',c:42,night:2},
  {id:'by',name:'방어',min:3,max:12,rar:3,h:.3,col:'#2d4d78',belly:'#eaeff4',fin:'#c9a93a',pat:'yline',c:42},
  {id:'bs',name:'부시리',min:4,max:16,rar:1.6,h:.28,col:'#375c7d',belly:'#eef2f5',fin:'#d9b43a',pat:'yline',c:44},
  {id:'hk',name:'학꽁치',min:.05,max:.3,rar:14,h:.14,col:'#3f7a86',belly:'#eef4f5',fin:'#7fa7ad',pat:'line2',c:60},
  {id:'jc',name:'쥐치',min:.1,max:.6,rar:12,h:.52,col:'#8a8270',belly:'#c9c1aa',fin:'#9c8f6a',pat:'freck',c:34},
- {id:'yg',name:'열기',min:.1,max:.6,rar:12,h:.36,col:'#c9473a',belly:'#f2c2a8',fin:'#c24a3c',pat:'spot',c:37},
+ {id:'yg',name:'열기',min:.1,max:.6,rar:12,h:.36,col:'#c9473a',belly:'#f2c2a8',fin:'#c24a3c',pat:'spot',c:37,night:2},
  {id:'dd',name:'도다리',min:.2,max:1.2,rar:9,h:.55,col:'#6e604a',belly:'#b9aa86',fin:'#5e5240',pat:'freck',c:36},
- {id:'gc',name:'갈치',min:.3,max:2,rar:7,h:.12,col:'#c9d2da',belly:'#f4f7fa',fin:'#d7dfe6',pat:'none',c:95},
+ {id:'gc',name:'갈치',min:.3,max:2,rar:7,h:.12,col:'#c9d2da',belly:'#f4f7fa',fin:'#d7dfe6',pat:'none',c:95,night:3},
  {id:'bd',name:'벵에돔',min:.3,max:2.5,rar:6,h:.42,col:'#2d3a46',belly:'#5d6b76',fin:'#26313b',pat:'none',c:35},
  {id:'ss',name:'삼치',min:1,max:6,rar:4,h:.2,col:'#3a5f80',belly:'#eef2f5',fin:'#5d7a92',pat:'dots2',c:48},
  {id:'dl',name:'돌돔',min:.5,max:4,rar:3.5,h:.48,col:'#8f9398',belly:'#d7dadc',fin:'#3c4146',pat:'bands',c:36},
- {id:'cs',name:'참다랑어',min:10,max:22,rar:.7,h:.3,col:'#1f3552',belly:'#e7ecf0',fin:'#e0b93a',pat:'tuna',c:45}
+ {id:'cs',name:'참다랑어',min:10,max:22,rar:.7,h:.3,col:'#1f3552',belly:'#e7ecf0',fin:'#e0b93a',pat:'tuna',c:45},
+ {id:'ojg',name:'오징어',kind:'squid',min:.2,max:.6,rar:13,h:.22,col:'#c98066',belly:'#f2d3c4',fin:'#d99a80',pat:'sq_long',c:42,night:3,day:.4},
+ {id:'gbo',name:'갑오징어',kind:'squid',min:.3,max:1.5,rar:8,h:.46,col:'#7a5a44',belly:'#d9c3a6',fin:'#a68567',pat:'sq_cuttle',c:24,night:1.2},
+ {id:'mno',name:'무늬오징어',kind:'squid',min:.5,max:2.5,rar:4,h:.4,col:'#a87890',belly:'#eed8e2',fin:'#c9a4b6',pat:'sq_reef',c:30,night:2.2,day:.6}
 ];
 const LIMIT=14;
 const tier=f=>f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
@@ -324,7 +327,44 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const lerp=(a,b,t)=>a+(b-a)*t;
 
 /* ---------- fish drawing ---------- */
+function drawSquid(c,x,y,L,f,sil){
+  const H=L*f.h,body=sil?'rgba(60,110,160,.22)':null,P=f.pat;
+  const m0=P==='sq_long'?-.5:-.44,m1=P==='sq_long'?.12:.08; // mantle span (x as fraction of L)
+  c.save();c.translate(x,y);c.lineCap='round';
+  const armLen=P==='sq_long'?.26:P==='sq_cuttle'?.2:.27,hx=m1+.07;
+  // arms + tentacles
+  c.strokeStyle=body||f.fin;
+  for(let i=0;i<8;i++){const a=(i-3.5)/3.5,len=armLen*(1-.25*Math.abs(a));c.lineWidth=Math.max(1,L*.03*(1-.4*Math.abs(a)));c.beginPath();c.moveTo(L*(hx+.04),a*H*.22);
+    c.quadraticCurveTo(L*(hx+.04+len*.5),a*H*.32+Math.sin(i*1.7)*H*.08,L*(hx+.04+len),a*H*.38+Math.sin(i*2.3)*H*.1);c.stroke()}
+  const tl=P==='sq_long'?.42:P==='sq_cuttle'?.3:.36;c.lineWidth=Math.max(1,L*.018);
+  for(const s of[-1,1]){c.beginPath();c.moveTo(L*(hx+.04),s*H*.06);c.quadraticCurveTo(L*(hx+tl*.6),s*H*.18,L*(hx+tl),s*H*.12);c.stroke();
+    c.fillStyle=body||f.fin;c.beginPath();c.ellipse(L*(hx+tl),s*H*.12,L*.04,H*.09,0,0,7);c.fill()}
+  // fins
+  c.fillStyle=body||f.fin;
+  if(P==='sq_long'){c.beginPath();c.moveTo(L*-.52,0);c.lineTo(L*-.37,-H*1.05);c.lineTo(L*-.2,0);c.lineTo(L*-.37,H*1.05);c.closePath();c.fill()}
+  else{c.beginPath();c.ellipse(L*(m0+m1)/2,0,L*(m1-m0)/2+L*.02,H*(P==='sq_reef'?.82:.66),0,0,7);c.fill()}
+  // head
+  c.fillStyle=body||f.col;c.beginPath();c.ellipse(L*hx,0,L*.07,H*(P==='sq_long'?.42:.34),0,0,7);c.fill();
+  // mantle
+  c.beginPath();
+  if(P==='sq_long'){c.moveTo(L*m0,0);c.quadraticCurveTo(L*(m0+.08),-H*.5,L*m1,-H*.48);c.lineTo(L*m1,H*.48);c.quadraticCurveTo(L*(m0+.08),H*.5,L*m0,0)}
+  else c.ellipse(L*(m0+m1)/2,0,L*(m1-m0)/2,H*.5,0,0,7);
+  if(sil){c.fill();c.restore();return}
+  const g=c.createLinearGradient(0,-H/2,0,H/2);g.addColorStop(0,f.col);g.addColorStop(.6,f.col);g.addColorStop(1,f.belly);c.fillStyle=g;c.fill();
+  c.save();c.clip();
+  if(P==='sq_long'){c.fillStyle='rgba(120,30,20,.45)';for(let i=0;i<22;i++){c.beginPath();c.arc(L*(m0+.05+((i*.37)%1)*(m1-m0-.05)),Math.sin(i*5.3)*H*.36,Math.max(.6,L*.012),0,7);c.fill()}
+    c.fillStyle='rgba(255,255,255,.25)';c.fillRect(L*m0,-H*.08,L*(m1-m0),H*.08)}
+  if(P==='sq_cuttle'){c.strokeStyle='rgba(245,235,215,.75)';c.lineWidth=Math.max(1,L*.022);for(let i=0;i<7;i++){const xx=L*(m0+.06+i*(m1-m0-.08)/6);c.beginPath();c.moveTo(xx,-H*.5);c.quadraticCurveTo(xx+L*.03,-H*.15,xx-L*.01,H*.1);c.stroke()}}
+  if(P==='sq_reef'){c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<18;i++){c.beginPath();c.arc(L*(m0+.04+((i*.41)%1)*(m1-m0-.06)),Math.cos(i*3.9)*H*.35,Math.max(.6,L*.014),0,7);c.fill()}
+    c.fillStyle='rgba(120,200,255,.28)';c.fillRect(L*m0,-H*.18,L*(m1-m0),H*.1)}
+  c.restore();
+  // eye
+  c.fillStyle='#e8e0c0';c.beginPath();c.arc(L*hx,-H*.12,Math.max(1,L*.032),0,7);c.fill();
+  c.fillStyle='#0d0d10';c.beginPath();c.arc(L*hx,-H*.12,Math.max(.8,L*.022),0,7);c.fill();
+  c.restore()}
+
 function drawFish(c,x,y,L,f,sil){
+  if(f.kind==='squid')return drawSquid(c,x,y,L,f,sil);
   const H=L*f.h,body=sil?'rgba(60,110,160,.22)':null;
   c.save();c.translate(x,y);
   c.fillStyle=body||f.fin;
@@ -631,6 +671,7 @@ function drawFrame(c,w,h,t,menu){
   if(!XR&&!menu&&fish&&(st==='bite'||st==='fight'||(st==='wait'&&nib>0))){const L=Math.min(1.6,.35+fw*.07)*sc,wq=proj(b[0]+.35,-.3,b[2]-.25);
     c.globalAlpha=st==='wait'?.3:.6;drawSprite(c,fishShadow(fish,L),wq[0]+(st==='fight'?Math.sin(T*(run>0?10:4))*sc*.12:0),wq[1],false,st==='fight'?Math.sin(T*(run>0?14:6))*.2:0);c.globalAlpha=1;
     if(st==='fight'&&run>0&&Math.sin(T*5)>.6){const sp=fishSprite(fish,L);drawSprite(c,sp,wq[0],bq[1]-sp.height*.4,Math.sin(T*2)>0,Math.sin(T*9)*.4)}}
+  if(!menu&&fish&&fish.kind==='squid'&&st==='fight'&&run>0){const iq=proj(b[0]+.3,-.35,b[2]-.2),r=iq[2]*.35;for(let i=0;i<26;i++){const a=i*2.39+T*.6,rr=r*((i%7)/7);px(c,iq[0]+Math.cos(a)*rr*1.3,iq[1]+Math.sin(a)*rr*.5,2,2,'rgba(16,14,22,.55)')}}
   // jumping fish
   for(const o of sea)if(o.k==='jump'){const p=Math.min(1,o.t/o.dur),q=proj(o.x+o.dir*1.2*p,Math.sin(Math.PI*p)*o.h,o.z);drawSprite(c,fishSprite(o.f,o.L*q[2]),q[0],q[1],o.dir<0,-Math.cos(Math.PI*p)*o.dir*.9)}
   // splash drops
@@ -667,7 +708,7 @@ function drawFrame(c,w,h,t,menu){
 let todT=0;function syncWorld(){if(T-todT>1||T<todT){todT=T;const el=$('todChip');if(el){const v=todLabel(kstHour());if(el.textContent!==v)el.textContent=v}}}
 function render(){ctx.setTransform(1,0,0,1,0,0);drawFrame(ctx,PW,PH,T,false);
   if(st==='bite'){const b=bobPos(),s=toScreen([b[0],b[1]+.9,b[2]]);pop.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;pop.hidden=false}else pop.hidden=true;
-  if(st==='fight'&&run>0){const b=bobPos(),s=toScreen([b[0],.9,b[2]]);resist.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;resist.hidden=false}else resist.hidden=true;
+  if(st==='fight'&&run>0){const rt=fish&&fish.kind==='squid'?'먹물 발사!':'저항 중!';if(resist.textContent!==rt)resist.textContent=rt;const b=bobPos(),s=toScreen([b[0],.9,b[2]]);resist.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;resist.hidden=false}else resist.hidden=true;
   if(!$('menu').hidden)drawMenu()}
 const mcv=$('menuCv'),mctx=mcv?mcv.getContext('2d'):null;
 function drawMenu(){if(!mctx)return;const w=Math.round(Math.min(220,innerWidth/2.6)),h=Math.round(w*innerHeight/innerWidth);if(mcv.width!==w||mcv.height!==h){mcv.width=w;mcv.height=h}
@@ -683,7 +724,8 @@ const tierIx=f=>f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
 const aimPos=()=>{const u=(aimT/.7)%2;return u<1?u:2-u};
 const CHUM={price:30,casts:5,legend:4};
 const XRAY={price:20,bite:1.5};let xray=false,xrayCast=false,waitT0=1;
-function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1);
+const nightMul=f=>{const n=(typeof tod==='function'?tod().night:0);return lerp(f.day||1,f.night||1,n)};
+function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1)*nightMul(f);
   const tot=FISH.reduce((s,f)=>s+wt(f),0);let r=Math.random()*tot;
   for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
 }
@@ -816,10 +858,10 @@ function renderSide(){
   for(const cv2 of $('shop').querySelectorAll('canvas')){const R=RODS.find(x=>x.id===cv2.dataset.rod);cv2.width=72;cv2.height=29;cv2.style.imageRendering='pixelated';const k=cv2.getContext('2d');k.imageSmoothingEnabled=false;k.clearRect(0,0,72,29);drawRodPx(k,[5,23],[34,15],[68,5],R,1.2,false)}
   if(typeof renderMenu==='function')renderMenu();
   $('dex').innerHTML=FISH.map(f=>{const d=save.dex[f.id],t=tier(f);
-    return `<div class="card"><canvas data-id="${f.id}"></canvas><b>${d?esc(f.name):'???'}</b><small>${d?`${d.n}마리 · 최고 ${d.best.toFixed(2)}kg`:`${f.min}–${f.max}kg`}</small><span class="tag" style="color:${t[1]}">${t[0]}</span></div>`}).join('');
+    return `<div class="card"><canvas data-id="${f.id}"></canvas><b>${d?esc(f.name):'???'}</b><small>${d?`${d.n}마리 · 최고 ${d.best.toFixed(2)}kg`:`${f.min}–${f.max}kg`}</small><span class="tag" style="color:${t[1]}">${t[0]}${f.night>=2?' · 🌙밤':''}</span></div>`}).join('');
   for(const c of $('dex').querySelectorAll('canvas')){const f=FISH.find(x=>x.id===c.dataset.id);fishCanvas(c,f,!save.dex[f.id],120,56)}
   $('log').innerHTML=save.log.length?save.log.slice(0,8).map(r=>{const f=FISH.find(x=>x.id===r.id);if(!f)return'';const tm=new Date(r.t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
-    return `<li class="${r.ok?'':'lost'}"><span>${r.ok?'🐟':'💨'} ${esc(f.name)} ${r.w.toFixed(2)}kg${r.ok?` · ${r.l}cm`:' 놓침'}</span><span>${tm}</span></li>`}).join(''):'<li class="empty">아직 조과가 없어요. 첫 캐스팅을 해보세요!</li>';
+    return `<li class="${r.ok?'':'lost'}"><span>${r.ok?(f.kind==='squid'?'🦑':'🐟'):'💨'} ${esc(f.name)} ${r.w.toFixed(2)}kg${r.ok?` · ${r.l}cm`:' 놓침'}</span><span>${tm}</span></li>`}).join(''):'<li class="empty">아직 조과가 없어요. 첫 캐스팅을 해보세요!</li>';
 }
 
 /* ---------- menu / screens / nickname ---------- */
