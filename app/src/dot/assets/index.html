@@ -294,6 +294,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <p class="mhelp">소리와 날씨를 설정할 수 있어요. 바꾼 설정은 저장돼요.</p>
     <div class="setrow"><span>🎵 배경음악</span><button id="tgMusic" class="tg" type="button"></button></div>
     <div class="setrow"><span>🔊 효과음</span><button id="tgSfx" class="tg" type="button"></button></div>
+    <div class="setrow"><span>📳 진동</span><button id="tgVib" class="tg" type="button"></button></div>
     <div class="setrow"><span>🌦️ 실제 날씨</span><button id="tgRealWx" class="tg" type="button"></button></div>
     <div class="setrow"><span>📍 날씨 지역</span><select id="wxRegion" class="wxsel"></select></div>
     <p class="mhelp" id="wxInfo" style="margin:8px 0 0"></p>
@@ -901,7 +902,7 @@ function drawMenu(){if(!mctx)return;const w=Math.ceil(innerWidth/PXS),h=Math.cei
   mctx.drawImage(menuShade,0,0)}
 
 /* ---------- 소리: 효과음 + 배경음악 (Web Audio로 직접 합성, 파일 없음) ---------- */
-if(!save.snd||typeof save.snd!=='object')save.snd={music:true,sfx:true};
+if(!save.snd||typeof save.snd!=='object')save.snd={music:true,sfx:true};if(save.snd.vib===undefined)save.snd.vib=true;
 const SND=(()=>{
   let ac=null,master,musicG,sfxG,delay,fb,noiseBuf,timer=null,nextT=0,step=0,mode='day';
   const midi=n=>440*Math.pow(2,(n-69)/12);
@@ -1238,7 +1239,7 @@ function startFight(){
   const b=bobPos();splash(b[0],b[1],b[2],10);ripple(b[0],b[2],2);buzz(40);sfx.hook();
 }
 let holding=false;
-const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+const buzz=(ms,amp)=>{if(save.snd&&save.snd.vib===false)return;try{if(window.NativeHaptic){const a=Array.isArray(ms)?ms:[ms];NativeHaptic.vibrate(JSON.stringify(a),amp||160);return}navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 function feel(w){return w<1?'가벼운 손맛':w<2?'제법 묵직함':w<5?'무거운 고기!':w<9?'엄청난 힘!':'괴물급 손맛!!'}
 
 function finish(ok,kind){
@@ -1285,7 +1286,7 @@ function update(dt){
   else if(st==='wait'){
     landAge+=dt;waitT-=dt;nibT-=dt;
     if(nibT<=0){nib=rnd(.5,.9);sfx.nibble();ripple(bx0,bz0,.7);nibT=Math.random()<.35?rnd(.15,.3):rnd(.7,1.8)}
-    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=Math.max(.75,1.25-fw*.03)*(fish.hard?.7:1)*(xray?XRAY.bite:1);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(60);sfx.bite()}
+    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=Math.max(.75,1.25-fw*.03)*(fish.hard?.7:1)*(xray?XRAY.bite:1);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(fish.boss||fish.hard||fw>=20?[260,70,260,70,420]:[200,80,220],255);sfx.bite()}
   }else if(st==='bite'){biteAge+=dt;bRip-=dt;if(bRip<=0){const b=bobPos();ripple(b[0],b[2],1.2+Math.random());if(Math.random()<.4)splash(b[0],0,b[2],3);bRip=rnd(.1,.2)}biteT-=dt;if(biteT<=0)finish(false,'miss')}
   else if(st==='fight'){
     clock+=dt;
@@ -1411,7 +1412,7 @@ function renderMenu(){
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
 }
 /* Android back button: returns true when handled */
-function renderSet(){for(const [id,k] of [['tgMusic','music'],['tgSfx','sfx']]){const b=$(id);b.textContent=save.snd[k]?'켜짐':'꺼짐';b.classList.toggle('on',save.snd[k]);b.setAttribute('aria-pressed',save.snd[k])}}
+function renderSet(){for(const [id,k] of [['tgMusic','music'],['tgSfx','sfx'],['tgVib','vib']]){const b=$(id);b.textContent=save.snd[k]?'켜짐':'꺼짐';b.classList.toggle('on',save.snd[k]);b.setAttribute('aria-pressed',save.snd[k])}}
 function renderSetWx(){const b=$('tgRealWx');b.textContent=save.wxSet.real?'켜짐':'꺼짐';b.classList.toggle('on',save.wxSet.real);const sel=$('wxRegion');if(!sel.options.length)sel.innerHTML=WX_REGIONS.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');sel.value=save.wxSet.region;sel.disabled=!save.wxSet.real;
   $('wxInfo').textContent=!save.wxSet.real?'게임 날씨(30분마다 바뀜)를 쓰고 있어요.':realFresh()?`${wxRegion().name}: ${WEATHERS[WX_REAL.id].ico} ${WEATHERS[WX_REAL.id].name} · ${WX_REAL.temp}°C · 바람 ${WX_REAL.wind}m/s${WX_REAL.wave?` · 파고 ${WX_REAL.wave}m`:''} (${new Date(WX_REAL.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준)`:wxFetching?'날씨를 불러오는 중…':'인터넷에 연결되면 실제 날씨를 불러와요. 그전까지는 게임 날씨를 써요.'}
 $('tgRealWx').addEventListener('click',()=>{save.wxSet.real=!save.wxSet.real;store();if(save.wxSet.real)fetchRealWx(true);tickWorld();renderSetWx();sfx.click()});
@@ -1422,6 +1423,7 @@ $('setClose').addEventListener('click',()=>{$('setModal').hidden=true});
 $('setModal').addEventListener('click',e=>{if(e.target.id==='setModal')$('setModal').hidden=true});
 $('tgMusic').addEventListener('click',()=>{save.snd.music=!save.snd.music;store();SND.unlock();SND.apply();renderSet()});
 $('tgSfx').addEventListener('click',()=>{save.snd.sfx=!save.snd.sfx;store();SND.unlock();SND.apply();renderSet();sfx.click()});
+$('tgVib').addEventListener('click',()=>{save.snd.vib=!save.snd.vib;store();renderSet();sfx.click();if(save.snd.vib)buzz([120,60,120],255)});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.mbtn,.hbtn,.ghost,.okbtn,.buy');if(b&&!b.disabled&&b.id!=='buyChum'&&b.id!=='buyXray')sfx.click()});
 /* ---------- 날씨·미끼·퀘스트 화면 ---------- */
 function baitIcon(b){return`<span class="bico">${b.ico}</span>`}

@@ -64,6 +64,7 @@ public class MainActivity extends Activity {
         root.addView(webView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         setContentView(root);
         webView.addJavascriptInterface(new NativeNet(webView), "NativeNet");   // 기상청 날씨 요청
+        webView.addJavascriptInterface(new NativeHaptic(this), "NativeHaptic");   // 세기 조절 진동
         Ads.attach(this, root, webView);
         hideSystemBars();
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
