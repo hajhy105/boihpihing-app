@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>보이흐피힝 테스터 안내</title>
+<style>
+body{font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;max-width:640px;margin:0 auto;padding:22px 18px 48px;line-height:1.7;color:#1b2b3a;background:#f4f9fc}
+h1{font-size:1.45em;margin:.2em 0}.sub{color:#5d7286;margin-top:0}
+.card{background:#fff;border:3px solid #1b1f2b;box-shadow:4px 4px 0 #1b1f2b;padding:14px 16px;margin:16px 0}
+.card h2{font-size:1.1em;margin:0 0 6px}ol{padding-left:1.3em;margin:6px 0}li{margin:4px 0}
+.btn{display:block;text-align:center;background:#ff8a65;color:#fff;font-weight:700;text-decoration:none;padding:12px;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;margin:10px 0}
+.btn.alt{background:#2f8fd0}.wait{background:#cfd5db;color:#4a5560;pointer-events:none}
+.note{font-size:.92em;color:#5d7286}
+</style>
+</head>
+<body>
+<h1>🎣 보이흐피힝 테스터 안내</h1>
+<p class="sub">도트 바다낚시 게임 「보이흐피힝」 비공개 테스트에 참여해 주셔서 고마워요!</p>
+
+<div class="card">
+<h2>1. 테스터 그룹 가입</h2>
+<p>게임을 받으려면 먼저 테스터 그룹에 가입해야 해요. <b>플레이 스토어에서 쓰는 구글 계정(Gmail)</b>으로 가입해 주세요.</p>
+<a class="btn alt" id="groupLink" href="#">테스터 그룹 가입하기</a>
+</div>
+
+<div class="card">
+<h2>2. 테스트 참여 + 설치</h2>
+<ol>
+<li>아래 버튼을 눌러 <b>「테스터 되기」</b>를 눌러요.</li>
+<li>이어서 나오는 <b>「Google Play에서 다운로드」</b>를 눌러 설치해요.</li>
+</ol>
+<a class="btn wait" id="optinLink" href="#">참여 링크 준비 중이에요</a>
+<p class="note">그룹 가입 직후에는 링크가 바로 안 열릴 수 있어요. 몇 분 뒤 다시 눌러 주세요.</p>
+</div>
+
+<div class="card">
+<h2>3. 꼭 부탁드려요 (14일)</h2>
+<ol>
+<li><b>14일 동안 앱을 지우지 말아 주세요.</b> 구글 정책상 테스터 12명 이상이 14일 동안 계속 참여해야 정식 출시를 신청할 수 있어요.</li>
+<li>가끔(하루 한 번쯤) 앱을 켜서 한두 번 던져 주세요.</li>
+<li>불편한 점이나 버그가 있으면 플레이 스토어 앱 페이지의 <b>「비공개 의견 보내기」</b>나 개발자에게 알려 주세요.</li>
+</ol>
+</div>
+
+<p class="note">이 게임은 기록을 휴대폰 안에만 저장해요. 개인정보처리방침: <a href="privacy.html">보기</a></p>
+<script>
+// 링크가 정해지면 아래 두 줄만 바꾸면 돼요
+const GROUP_URL='';   // 예: https://groups.google.com/g/boihpihing-testers
+const OPTIN_URL='';   // 예: https://play.google.com/apps/testing/com.boihpihing.fishing
+if(GROUP_URL)document.getElementById('groupLink').href=GROUP_URL;else{const g=document.getElementById('groupLink');g.textContent='그룹 링크 준비 중이에요';g.classList.add('wait')}
+if(OPTIN_URL){const o=document.getElementById('optinLink');o.href=OPTIN_URL;o.textContent='테스트 참여하기 (Play 스토어)';o.classList.remove('wait')}
+</script>
+</body>
+</html>
