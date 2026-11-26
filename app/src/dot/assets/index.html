@@ -222,6 +222,11 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 .stage{border:4px solid #1b1f2b!important;box-shadow:4px 4px 0 #1b1f2b}
 .bar,.row .bar{border:2px solid #1b1f2b!important;border-radius:0!important}
 .bar>*{border-radius:0!important}
+
+/* readability on the menu art + act label fit */
+.hello,.sub{opacity:1;text-shadow:0 2px 0 #0b2740,2px 0 0 #0b2740,-2px 0 0 #0b2740,0 -2px 0 #0b2740,0 0 10px #0b2740}
+.mstat{opacity:1;color:#fff;background:rgba(9,28,48,.82);border:2px solid #0b1a2c;padding:7px 14px;line-height:1.5;box-shadow:0 3px 0 #0b1a2c;text-shadow:0 1px 0 #000}
+.actrow #act,#act{white-space:nowrap;overflow:hidden;padding:0 8px}
 </style>
 </head>
 <body>
@@ -697,7 +702,7 @@ function applyTOD(c,w,h,t,TD,bob){
   if(on>0){c.fillStyle='rgba(255,240,170,.22)';const dir=Math.cos(t*1.6)>0?1:-1,len=Math.round(on*40*U);for(let i=1;i<len;i++){const s=Math.round(i*.12);c.fillRect(lx+1+dir*i,ly-s,1,s*2+1)}}
   c.globalAlpha=1;}
   // night-fishing chem light on the bobber (green glow)
-  if(bob){c.globalAlpha=N;const [x,y,s]=bob,top=y-s*4,g=(Math.sin(t*5)+1)/2;c.fillStyle=`rgba(140,255,150,${(.35+g*.25).toFixed(2)})`;c.fillRect(x-1,top-2,3,s*2+4);c.fillRect(x-2,top,5,s*2);c.fillStyle='rgba(140,255,150,.18)';c.fillRect(x-3,top+1,7,s*2-2);for(let i=0;i<4;i++)px(c,x-1-i+Math.round(Math.sin(t*3+i)),y+1+i*2,3+i*2,1,'rgba(140,255,150,'+(.3-i*.06).toFixed(2)+')');px(c,x,top,1,s*2,'#d8ffb8');c.globalAlpha=1}
+  if(bob){c.globalAlpha=N;const hit=st==='bite'||st==='fight',C=hit?'255,70,60':'140,255,150',[x,y,s]=bob,top=y-s*4,g=(Math.sin(t*(hit?14:5))+1)/2;c.fillStyle=`rgba(${C},${(.35+g*(hit?.4:.25)).toFixed(2)})`;c.fillRect(x-1,top-2,3,s*2+4);c.fillRect(x-2,top,5,s*2);c.fillStyle=`rgba(${C},${hit?.28:.18})`;c.fillRect(x-3,top+1,7,s*2-2);if(hit){c.fillStyle=`rgba(${C},${(.08+g*.12).toFixed(2)})`;c.fillRect(x-5,top-3,11,s*2+6)}for(let i=0;i<4;i++)px(c,x-1-i+Math.round(Math.sin(t*3+i)),y+1+i*2,3+i*2,1,`rgba(${C},`+(.3-i*.06).toFixed(2)+')');px(c,x,top,1,s*2,hit?'#ffd0c8':'#d8ffb8');c.globalAlpha=1}
   // a few lit windows/lamps far away
   if(LH){c.globalAlpha=N;for(let i=0;i<5;i++)px(c,u(10+i*9),yH-u(2)-(i%2),1,1,i%2?'#ffd98a':'#fff2b0');c.globalAlpha=1}}
 let TD=tod();
@@ -1239,6 +1244,8 @@ function startFight(){
   const b=bobPos();splash(b[0],b[1],b[2],10);ripple(b[0],b[2],2);buzz(40);sfx.hook();
 }
 let holding=false;
+function fitAct(){const a=$('act');a.style.fontSize='';let f=parseFloat(getComputedStyle(a).fontSize);while(a.scrollWidth>a.clientWidth&&f>14){f-=1;a.style.fontSize=f+'px'}}
+addEventListener('resize',()=>{try{fitAct()}catch(e){}});
 let hapT=0;
 /* 손맛 진동: 감는 동안 툭툭, 장력이 높을수록 세고 잦게, 고기가 차고 나가면 묵직하게 */
 function fightHaptic(dt){hapT-=dt;if(hapT>0)return;const t=Math.min(1,tens/100);
@@ -1317,7 +1324,7 @@ function hud(){
   {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok}}
   const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
   const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중…':'꾹 눌러 감기'}[st];
-  if(act.textContent!==lab)act.textContent=lab;
+  if(act.textContent!==lab){act.textContent=lab;fitAct()}
   act.className=st==='result'?'':st;
   const h={idle:save.chumLeft>0?`떡밥 효과 중! 남은 ${save.chumLeft}회 — START를 눌러 캐스팅하세요`:'START를 눌러 캐스팅하세요',aim:'표시가 금색 칸에 올 때 누르면 귀한 고기가 와요!',cast:'휘익—',wait:'찌를 지켜보세요… 느낌표가 뜨면 챔질!',bite:'입질! 지금 챔질!',result:ok=>''}[st];
   if(st==='fight')hint.textContent=(heavy?(run>0?'저항 중! 손을 떼고 장력을 낮추세요':'꾹 눌러 감되, 장력이 높으면 떼세요'):'꾹 누르고 있으면 감겨요')+' · '+feel(fw);
