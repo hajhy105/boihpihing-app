@@ -292,7 +292,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div class="setrow"><span>📍 날씨 지역</span><select id="wxRegion" class="wxsel"></select></div>
     <p class="mhelp" id="wxInfo" style="margin:8px 0 0"></p>
     <button type="button" id="adPrivacy" class="okbtn" style="margin-top:10px;width:100%" hidden>광고 개인정보 설정</button>
-    <p class="mhelp" style="margin:4px 0 0;font-size:11.5px">날씨 데이터: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0)</p>
+    <p class="mhelp" id="wxCredit" style="margin:4px 0 0;font-size:11.5px"></p>
     <div class="modal-btns"><button type="button" id="setClose" class="okbtn">닫기</button></div>
   </div>
 </div>
@@ -1001,15 +1001,40 @@ function codeToWx(code,wind,wave){ // WMO weather code → 게임 날씨
   if(code===45||code===48)return'fog';
   if(code===3)return'cloudy';
   return'clear'}
+/* 기상청 단기예보(공공데이터포털) — 앱 안(NativeNet)에서만 요청. 인증키는 앱 코드(BuildConfig)에만 있다 */
+const KMA_OK=()=>window.NativeNet&&typeof NativeNet.hasKma==='function'&&NativeNet.hasKma();
+let kmaSeq=0;const kmaWait={};window.__kmaCb=(id,body)=>{const f=kmaWait[id];delete kmaWait[id];if(f)f(body)};
+function kmaCall(op,q){return new Promise((res,rej)=>{const id='k'+(++kmaSeq);const to=setTimeout(()=>{delete kmaWait[id];rej('timeout')},12000);
+  kmaWait[id]=b=>{clearTimeout(to);try{const j=JSON.parse(b);const items=j.response&&j.response.body&&j.response.body.items&&j.response.body.items.item;if(!items)return rej(j.response&&j.response.header?j.response.header.resultMsg:'no data');res(items)}catch(e){rej('parse')}};
+  NativeNet.kma(op,q,id)})}
+function kmaGrid(lat,lon){const RE=6371.00877,GRID=5,D=Math.PI/180,s1=30*D,s2=60*D,olon=126*D,olat=38*D,re=RE/GRID;
+  let sn=Math.log(Math.cos(s1)/Math.cos(s2))/Math.log(Math.tan(Math.PI/4+s2/2)/Math.tan(Math.PI/4+s1/2)),sf=Math.pow(Math.tan(Math.PI/4+s1/2),sn)*Math.cos(s1)/sn,ro=re*sf/Math.pow(Math.tan(Math.PI/4+olat/2),sn);
+  const ra=re*sf/Math.pow(Math.tan(Math.PI/4+lat*D/2),sn);let th=lon*D-olon;if(th>Math.PI)th-=2*Math.PI;if(th<-Math.PI)th+=2*Math.PI;th*=sn;
+  return{nx:Math.floor(ra*Math.sin(th)+43+.5),ny:Math.floor(ro-ra*Math.cos(th)+136+.5)}}
+const kstParts=ms=>{const d=new Date(ms+9*3600e3);return{date:d.toISOString().slice(0,10).replace(/-/g,''),h:d.getUTCHours(),m:d.getUTCMinutes()}};
+async function fetchKma(R){const now=Date.now(),g=kmaGrid(R.lat,R.lon);
+  const n=kstParts(now-40*60e3),ncst=await kmaCall('getUltraSrtNcst',`pageNo=1&numOfRows=20&base_date=${n.date}&base_time=${String(n.h).padStart(2,'0')}00&nx=${g.nx}&ny=${g.ny}`);
+  const v=c=>{const it=ncst.find(x=>x.category===c);return it?parseFloat(it.obsrValue):NaN};
+  let sky=1;try{const f=kstParts(now-45*60e3),fc=await kmaCall('getUltraSrtFcst',`pageNo=1&numOfRows=60&base_date=${f.date}&base_time=${String(f.h).padStart(2,'0')}30&nx=${g.nx}&ny=${g.ny}`);
+    const s=fc.filter(x=>x.category==='SKY').sort((a,b)=>(a.fcstDate+a.fcstTime).localeCompare(b.fcstDate+b.fcstTime))[0];if(s)sky=+s.fcstValue}catch(e){}
+  // 파고(WAV)는 3시간마다 나오는 단기예보에서, 바다 위 격자로 가져온다(3시간 동안 다시 부르지 않음)
+  let wave=0;const cw=WX_REAL&&WX_REAL.region===R.id&&WX_REAL.waveAt&&now-WX_REAL.waveAt<3*3600e3?WX_REAL:null;
+  if(cw)wave=cw.wave||0;else{try{const sg=kmaGrid(R.slat,R.slon),b=kstParts(now-15*60e3);let bh=[23,20,17,14,11,8,5,2].find(x=>x<=b.h),bd=b.date;if(bh===undefined){bh=23;bd=kstParts(now-24*3600e3).date}
+    const vf=await kmaCall('getVilageFcst',`pageNo=1&numOfRows=100&base_date=${bd}&base_time=${String(bh).padStart(2,'0')}00&nx=${sg.nx}&ny=${sg.ny}`);const w=vf.find(x=>x.category==='WAV');if(w)wave=parseFloat(w.fcstValue)||0}catch(e){}}
+  const pty=v('PTY'),t=v('T1H'),wsd=v('WSD');if(isNaN(t))throw'bad';
+  let id='clear';if(wsd>=10||wave>=1.5)id='storm';else if([3,7].includes(pty))id='snow';else if(pty>0)id='rain';else if(sky>=4)id='cloudy';
+  return{region:R.id,at:now,id,temp:Math.round(t),wind:Math.round((wsd||0)*10)/10,wave:Math.round(wave*10)/10,waveAt:cw?cw.waveAt:now,src:'kma'}}
 let wxFetching=false,wxLastTry=0;
 async function fetchRealWx(force){if(!save.wxSet.real||wxFetching)return;const now=Date.now();
-  if(!force&&WX_REAL&&WX_REAL.region===save.wxSet.region&&now-WX_REAL.at<30*60e3)return;if(!force&&now-wxLastTry<5*60e3)return;
+  if(!force&&WX_REAL&&WX_REAL.region===save.wxSet.region&&now-WX_REAL.at<(KMA_OK()?60:30)*60e3)return;if(!force&&now-wxLastTry<5*60e3)return;
   wxFetching=true;wxLastTry=now;const R=wxRegion();
+  if(KMA_OK()){try{WX_REAL=await fetchKma(R);try{localStorage.setItem('seafish.wx',JSON.stringify(WX_REAL))}catch(e){}if(typeof tickWorld==='function')tickWorld();if(typeof renderSetWx==='function')renderSetWx()}catch(e){}finally{wxFetching=false}return}
+  if(typeof ADS==='function'&&ADS()){wxFetching=false;return} // 광고 버전에서는 비상업용 Open-Meteo를 쓰지 않는다
   try{const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),8000);
     const a=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${R.lat}&longitude=${R.lon}&current=temperature_2m,weather_code,wind_speed_10m&timezone=Asia%2FSeoul`,{signal:ctl.signal}).then(r=>r.json());
     let wave=0;try{const m=await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${R.slat}&longitude=${R.slon}&current=wave_height`,{signal:ctl.signal}).then(r=>r.json());wave=(m.current&&m.current.wave_height)||0}catch(e){}
     clearTimeout(to);const cur=a.current;if(!cur)throw 0;
-    WX_REAL={region:R.id,at:Date.now(),id:codeToWx(cur.weather_code,cur.wind_speed_10m,wave),temp:Math.round(cur.temperature_2m),wind:Math.round(cur.wind_speed_10m/3.6*10)/10,wave:Math.round(wave*10)/10};
+    WX_REAL={src:'om',region:R.id,at:Date.now(),id:codeToWx(cur.weather_code,cur.wind_speed_10m,wave),temp:Math.round(cur.temperature_2m),wind:Math.round(cur.wind_speed_10m/3.6*10)/10,wave:Math.round(wave*10)/10};
     try{localStorage.setItem('seafish.wx',JSON.stringify(WX_REAL))}catch(e){}
     if(typeof tickWorld==='function')tickWorld();if(typeof renderSetWx==='function')renderSetWx()}
   catch(e){}finally{wxFetching=false}}
@@ -1319,7 +1344,7 @@ function renderSetWx(){const b=$('tgRealWx');b.textContent=save.wxSet.real?'켜�
   $('wxInfo').textContent=!save.wxSet.real?'게임 날씨(30분마다 바뀜)를 쓰고 있어요.':realFresh()?`${wxRegion().name}: ${WEATHERS[WX_REAL.id].ico} ${WEATHERS[WX_REAL.id].name} · ${WX_REAL.temp}°C · 바람 ${WX_REAL.wind}m/s${WX_REAL.wave?` · 파고 ${WX_REAL.wave}m`:''} (${new Date(WX_REAL.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준)`:wxFetching?'날씨를 불러오는 중…':'인터넷에 연결되면 실제 날씨를 불러와요. 그전까지는 게임 날씨를 써요.'}
 $('tgRealWx').addEventListener('click',()=>{save.wxSet.real=!save.wxSet.real;store();if(save.wxSet.real)fetchRealWx(true);tickWorld();renderSetWx();sfx.click()});
 $('wxRegion').addEventListener('change',e=>{save.wxSet.region=e.target.value;WX_REAL=null;store();fetchRealWx(true);tickWorld();renderSetWx()});
-function openSet(){renderSet();renderSetWx();try{$('adPrivacy').hidden=!(ADS()&&window.AndroidAds.privacyOptionsRequired())}catch(e){}$('setModal').hidden=false}
+function openSet(){renderSet();renderSetWx();$('wxCredit').innerHTML=KMA_OK()?'날씨 데이터: 기상청 단기예보(공공데이터포털)':'날씨 데이터: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0)';try{$('adPrivacy').hidden=!(ADS()&&window.AndroidAds.privacyOptionsRequired())}catch(e){}$('setModal').hidden=false}
 $('mSet').addEventListener('click',openSet);$('setBtn').addEventListener('click',openSet);
 $('setClose').addEventListener('click',()=>{$('setModal').hidden=true});
 $('setModal').addEventListener('click',e=>{if(e.target.id==='setModal')$('setModal').hidden=true});

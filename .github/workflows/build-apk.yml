@@ -40,6 +40,8 @@ jobs:
           PY
 
       - name: Build debug APK
+        env:
+          KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
         run: gradle assembleClassicDebug assembleDotDebug assembleStoreDebug --no-daemon
 
       - name: Rename APKs
@@ -53,6 +55,7 @@ jobs:
         env:
           KS_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
           UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
         run: |
           if [ -z "$KS_B64" ]; then echo "업로드 키 비밀값이 없어서 AAB는 건너뜀"; exit 0; fi
           echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"

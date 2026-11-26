@@ -63,6 +63,7 @@ public class MainActivity extends Activity {
         FrameLayout root = new FrameLayout(this);
         root.addView(webView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         setContentView(root);
+        webView.addJavascriptInterface(new NativeNet(webView), "NativeNet");   // 기상청 날씨 요청
         Ads.attach(this, root, webView);
         hideSystemBars();
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
