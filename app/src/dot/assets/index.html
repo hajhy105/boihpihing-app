@@ -106,6 +106,10 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .wxsel{min-width:96px;min-height:40px;font:17px Jua,sans-serif;border:3px solid #1b1f2b;background:#fff;padding:0 6px}
 .adretry{display:block;margin:10px auto 2px;padding:10px 14px;background:#7a4fd0;color:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;font:17px Jua,sans-serif;cursor:pointer}
 body.has-banner .menu{padding-bottom:70px}body.has-banner .sheet-in{padding-bottom:80px}
+.talk{position:absolute;left:5%;bottom:6%;max-width:70%;background:#fff;color:#1b1f2b;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;padding:6px 12px;font:20px Jua,sans-serif;opacity:0;transform:scale(.6) translateY(10px);transform-origin:left bottom;transition:opacity .15s,transform .15s;pointer-events:none;z-index:3;white-space:nowrap}
+.talk::after{content:'';position:absolute;left:18px;bottom:-14px;border:7px solid transparent;border-top:8px solid #1b1f2b}
+.talk.on{opacity:1;transform:none;animation:talkshake .45s}@keyframes talkshake{0%,100%{transform:none}20%{transform:rotate(-3deg)}60%{transform:rotate(3deg)}}
+.junkbox{margin:8px 0 16px;padding:10px 12px;background:#fff;border:3px solid #1b1f2b;box-shadow:4px 4px 0 #1b1f2b;font-size:14px;line-height:1.9}
 .modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .okbtn{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--org);color:#fff;font:18px Jua,sans-serif;cursor:pointer}
 .howto{cursor:pointer}
@@ -266,6 +270,8 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
   <div class="sheet-in">
     <div class="sheet-head"><h2>어종 도감 <small id="dexCount" class="dexcount"></small></h2><button id="dexClose" class="ghost" type="button">닫기</button></div>
     <div class="dex" id="dex"></div>
+    <h2>잡동사니·보물</h2>
+    <div class="junkbox" id="junkBox"></div>
     <h2>최근 조과</h2>
     <ul class="log" id="log"></ul>
     <div class="foot"><button class="ghost" id="reset" type="button">기록 초기화</button></div>
@@ -354,6 +360,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div id="res"></div>
     <div id="pop" class="pop" hidden>!</div>
     <div id="toast" class="toast"></div>
+    <div id="talk" class="talk"></div>
     <div id="resist" class="resist" hidden>저항 중!</div>
     <div id="xtag" class="xtag" hidden></div>
   </div>
@@ -414,8 +421,9 @@ const FISH=[
  {id:'mno',name:'무늬오징어',kind:'squid',min:.5,max:2.5,rar:4,h:.4,col:'#a87890',belly:'#eed8e2',fin:'#c9a4b6',pat:'sq_reef',c:30,night:2.2,day:.6},
  {id:'dwo',name:'대왕오징어',kind:'squid',min:50,max:150,rar:.1,h:.2,col:'#b8503a',belly:'#e8b8a4',fin:'#c8644c',pat:'sq_long',c:45,night:3,day:.2,hard:true}
 ];
+
 const LIMIT=14;
-const tier=f=>f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
+const tier=f=>f.boss?['👑 보스','#7a2bd0']:f.kind==='junk'?['잡동사니','#8a96a2']:f.kind==='treasure'?['보물','#c98a00']:f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
 const KEY='seafish.v1';
 let save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0,xray:0},chumLeft:0,xrayArmed:false};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.dex)save=s}catch(e){}
@@ -481,6 +489,8 @@ function drawFishShape(c,x,y,L,f,sil){ // special body shapes: eel, sunfish, swo
     eye(L*.18,-H*.1,L*.022);c.restore();return}
   c.restore()}
 function drawFish(c,x,y,L,f,sil){
+  if(f.kind==='junk'||f.kind==='treasure')return drawJunk(c,x,y,L,f,sil);
+  if(f.kind==='earth')return;
   if(f.kind==='squid')return drawSquid(c,x,y,L,f,sil);
   if(f.shape==='eel'||f.shape==='sun'||f.shape==='sword')return drawFishShape(c,x,y,L,f,sil);
   const H=L*f.h,body=sil?'rgba(60,110,160,.22)':null;
@@ -1135,16 +1145,76 @@ function renderSpotList(){const el=$('spotList');if(!el)return;const night=isNig
     return`<div class="spot${cur?' cur':''}${open?'':' locked'}"><div class="sico">${open?s.ico:'🔒'}</div><div class="stxt"><b>${s.name}</b>${cur?' <small class="here">지금 여기</small>':''}${s.night?' <small>🌙 밤 전용</small>':''}
       <p>${s.desc}</p><p class="sbest">잘 나와요: ${s.best}</p>${btn}</div></div>`}).join('')}
 function openSpots(){renderSpotList();$('spotScreen').hidden=false}
+/* ---------- 보스 · 보물 · 쓰레기 · 꽝 ---------- */
+const BOSSES=[
+  {id:'b_ur',name:'괴물 우럭',title:'방파제의 전설',boss:true,min:30,max:60,rar:0,h:.42,col:'#3e3630',belly:'#a89a88',fin:'#2e2824',pat:'spot',c:22,hard:true,cond:{spot:'pier',night:true},hint:'방파제 · 밤'},
+  {id:'b_dl',name:'황제 돌돔',title:'갯바위의 수호신',boss:true,min:40,max:90,rar:0,h:.5,col:'#2c2c34',belly:'#d8d4c8',fin:'#1e1e24',pat:'bands',c:20,hard:true,cond:{spot:'rock',wx:['rain','storm']},hint:'갯바위 · 비 또는 파도 높음'},
+  {id:'b_sgc',name:'대왕산갈치',title:'심해의 그림자',boss:true,shape:'eel',min:100,max:300,rar:0,h:.08,col:'#c9d2da',belly:'#eef2f5',fin:'#e0453a',pat:'none',c:110,hard:true,cond:{spot:'ika'},hint:'집어등 배 · 밤'},
+  {id:'b_cs',name:'바다의 주인',title:'전설의 대왕 참다랑어',boss:true,min:300,max:600,rar:0,h:.3,col:'#16263c',belly:'#e7ecf0',fin:'#ffd23f',pat:'tuna',c:40,hard:true,cond:{spot:'sea'},hint:'먼바다'}];
+const JUNK=[
+  {id:'j_boot',name:'낡은 장화',kind:'junk',art:'boot',min:.6,max:1.4,h:.8,c:30,say:'…장화?',msg:'누가 바다에 장화를 버렸을까요. 바다 청소에 한몫했어요!'},
+  {id:'j_can',name:'찌그러진 깡통',kind:'junk',art:'can',min:.05,max:.2,h:.6,c:12,say:'에이… 깡통이잖아',msg:'깡통은 분리수거! 바다가 조금 깨끗해졌어요.'},
+  {id:'j_bag',name:'비닐봉지',kind:'junk',art:'bag',min:.02,max:.1,h:.9,c:25,say:'봉지였어…',msg:'바다거북이 고마워할 거예요.'},
+  {id:'j_bottle',name:'페트병',kind:'junk',art:'bottle',min:.05,max:.6,h:.35,c:25,say:'페트병이네…',msg:'라벨 떼고 분리배출하면 완벽해요.'},
+  {id:'j_tire',name:'폐타이어',kind:'junk',art:'tire',min:5,max:10,h:1,c:60,say:'무겁더라니…',msg:'엄청 무거웠죠? 바다 대청소 성공!'}];
+const TREASURE=[
+  {id:'t_chest',name:'보물상자',kind:'treasure',art:'chest',min:3,max:8,h:.75,c:45,coin:[80,200],item:true,say:'보물이다!!',msg:'바닷속에 잠들어 있던 보물상자를 건졌어요!'},
+  {id:'t_pearl',name:'진주조개',kind:'treasure',art:'pearl',min:.2,max:.6,h:.7,c:15,coin:[40,80],say:'반짝인다…!',msg:'영롱한 진주가 들어 있었어요.'},
+  {id:'t_letter',name:'유리병 편지',kind:'treasure',art:'letter',min:.3,max:.8,h:.35,c:25,coin:[20,40],say:'편지가 들어있어!',msg:''},
+  {id:'t_gold',name:'옛 금화 꾸러미',kind:'treasure',art:'gold',min:.5,max:2,h:.6,c:20,coin:[30,70],say:'금화다!!',msg:'오래전 침몰선에서 흘러나온 금화예요.'}];
+const LETTERS=['"이 편지를 주운 사람은 오늘 대물을 낚게 될 거예요." — 어느 낚시꾼','"바다야, 우리 엄마 아빠 행복하게 해줘." — 지수(8살)','"2009년 여름, 여기서 첫 감성돔을 잡았다. 행운을 빈다!"','"보물은 갯바위 어딘가에… 비 오는 날을 노려라."'];
+const JICO={boot:'🥾',can:'🥫',bag:'🛍️',bottle:'🧴',tire:'🛞',chest:'🧰',pearl:'🦪',letter:'✉️',gold:'🪙'};
+const EARTH={id:'earth',name:'지구',kind:'earth',min:10,max:20,rar:1,h:.6,c:1};
+if(!save.junk||typeof save.junk!=='object')save.junk={};
+if(typeof save.ggwang!=='number')save.ggwang=0;
+const SPECIAL={earth:.05,treasure:.015,junk:.07,boss:.015};
+function bossFor(){const s=save.spot,night=typeof tod==='function'&&tod().night>.5;return BOSSES.find(b=>b.cond.spot===s&&(!b.cond.night||night||s==='ika')&&(!b.cond.wx||b.cond.wx.includes(WX.id)))}
+function rollSpecial(grade,chum){const r=Math.random(),b=bossFor();let p=0;
+  if(b){const pb=SPECIAL.boss*(grade==='perfect'?2:1)*(chum?2:1);if(r<pb)return b;p=pb}
+  if(r<(p+=SPECIAL.earth))return EARTH;
+  if(r<(p+=SPECIAL.treasure*(save.spot==='rock'?1.5:1)))return TREASURE[Math.floor(Math.random()*TREASURE.length)];
+  if(r<(p+=SPECIAL.junk*(save.spot==='pier'?1.4:save.spot==='sea'?.5:1)))return JUNK[Math.floor(Math.random()*JUNK.length)];
+  return null}
+/* 말풍선 */
+let talkT=null;function talk(msg,ms=1500){const el=$('talk');if(!el)return;el.textContent=msg;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(talkT);talkT=setTimeout(()=>el.classList.remove('on'),ms)}
+/* 잡동사니·보물 그림 (도트로 변환됨) */
+function drawJunk(c,x,y,L,f,sil){const K=v=>v*L,col=(a)=>sil?'rgba(60,110,160,.22)':a;c.save();c.translate(x,y);
+  const R=(x0,y0,w,h,cl)=>{c.fillStyle=col(cl);c.fillRect(K(x0),K(y0),K(w),K(h))};
+  switch(f.art){
+    case'boot':R(-.15,-.4,.22,.55,'#3d4a3a');R(-.15,.1,.5,.18,'#3d4a3a');R(-.15,.25,.52,.06,'#222');R(-.17,-.42,.26,.08,'#56664f');break;
+    case'can':R(-.18,-.28,.36,.56,'#c0392b');R(-.18,-.28,.36,.08,'#b8bec6');R(-.18,.2,.36,.08,'#b8bec6');R(-.06,-.1,.12,.2,'#f4f4f0');c.fillStyle=col('#7a2018');c.fillRect(K(.05),K(-.2),K(.08),K(.3));break;
+    case'bag':c.fillStyle=col('rgba(240,244,248,.95)');c.beginPath();c.moveTo(K(-.3),K(-.2));c.lineTo(K(.3),K(-.25));c.lineTo(K(.35),K(.35));c.lineTo(K(-.32),K(.38));c.closePath();c.fill();R(-.25,-.4,.1,.22,'#e8edf2');R(.12,-.42,.1,.22,'#e8edf2');R(-.05,0,.15,.06,'#3b8fd6');break;
+    case'bottle':R(-.42,-.12,.6,.26,'#8fd0e8');R(.18,-.06,.14,.14,'#8fd0e8');R(.3,-.07,.08,.16,'#2f8fd0');R(-.25,-.12,.25,.26,'#e0453a');break;
+    case'tire':c.fillStyle=col('#26282c');c.beginPath();c.arc(0,0,K(.42),0,7);c.fill();c.fillStyle=sil?'rgba(0,0,0,0)':'#0b1622';c.globalCompositeOperation='destination-out';c.beginPath();c.arc(0,0,K(.18),0,7);c.fill();c.globalCompositeOperation='source-over';c.strokeStyle=col('#4a4e56');c.lineWidth=K(.04);for(let i=0;i<10;i++){const a=i/10*Math.PI*2;c.beginPath();c.moveTo(Math.cos(a)*K(.3),Math.sin(a)*K(.3));c.lineTo(Math.cos(a)*K(.4),Math.sin(a)*K(.4));c.stroke()}break;
+    case'chest':R(-.4,-.08,.8,.4,'#8a5a2b');R(-.4,-.32,.8,.24,'#a86a32');R(-.4,-.1,.8,.06,'#d9a440');R(-.06,-.14,.12,.16,'#ffd23f');R(-.4,-.32,.06,.64,'#d9a440');R(.34,-.32,.06,.64,'#d9a440');if(!sil){c.fillStyle='#fff3b0';c.fillRect(K(-.3),K(-.36),K(.06),K(.04));c.fillRect(K(.2),K(-.38),K(.05),K(.04))}break;
+    case'pearl':c.fillStyle=col('#e8c8c0');c.beginPath();c.ellipse(0,K(.05),K(.42),K(.26),0,0,Math.PI);c.fill();c.fillStyle=col('#f0d8d0');c.beginPath();c.ellipse(0,K(.02),K(.42),K(.3),0,Math.PI,Math.PI*2);c.fill();c.fillStyle=col('#fffaf0');c.beginPath();c.arc(0,K(.04),K(.12),0,7);c.fill();break;
+    case'letter':R(-.42,-.13,.62,.26,'#bfe3ef');R(.2,-.07,.14,.14,'#bfe3ef');R(.32,-.08,.08,.16,'#8a5a2b');R(-.3,-.08,.38,.16,'#f4e8c8');c.fillStyle=col('#9a8a6a');for(let i=0;i<3;i++)c.fillRect(K(-.26),K(-.05+i*.05),K(.3),K(.015));break;
+    case'gold':c.fillStyle=col('#7a5a34');c.beginPath();c.ellipse(0,K(.1),K(.34),K(.24),0,0,7);c.fill();R(-.12,-.25,.24,.14,'#7a5a34');R(-.14,-.13,.28,.05,'#c9a24a');c.fillStyle=col('#ffd23f');for(let i=0;i<5;i++){c.beginPath();c.arc(K(-.25+i*.12),K(-.2+((i*37)%3)*.03),K(.07),0,7);c.fill()}break}
+  c.restore()}
+function specialResult(ok,kind){const f=fish;let html='';
+  if(f.kind==='earth'){save.ggwang++;talk('지구를 낚았다..!!',2600);sfx.fail();
+    html=`<h3>꽝! 지구를 낚았어요 🌏</h3><p class="stat">바닥(밑걸림)에 걸린 거였어요</p><p>그렇게 힘껏 버텼는데… 상대는 지구였네요. 지금까지 지구를 ${save.ggwang}번 낚았어요.</p>`;
+    if(kind==='break'||kind==='snag'){sfx.snap();const B=bait();if(B.lure){save.baits[B.id]=Math.max(0,save.baits[B.id]-1);if(save.baits[B.id]<=0)save.bait='krill';renderWX()}}
+    return html}
+  if(!ok){const what=f.kind==='treasure'?'보물':'무언가';sfx.fail();return`<h3>놓쳤어요</h3><canvas id="rc"></canvas><p class="stat">${what}가 걸려 있었는데…</p><p>${esc(f.name)}이(가) 바닷속으로 다시 가라앉았어요.</p>`}
+  save.junk[f.id]=(save.junk[f.id]||0)+1;
+  if(f.kind==='junk'){const coin=1+Math.floor(Math.random()*3);save.coins+=coin;talk(f.say,1800);sfx.coin();
+    return`<h3>${esc(f.name)}을(를) 낚았다…</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · 바다 청소</p><p>${f.msg} <b style="color:#c98a00">+${coin}코인</b> (청소 보너스)</p>`}
+  const coin=f.coin[0]+Math.floor(Math.random()*(f.coin[1]-f.coin[0]+1));save.coins+=coin;talk(f.say,1800);sfx.catch(true);setTimeout(()=>sfx.coin(),650);
+  let extra='';if(f.item){const r=Math.random();if(r<.4){save.items.xray++;extra=' · 투시 안경 1개'}else if(r<.8){save.items.chum++;extra=' · 떡밥 1개'}}
+  const msg=f.art==='letter'?`편지에는 이렇게 적혀 있어요: ${LETTERS[Math.floor(Math.random()*LETTERS.length)]}`:f.msg;
+  return`<h3>${esc(f.name)} 발견!</h3><canvas id="rc"></canvas><p class="stat">✨ 보물</p><p>${msg}</p><p><b style="color:#c98a00">+${coin}코인</b>${extra}</p>`}
+FISH.push(...BOSSES);
 /* ---------- game ---------- */
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
 const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
 let aimT=0,aimZ=.75,grade='good',chumUsed=false;
-const tierIx=f=>f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
+const tierIx=f=>f.boss||f.kind==='treasure'?3:f.kind==='junk'||f.kind==='earth'?0:f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
 const aimPos=()=>{const u=(aimT/.7)%2;return u<1?u:2-u};
 const CHUM={price:30,casts:5,legend:4};
 const XRAY={price:20,bite:1.5};let xray=false,xrayCast=false,waitT0=1;
 const nightMul=f=>{const n=(typeof tod==='function'?tod().night:0);return lerp(f.day||1,f.night||1,n)};
-function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1)*nightMul(f)*weatherMul(f)*baitMul(f)*spotMul(f);
+function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.boss?0:f.rar*m[tierIx(f)]*(chum&&tierIx(f)===3?CHUM.legend:1)*nightMul(f)*weatherMul(f)*baitMul(f)*spotMul(f);
   const tot=FISH.reduce((s,f)=>s+wt(f),0);let r=Math.random()*tot;
   for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
 }
@@ -1155,7 +1225,7 @@ function cast(){
   const G0=GRADES[grade],gEl=$('grade');gEl.textContent=G0.lab;gEl.style.color=G0.col;gEl.classList.remove('show');void gEl.offsetWidth;gEl.classList.add('show');
   sfx.cast();if(grade==='perfect'){buzz([20,30,20]);sfx.perfect()}
   chumUsed=save.chumLeft>0;if(chumUsed){save.chumLeft--;store();renderSide()}
-  fish=pickFish(grade,chumUsed);fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),spotSkew())).toFixed(2);
+  fish=pickFish(grade,chumUsed);{const sp=rollSpecial(grade,chumUsed);if(sp)fish=sp}fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),fish.boss?1.4:spotSkew())).toFixed(2);
   if(xray){bx0=EYE.x+rnd(-.12,.12);bz0=lerp(XZ0,XZ1,aimPos());xrayCast=true;const o=xrayCatch();if(o){fish=o.f;fw=o.w}xHideTags()}
   const far=grade==='perfect'?1:grade==='great'?.7:grade==='good'?.4:.1;
   if(!xray){bx0=rnd(-.2,2.8);bz0=lerp(-1.4,-4.6,far)+rnd(-.4,.4)}castT=0;st='cast';waitT=rnd(2.2,6.5)*(WX.wait||1);waitT0=waitT;tripCast();
@@ -1164,7 +1234,7 @@ function cast(){
 }
 function startFight(){
   st='fight';heavy=fw>=2;gauge=0;zeroT=0;tens=0;clock=0;run=0;nextRun=rnd(1.2,2.6)*(fish.hard?.7:1);
-  const fwE=effW(fw),R=rod();P=heavy?{drain:5+fwE*1.4,up:34*R.up,tr:(6+fwE*2.5)*R.tr*(fwE>R.max?1.2:1)*(WX.tr||1)*(SPOT().tr||1)}:{drain:5+fw*2.5,up:27.5*R.up,tr:0};
+  const fwE=fish.boss?Math.min(effW(fw),24):fish.kind==='junk'||fish.kind==='treasure'?Math.min(fw,6):effW(fw),R=rod();if(fish.kind==='junk'||fish.kind==='treasure')nextRun=1e9;if(fish.boss){setTimeout(()=>toast(`⚠ 보스 출현! ${fish.title} — ${fish.name}`,3200),50);sfx.run()}P=heavy?{drain:5+fwE*1.4,up:34*R.up,tr:(6+fwE*2.5)*R.tr*(fwE>R.max?1.2:1)*(WX.tr||1)*(SPOT().tr||1)}:{drain:5+fw*2.5,up:27.5*R.up,tr:0};
   const b=bobPos();splash(b[0],b[1],b[2],10);ripple(b[0],b[2],2);buzz(40);sfx.hook();
 }
 let holding=false;
@@ -1175,9 +1245,10 @@ function finish(ok,kind){
   st='result';holding=false;mood=ok?'happy':'sad';resT=T;
   const f=fish,len=Math.round(f.c*Math.cbrt(fw)),t=tier(f);
   let html='';
-  if(ok){retryInfo=null;
-    const pts=Math.round(Math.min(fw,30)*10*Math.sqrt(20/f.rar));
-    const coin=fw<2?1+Math.floor(Math.random()*4):fw<5?5+Math.floor(Math.random()*10):15+Math.floor(Math.random()*(Math.round(Math.min(fw,40)*2)+1));save.coins+=coin;
+  if(f&&(f.kind==='earth'||f.kind==='junk'||f.kind==='treasure')&&kind!=='early'&&kind!=='miss'){retryInfo=null;mood=f.kind==='treasure'&&ok?'happy':'sad';html=specialResult(ok,kind);if(f.kind==='earth')fish=null;else if(ok){const b=bobPos();splash(b[0],b[1],b[2],12);flyCatch()}}
+  else if(ok){retryInfo=null;
+    const pts=f.boss?3000+Math.round(fw*5):Math.round(Math.min(fw,30)*10*Math.sqrt(20/f.rar));
+    const coin=f.boss?300+Math.floor(Math.random()*201):fw<2?1+Math.floor(Math.random()*4):fw<5?5+Math.floor(Math.random()*10):15+Math.floor(Math.random()*(Math.round(Math.min(fw,40)*2)+1));save.coins+=coin;
     const d=save.dex[f.id]||{n:0,best:0};const rec=fw>d.best;
     d.n++;if(rec)d.best=fw;save.dex[f.id]=d;const prev=save.pts;save.pts+=pts;
     const unl=RODS.filter(r=>prev<r.need&&save.pts>=r.need);
@@ -1195,7 +1266,7 @@ function finish(ok,kind){
   }
   save.log=save.log.slice(0,20);store();tripCheck();
   const r=$('res');r.innerHTML=html+'<p class="close">화면을 터치하면 닫혀요</p>';r.classList.add('on');
-  const rc=$('rc');if(rc)fishCanvas(rc,f,!ok,220,100);
+  const rc=$('rc');if(rc&&f.kind!=='earth')fishCanvas(rc,f,!ok&&!f.kind,220,100);
   renderSide();
 }
 
@@ -1220,7 +1291,7 @@ function update(dt){
     clock+=dt;
     if(heavy){
       if(run>0){run-=dt;if(run<=0)nextRun=rnd(1.2,2.8)*(fish.hard?.7:1)}
-      else{nextRun-=dt;if(nextRun<=0){run=rnd(.6,1.2)+effW(fw)*.03;const b=bobPos();ripple(b[0],b[2],1.8);splash(b[0],0,b[2],5);buzz(25);sfx.run()}}
+      else{nextRun-=dt;if(nextRun<=0){run=rnd(.6,1.2)+effW(fw)*.03;talk(fish.boss?'보스다..!!':Math.random()<.5?'대물인가..!!':'헉...!!',1300);const b=bobPos();ripple(b[0],b[2],1.8);splash(b[0],0,b[2],5);buzz(25);sfx.run()}}
     }
     if(holding){gauge+=P.up*(run>0?.5:1)*dt;if(heavy)tens+=(P.tr*(run>0?2.2:1)-15)*dt}else tens-=45*dt;
     tens=Math.max(0,tens);gauge=Math.max(0,gauge-P.drain*(run>0?1.8:1)*dt);zeroT=gauge<=0?zeroT+dt:0;
@@ -1285,7 +1356,8 @@ function renderSide(){
   for(const cv2 of $('shop').querySelectorAll('canvas')){const R=RODS.find(x=>x.id===cv2.dataset.rod);cv2.width=108;cv2.height=44;cv2.style.imageRendering='pixelated';const k=cv2.getContext('2d');k.imageSmoothingEnabled=false;k.clearRect(0,0,108,44);drawRodPx(k,[8,35],[51,23],[102,8],R,1.2,false,true)}
   if(typeof renderMenu==='function')renderMenu();
   $('dex').innerHTML=FISH.map(f=>{const d=save.dex[f.id],t=tier(f);
-    return `<div class="card"><canvas data-id="${f.id}"></canvas><b>${d?esc(f.name):'???'}</b><small>${d?`${d.n}마리 · 최고 ${d.best.toFixed(2)}kg`:`${f.min}–${f.max}kg`}</small><span class="tag" style="color:${t[1]}">${t[0]}${f.night>=2?' · 🌙밤':''}${f.hard?' · 🔥':''}</span></div>`}).join('');
+    return `<div class="card"><canvas data-id="${f.id}"></canvas><b>${d?esc(f.name):'???'}</b>${f.boss?`<small style="color:#7a2bd0">${f.title}</small>`:''}<small>${d?`${d.n}마리 · 최고 ${d.best.toFixed(2)}kg`:`${f.min}–${f.max}kg`}</small><span class="tag" style="color:${t[1]}">${t[0]}${f.boss?' · '+f.hint:''}${f.night>=2&&!f.boss?' · 🌙밤':''}${f.hard&&!f.boss?' · 🔥':''}</span></div>`}).join('');
+  {const jb=$('junkBox');if(jb){const all=[...JUNK,...TREASURE];jb.innerHTML=all.map(j=>{const n=save.junk[j.id]||0;return `<span style="opacity:${n?1:.35};margin-right:12px;white-space:nowrap">${JICO[j.art]} ${n?esc(j.name):'???'} ×${n}</span>`}).join('')+`<span style="margin-right:12px;white-space:nowrap">🌏 지구 ×${save.ggwang}</span>`}}
   for(const c of $('dex').querySelectorAll('canvas')){const f=FISH.find(x=>x.id===c.dataset.id);fishCanvas(c,f,!save.dex[f.id],120,56)}
   $('log').innerHTML=save.log.length?save.log.slice(0,8).map(r=>{const f=FISH.find(x=>x.id===r.id);if(!f)return'';const tm=new Date(r.t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
     return `<li class="${r.ok?'':'lost'}"><span>${r.ok?(f.kind==='squid'?'🦑':'🐟'):'💨'} ${esc(f.name)} ${r.w.toFixed(2)}kg${r.ok?` · ${r.l}cm`:' 놓침'}</span><span>${tm}</span></li>`}).join(''):'<li class="empty">아직 조과가 없어요. 첫 캐스팅을 해보세요!</li>';
