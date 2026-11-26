@@ -1239,6 +1239,12 @@ function startFight(){
   const b=bobPos();splash(b[0],b[1],b[2],10);ripple(b[0],b[2],2);buzz(40);sfx.hook();
 }
 let holding=false;
+let hapT=0;
+/* 손맛 진동: 감는 동안 툭툭, 장력이 높을수록 세고 잦게, 고기가 차고 나가면 묵직하게 */
+function fightHaptic(dt){hapT-=dt;if(hapT>0)return;const t=Math.min(1,tens/100);
+  if(run>0){buzz(holding?[70,40,90]:[60],Math.round(170+t*85));hapT=holding?rnd(.16,.24):rnd(.3,.5)}
+  else if(holding){if(heavy&&t>.85){buzz([45,35,45],255);hapT=.18}else{buzz(heavy?Math.round(22+t*30):16,Math.round((heavy?90:60)+t*140));hapT=heavy?.34-t*.18:.3}}
+  else if(heavy&&Math.random()<.5){buzz(30,90);hapT=rnd(.6,1)}else hapT=.4}
 const buzz=(ms,amp)=>{if(save.snd&&save.snd.vib===false)return;try{if(window.NativeHaptic){const a=Array.isArray(ms)?ms:[ms];NativeHaptic.vibrate(JSON.stringify(a),amp||160);return}navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 function feel(w){return w<1?'가벼운 손맛':w<2?'제법 묵직함':w<5?'무거운 고기!':w<9?'엄청난 힘!':'괴물급 손맛!!'}
 
@@ -1292,9 +1298,10 @@ function update(dt){
     clock+=dt;
     if(heavy){
       if(run>0){run-=dt;if(run<=0)nextRun=rnd(1.2,2.8)*(fish.hard?.7:1)}
-      else{nextRun-=dt;if(nextRun<=0){run=rnd(.6,1.2)+effW(fw)*.03;talk(fish.boss?'보스다..!!':Math.random()<.5?'대물인가..!!':'헉...!!',1300);const b=bobPos();ripple(b[0],b[2],1.8);splash(b[0],0,b[2],5);buzz(25);sfx.run()}}
+      else{nextRun-=dt;if(nextRun<=0){run=rnd(.6,1.2)+effW(fw)*.03;talk(fish.boss?'보스다..!!':Math.random()<.5?'대물인가..!!':'헉...!!',1300);const b=bobPos();ripple(b[0],b[2],1.8);splash(b[0],0,b[2],5);buzz([160,50,240],255);hapT=.35;sfx.run()}}
     }
     if(holding){gauge+=P.up*(run>0?.5:1)*dt;if(heavy)tens+=(P.tr*(run>0?2.2:1)-15)*dt}else tens-=45*dt;
+    fightHaptic(dt);
     tens=Math.max(0,tens);gauge=Math.max(0,gauge-P.drain*(run>0?1.8:1)*dt);zeroT=gauge<=0?zeroT+dt:0;
     if(gauge>=100)finish(true);
     else if(zeroT>=1.5)finish(false,'escape');
