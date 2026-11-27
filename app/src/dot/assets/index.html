@@ -101,7 +101,7 @@ h2{font-size:24px;margin:28px 0 10px;color:#2f6fb0}
 .travel.arrive .trtxt{background:#2fae74}
 .trskip{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);color:rgba(255,255,255,.75);font-size:13px;text-shadow:1px 1px 0 #000}
 .upg{margin-top:10px;border-top:2px dashed #dbe8f0;padding-top:8px}.upgbar{display:flex;gap:3px;margin-bottom:6px}.upgbar i{flex:1;height:8px;background:#e3e9ee;border:2px solid #1b1f2b}.upgbar i.on{background:#ffd23f}
-.upbtn{width:100%;background:#7a4fd0!important}.lvb{font-style:normal;color:#7a4fd0}
+.upbtn{width:100%;background:#7a4fd0!important;color:#fff!important;text-shadow:0 2px 0 #3d1f80;font-size:17px!important;box-shadow:0 4px 0 #4e2c99!important}.upbtn:disabled{background:#ece6fa!important;color:#4a2f8a!important;text-shadow:none;box-shadow:none!important;border:2px dashed #9a82d6!important}.upbtn small{display:block;font:12px 'Gowun Dodum',sans-serif;color:#7a5fc0;margin-top:2px}.lvb{font-style:normal;color:#7a4fd0}
 .rod.flash-ok{animation:fok .7s}.rod.flash-ng{animation:fng .5s}@keyframes fok{0%,100%{background:#fff}40%{background:#fff4c2}}@keyframes fng{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .wxsel{min-width:96px;min-height:40px;font:17px Jua,sans-serif;border:3px solid #1b1f2b;background:#fff;padding:0 6px}
 .adretry{display:block;margin:10px auto 2px;padding:10px 14px;background:#7a4fd0;color:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;font:17px Jua,sans-serif;cursor:pointer}
@@ -1214,9 +1214,11 @@ FISH.push(...BOSSES);
 /* ---------- game ---------- */
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
 const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
+/* 챔질 가능 시간: 작은 고기는 톡 건드리고 금방 뱉고, 큰 고기일수록 오래 물고 늘어진다 */
+const biteWindow=w=>Math.min(2.6,1.4+Math.log2(1+w)*.26);
 let aimT=0,aimZ=.75,grade='good',chumUsed=false;
 const tierIx=f=>f.boss||f.kind==='treasure'?3:f.kind==='junk'||f.kind==='earth'?0:f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
-const aimPos=()=>{const u=(aimT/.7)%2;return u<1?u:2-u};
+const AIM_SWEEP=1.15;const aimPos=()=>{const u=(aimT/AIM_SWEEP)%2;return u<1?u:2-u};
 const CHUM={price:30,casts:5,legend:4};
 const XRAY={price:20,bite:1.5};let xray=false,xrayCast=false,waitT0=1;
 const nightMul=f=>{const n=(typeof tod==='function'?tod().night:0);return lerp(f.day||1,f.night||1,n)};
@@ -1224,7 +1226,7 @@ function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.boss?0:f.rar*m[tierIx(f)]*
   const tot=FISH.reduce((s,f)=>s+wt(f),0);let r=Math.random()*tot;
   for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
 }
-function startAim(){$('res').classList.remove('on');if(xray&&xrayCast)xrayEnd();st='aim';aimT=rnd(0,.7);aimZ=rnd(.58,.9);
+function startAim(){$('res').classList.remove('on');if(xray&&xrayCast)xrayEnd();st='aim';aimT=rnd(0,AIM_SWEEP);aimZ=rnd(.58,.9);
   const z=$('aimz');for(const k of['good','great','perfect']){const e=z.querySelector('.'+k),w=GRADES[k].w;e.style.left=((aimZ-w)*100)+'%';e.style.width=(w*200)+'%'}}
 function cast(){
   const d=Math.abs(aimPos()-aimZ);grade=d<=GRADES.perfect.w?'perfect':d<=GRADES.great.w?'great':d<=GRADES.good.w?'good':'miss';
@@ -1299,7 +1301,7 @@ function update(dt){
   else if(st==='wait'){
     landAge+=dt;waitT-=dt;nibT-=dt;
     if(nibT<=0){nib=rnd(.5,.9);sfx.nibble();ripple(bx0,bz0,.7);nibT=Math.random()<.35?rnd(.15,.3):rnd(.7,1.8)}
-    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=Math.max(.75,1.25-fw*.03)*(fish.hard?.7:1)*(xray?XRAY.bite:1);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(fish.boss||fish.hard||fw>=20?[260,70,260,70,420]:[200,80,220],255);sfx.bite()}
+    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=biteWindow(fw)*(fish.hard?.85:1)*(xray?XRAY.bite:1);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(fish.boss||fish.hard||fw>=20?[260,70,260,70,420]:[200,80,220],255);sfx.bite()}
   }else if(st==='bite'){biteAge+=dt;bRip-=dt;if(bRip<=0){const b=bobPos();ripple(b[0],b[2],1.2+Math.random());if(Math.random()<.4)splash(b[0],0,b[2],3);bRip=rnd(.1,.2)}biteT-=dt;if(biteT<=0)finish(false,'miss')}
   else if(st==='fight'){
     clock+=dt;
@@ -1364,7 +1366,7 @@ function renderSide(){
   const cur=rod();$('rodName').textContent=cur.name;$('rodMax').textContent=cur.max;
   $('shop').innerHTML=RODS.map(r0=>{const own=save.pts>=r0.need,on=r0.id===cur.base.id,lv=rodLv(r0.id),r=rodStat(r0,lv),cost=upgCost(r0.id),rate=upgRate(r0.id),maxed=lv>=UPG.maxLv;
     const upg=own?`<div class="upg"><div class="upgbar">${Array.from({length:UPG.maxLv},(_,i)=>`<i class="${i<lv?'on':''}"></i>`).join('')}</div>
-      <button type="button" class="buy upbtn" data-upg="${r0.id}" ${maxed||save.coins<cost?'disabled':''}>${maxed?'최대 강화 완료 (+10)':`강화 +${lv+1} · ${cost}코인 · 성공 ${rate}%`}</button></div>`:'';
+      <button type="button" class="buy upbtn" data-upg="${r0.id}" ${maxed||save.coins<cost?'disabled':''}>${maxed?'최대 강화 완료 (+10)':`강화 +${lv+1} · ${cost}코인 · 성공 ${rate}%${save.coins<cost?`<small>코인이 ${cost-save.coins}개 부족해요</small>`:''}`}</button></div>`:'';
     return `<div class="rod${on?' on':''}${own?'':' lock'}"><canvas data-rod="${r0.id}"></canvas><b>${lv?`<em class="lvb">+${lv}</em> `:''}${r0.name}</b><small>${r0.desc}</small>
     <ul><li>권장 무게<span>${r.max}kg 이하</span></li><li>감기 속도<span>×${r.up.toFixed(2)}</span></li><li>줄 장력 부담<span>${r.tr===1?'기본':'−'+Math.round((1-r.tr)*100)+'%'}</span></li></ul>
     <button type="button" data-eq="${r0.id}" ${on||!own?'disabled':''}>${on?'장착 중':own?'장착하기':`${r0.need.toLocaleString('ko-KR')}점 필요 · ${(r0.need-save.pts).toLocaleString('ko-KR')}점 남음`}</button>${upg}</div>`}).join('');
