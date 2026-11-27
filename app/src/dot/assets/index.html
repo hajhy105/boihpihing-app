@@ -879,7 +879,13 @@ function drawFrame(c,w,h,t,menu){
   if(!menu&&st==='aim'){const k=aimPos();tip=[w*(.6-k*.3),h*(.16-k*.1)];hand=[w*.34,h*.92]}
   if(!menu&&st==='cast'){const k=Math.min(1,castT/.25);tip=[lerp(w*.3,w*.6,k),lerp(h*.06,h*.16,k)]}
   let bend=0;if(!menu&&st==='fight')bend=Math.min(1,.25+tens/100*.7+(run>0?.2:0));else if(!menu&&st==='bite')bend=.15;
-  if(bend){tip=[lerp(tip[0],bq[0],bend*.35),tip[1]+bend*h*.16]}
+  if(bend){tip=[lerp(tip[0],bq[0],bend*(st==='fight'?.5:.35)),tip[1]+bend*h*.16]}
+  // 팔: 고기가 끄는 쪽으로 같이 끌려가고, 차고 나가면 앞으로 당겨지며 떨리고, 감을 때는 몸 쪽으로 버틴다
+  if(!menu&&st==='fight'){const side=Math.max(-1,Math.min(1,(bq[0]-w*.5)/(w*.35))),R=run>0,tn=tens/100,sh=(R?2.2:.8)+tn*1.6;
+    hand=[hand[0]+side*w*(R?.1:.06)+Math.sin(T*(R?37:23))*sh,hand[1]+(R?-h*.035:holding?h*.012:0)+Math.sin(T*(R?41:29)+1)*sh*.8];
+    if(holding)hand[1]+=Math.sin(T*16)*1.2;
+    tip=[tip[0]+side*w*.05,tip[1]]}
+  else if(!menu&&st==='bite'){const j=biteAge<.25?Math.sin(biteAge*60)*(1-biteAge/.25)*3:0;hand=[hand[0]+j,hand[1]-Math.abs(j)*.6]}
   if(happy){hand=[hand[0],hand[1]-Math.abs(Math.sin(T*6))*3]}
   const ctrl=[lerp(hand[0],tip[0],.45)-2,lerp(hand[1],tip[1],.45)+bend*h*.06-h*.02];
   const showB=menu||st==='cast'||st==='wait'||st==='bite'||st==='fight';

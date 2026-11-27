@@ -10,8 +10,8 @@ android {
         applicationId 'com.boihpihing.app'
         minSdk 24
         targetSdk 36
-        versionCode 39
-        versionName '3.9'
+        versionCode 40
+        versionName '4.0'
         // 기상청 단기예보 인증키: GitHub 비밀값 KMA_API_KEY에서 빌드 때 넣는다(저장소에는 넣지 않음)
         buildConfigField 'String', 'KMA_KEY', '"' + (System.getenv('KMA_API_KEY') ?: '') + '"'
     }
