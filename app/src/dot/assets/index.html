@@ -651,8 +651,16 @@ function bobPos(){
   let x=bx0,z=bz0,y=wave(x,z,T);
   if(st==='wait'){const s=Math.exp(-landAge*4);y+=Math.abs(Math.sin(landAge*13))*.16*s;y-=nib*.11}
   if(st==='bite'){const a=biteAge,dv=a<.12?a/.12:1;y-=dv*.16+Math.sin(a*21)*.06*dv}
-  if(st==='fight'){const k=gauge/100;z=lerp(bz0,1.2,k*.75)+Math.sin(T*(run>0?6:1.7))*(run>0?.25:.1);x=bx0+Math.sin(T*(run>0?4.3:1.3))*(run>0?.5:.18);y=wave(x,z,T)-.12}
+  if(st==='fight'){const k=gauge/100;z=lerp(bz0,1.2,k*.75)+FM.z+Math.sin(T*(run>0?7:2.3))*(run>0?.08:.04);x=bx0+FM.x+Math.sin(T*(run>0?11:3))*(run>0?.06:.03);y=wave(x,z,T)-.12}
   return[x,y,z,0,0]}
+/* 파이팅 중 고기 움직임: 좌우로 방향을 틀며 내달리고, 차고 나갈 때는 크게 휘젓는다 */
+const FM={x:0,z:0,tx:0,tz:0,vx:0,t:0,face:1};
+function fmReset(){FM.x=FM.z=FM.tx=FM.tz=FM.vx=0;FM.t=.3;FM.face=Math.random()<.5?-1:1}
+function fishMove(dt){const big=Math.min(1,Math.log2(1+fw)/6),R=run>0,k=gauge/100,amp=(.35+big*.7)*(R?1.7:1)*(1-k*.45);
+  FM.t-=dt;if(FM.t<=0){const side=FM.tx>0?-1:1;FM.tx=side*rnd(.45,1)*amp;FM.tz=R?rnd(.1,.45)*(.6+big):rnd(-.15,.2);FM.t=R?rnd(.35,.7):rnd(.6,1.3)*(1.2-big*.4);
+    if(R||Math.random()<.35){const b=bobPos();splash(b[0],0,b[2],R?6:3);ripple(b[0],b[2],R?1.8:1.2)}}
+  const kx=R?6:3.2,px0=FM.x;FM.x+=(FM.tx-FM.x)*Math.min(1,dt*kx);FM.z+=(FM.tz-FM.z)*Math.min(1,dt*(R?4:2));FM.vx=(FM.x-px0)/Math.max(dt,1e-3);
+  if(Math.abs(FM.vx)>.15)FM.face=FM.vx<0?-1:1}
 let ripples=[],drops=[],chumP=[];
 function ripple(x,z,s){ripples.push({x,z,r:.05,a:.8,s:s||1})}
 function splash(x,y,z,n){for(let k=0;k<n;k++)drops.push({x,y,z,vx:rnd(-1.2,1.2),vy:rnd(1.5,3.2),vz:rnd(-1.2,1.2),a:1})}
@@ -853,8 +861,8 @@ function drawFrame(c,w,h,t,menu){
     if(st==='wait'||st==='bite'){const s=PXS,tt=tier(fish);xtag.innerHTML=`<b style="color:${tt[1]}">●</b> ${esc(fish.name)} <b style="color:#9fe7f2">${tt[0]}</b>`;xtag.style.transform=`translate(${q[0]*s}px,${(q[1]-L*q[2]*.45)*s}px) translate(-50%,-115%)`;xtag.hidden=false}else xtag.hidden=true}
   else if(xtag&&!xtag.hidden)xtag.hidden=true;
   if(!XR&&!menu&&fish&&(st==='bite'||st==='fight'||(st==='wait'&&nib>0))){const L=Math.min(1.6,.35+fw*.07)*sc,wq=proj(b[0]+.35,-.3,b[2]-.25);
-    c.globalAlpha=st==='wait'?.3:.6;drawSprite(c,fishShadow(fish,L),wq[0]+(st==='fight'?Math.sin(T*(run>0?10:4))*sc*.12:0),wq[1],false,st==='fight'?Math.sin(T*(run>0?14:6))*.2:0);c.globalAlpha=1;
-    if(st==='fight'&&run>0&&Math.sin(T*5)>.6){const sp=fishSprite(fish,L);drawSprite(c,sp,wq[0],bq[1]-sp.height*.4,Math.sin(T*2)>0,Math.sin(T*9)*.4)}}
+    c.globalAlpha=st==='wait'?.3:.6;drawSprite(c,fishShadow(fish,L),wq[0]+(st==='fight'?Math.sin(T*(run>0?16:7))*sc*.05:0),wq[1],st==='fight'&&FM.face<0,st==='fight'?Math.max(-.5,Math.min(.5,FM.vx*.12))+Math.sin(T*(run>0?18:8))*.12:0);c.globalAlpha=1;
+    if(st==='fight'&&run>0&&Math.sin(T*5)>.6){const sp=fishSprite(fish,L);drawSprite(c,sp,wq[0],bq[1]-sp.height*.4,FM.face<0,Math.sin(T*9)*.4)}}
   if(!menu&&fish&&fish.kind==='squid'&&st==='fight'&&run>0){const iq=proj(b[0]+.3,-.35,b[2]-.2),r=iq[2]*.35;for(let i=0;i<26;i++){const a=i*2.39+T*.6,rr=r*((i%7)/7);px(c,iq[0]+Math.cos(a)*rr*1.3,iq[1]+Math.sin(a)*rr*.5,2,2,'rgba(16,14,22,.55)')}}
   // jumping fish
   for(const o of sea)if(o.k==='jump'){const p=Math.min(1,o.t/o.dur),q=proj(o.x+o.dir*1.2*p,Math.sin(Math.PI*p)*o.h,o.z);drawSprite(c,fishSprite(o.f,o.L*q[2]),q[0],q[1],o.dir<0,-Math.cos(Math.PI*p)*o.dir*.9)}
@@ -1215,7 +1223,7 @@ FISH.push(...BOSSES);
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
 const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
 /* 챔질 가능 시간: 작은 고기는 톡 건드리고 금방 뱉고, 큰 고기일수록 오래 물고 늘어진다 */
-const biteWindow=w=>Math.min(2.6,1.4+Math.log2(1+w)*.26);
+const biteWindow=w=>Math.min(3.2,2+Math.log2(1+w)*.3);
 let aimT=0,aimZ=.75,grade='good',chumUsed=false;
 const tierIx=f=>f.boss||f.kind==='treasure'?3:f.kind==='junk'||f.kind==='earth'?0:f.rar>=12?0:f.rar>=6?1:f.rar>=3?2:3;
 const AIM_SWEEP=1.15;const aimPos=()=>{const u=(aimT/AIM_SWEEP)%2;return u<1?u:2-u};
@@ -1240,7 +1248,7 @@ function cast(){
   {const B=bait();if(B.id==='worm'){save.baits.worm=Math.max(0,save.baits.worm-1);if(save.baits.worm<=0){save.bait='krill';toast('🪱 갯지렁이를 다 썼어요. 크릴로 바꿨어요')}store();renderWX()}}
   if(grade==='perfect')questEvent('perfect');nibT=rnd(.6,1.4);nib=0;
 }
-function startFight(){
+function startFight(){fmReset();
   st='fight';heavy=fw>=2;gauge=0;zeroT=0;tens=0;clock=0;run=0;nextRun=rnd(1.2,2.6)*(fish.hard?.7:1);
   const fwE=fish.boss?Math.min(effW(fw),24):fish.kind==='junk'||fish.kind==='treasure'?Math.min(fw,6):effW(fw),R=rod();if(fish.kind==='junk'||fish.kind==='treasure')nextRun=1e9;if(fish.boss){setTimeout(()=>toast(`⚠ 보스 출현! ${fish.title} — ${fish.name}`,3200),50);sfx.run()}P=heavy?{drain:5+fwE*1.4,up:34*R.up,tr:(6+fwE*2.5)*R.tr*(fwE>R.max?1.2:1)*(WX.tr||1)*(SPOT().tr||1)}:{drain:5+fw*2.5,up:27.5*R.up,tr:0};
   const b=bobPos();splash(b[0],b[1],b[2],10);ripple(b[0],b[2],2);buzz(40);sfx.hook();
@@ -1301,7 +1309,7 @@ function update(dt){
   else if(st==='wait'){
     landAge+=dt;waitT-=dt;nibT-=dt;
     if(nibT<=0){nib=rnd(.5,.9);sfx.nibble();ripple(bx0,bz0,.7);nibT=Math.random()<.35?rnd(.15,.3):rnd(.7,1.8)}
-    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=biteWindow(fw)*(fish.hard?.85:1)*(xray?XRAY.bite:1);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(fish.boss||fish.hard||fw>=20?[260,70,260,70,420]:[200,80,220],255);sfx.bite()}
+    if(waitT<=0){st='bite';biteAge=0;bRip=0;biteT=Math.max(2,biteWindow(fw)*(fish.hard?.9:1))*(xray?XRAY.bite:1);ripple(bx0,bz0,2.2);splash(bx0,0,bz0,8);buzz(fish.boss||fish.hard||fw>=20?[260,70,260,70,420]:[200,80,220],255);sfx.bite()}
   }else if(st==='bite'){biteAge+=dt;bRip-=dt;if(bRip<=0){const b=bobPos();ripple(b[0],b[2],1.2+Math.random());if(Math.random()<.4)splash(b[0],0,b[2],3);bRip=rnd(.1,.2)}biteT-=dt;if(biteT<=0)finish(false,'miss')}
   else if(st==='fight'){
     clock+=dt;
@@ -1310,7 +1318,7 @@ function update(dt){
       else{nextRun-=dt;if(nextRun<=0){run=rnd(.6,1.2)+effW(fw)*.03;talk(fish.boss?'보스다..!!':Math.random()<.5?'대물인가..!!':'헉...!!',1300);const b=bobPos();ripple(b[0],b[2],1.8);splash(b[0],0,b[2],5);buzz([160,50,240],255);hapT=.35;sfx.run()}}
     }
     if(holding){gauge+=P.up*(run>0?.5:1)*dt;if(heavy)tens+=(P.tr*(run>0?2.2:1)-15)*dt}else tens-=45*dt;
-    fightHaptic(dt);
+    fightHaptic(dt);fishMove(dt);
     tens=Math.max(0,tens);gauge=Math.max(0,gauge-P.drain*(run>0?1.8:1)*dt);zeroT=gauge<=0?zeroT+dt:0;
     if(gauge>=100)finish(true);
     else if(zeroT>=1.5)finish(false,'escape');
