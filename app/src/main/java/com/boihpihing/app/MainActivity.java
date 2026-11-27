@@ -15,11 +15,15 @@ import android.widget.FrameLayout;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.graphics.Insets;
+import android.webkit.JavascriptInterface;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.webkit.WebViewAssetLoader;
 
 /** 게임(assets/index.html)을 전체 화면 WebView로 띄운다. 인터넷 없이도 동작한다. */
 public class MainActivity extends Activity {
+    private volatile int safeTop = 0, safeBottom = 0;
 
     private WebView webView;
 
@@ -53,6 +57,11 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onPageFinished(WebView view, String url) {
+                view.evaluateJavascript("window.__setSafe&&__setSafe(" + safeTop + "," + safeBottom + ")", null);
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri u = request.getUrl();
                 return !"appassets.androidplatform.net".equals(u.getHost());
@@ -65,6 +74,18 @@ public class MainActivity extends Activity {
         setContentView(root);
         webView.addJavascriptInterface(new NativeNet(webView), "NativeNet");   // 기상청 날씨 요청
         webView.addJavascriptInterface(new NativeHaptic(this), "NativeHaptic");   // 세기 조절 진동
+        // 카메라 구멍(컷아웃) 높이를 게임에 알려서 상단 버튼이 가려지지 않게 한다
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface public String safe() { return safeTop + "," + safeBottom; }
+        }, "AppSafe");
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets c = insets.getInsets(WindowInsetsCompat.Type.displayCutout());
+            float d = getResources().getDisplayMetrics().density;
+            safeTop = Math.round(c.top / d);
+            safeBottom = Math.round(c.bottom / d);
+            webView.evaluateJavascript("window.__setSafe&&__setSafe(" + safeTop + "," + safeBottom + ")", null);
+            return insets;
+        });
         Ads.attach(this, root, webView);
         hideSystemBars();
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
