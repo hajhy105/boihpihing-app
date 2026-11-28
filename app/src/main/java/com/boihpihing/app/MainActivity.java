@@ -3,6 +3,7 @@ package com.boihpihing.app;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
@@ -78,6 +79,10 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new Object() {
             @JavascriptInterface public String safe() { return safeTop + "," + safeBottom; }
         }, "AppSafe");
+        if (Build.VERSION.SDK_INT >= 33) {   // Android 13+: 새 뒤로가기 방식(앱이 직접 처리)
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+        }
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets c = insets.getInsets(WindowInsetsCompat.Type.displayCutout());
             float d = getResources().getDisplayMetrics().density;
@@ -134,11 +139,19 @@ public class MainActivity extends Activity {
         c.hide(WindowInsetsCompat.Type.systemBars());
     }
 
-    /** 뒤로 가기: 게임 화면 → 메뉴, 상점·닉네임 창 → 닫기, 메뉴에서 누르면 앱 종료 */
-    @Override
-    public void onBackPressed() {
+    // 뒤로가기: 게임 안에서는 열린 창 닫기 → 메뉴(홈)로. 메뉴에서는 두 번 눌러야 종료.
+    private long lastBackAt = 0;
+    private void handleBack() {
         webView.evaluateJavascript("(window.appBack && window.appBack()) ? '1' : '0'", value -> {
-            if (!"\"1\"".equals(value)) finish();
+            if ("\"1\"".equals(value)) return;
+            long now = System.currentTimeMillis();
+            if (now - lastBackAt < 2000) { finish(); return; }
+            lastBackAt = now;
+            android.widget.Toast.makeText(this, "뒤로 버튼을 한 번 더 누르면 게임이 종료돼요", android.widget.Toast.LENGTH_SHORT).show();
         });
     }
+
+    @Override
+    public void onBackPressed() { handleBack(); }   // Android 12 이하
+
 }

@@ -238,10 +238,14 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 .rlist li{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid #1b1f2b;padding:8px 12px;font-size:15px}
 .rlist li.me{background:#e7f6ff;border-color:#1f6fb2}
 .rlist .rk{font:18px Jua,sans-serif;width:34px;text-align:center}.rlist .nm{flex:1;font-family:Jua,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rlist .sc{font-family:Jua,sans-serif;color:#e8603c}.rlist small{color:#6a7a8c;margin-left:4px}
+/* 화면 높이에 맞추기: 모달은 넘치면 안에서 스크롤, 카메라 구멍/하단 여백 피함 */
+.modal{padding:calc(12px + var(--sat,0px)) 12px calc(12px + var(--sab,0px))}
+.modal-card{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.wallet{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px}.wallet span{background:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;padding:6px 12px;font:16px Jua,sans-serif}.wallet b{color:#e8603c}
 </style>
 </head>
 <body>
-<script>window.__setSafe=function(t,b){var r=document.documentElement.style;r.setProperty('--sat',(t||0)+'px');r.setProperty('--sab',(b||0)+'px')};try{if(window.AppSafe){var q=AppSafe.safe().split(',');__setSafe(+q[0],+q[1])}}catch(e){}</script>
+<script>window.__setSafe=function(t,b){var r=document.documentElement.style;r.setProperty('--sat',(t||0)+'px');r.setProperty('--sab',(b||0)+'px');setTimeout(function(){window.fitStage&&window.fitStage()},60)};try{if(window.AppSafe){var q=AppSafe.safe().split(',');__setSafe(+q[0],+q[1])}}catch(e){}</script>
 <div id="menu" class="menu">
   <canvas id="menuCv" class="menu-art" aria-hidden="true"></canvas>
   <div class="menu-in">
@@ -274,6 +278,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 <div id="shopScreen" class="sheet" hidden>
   <div class="sheet-in">
     <div class="sheet-head"><h2>낚시대 상점</h2><button id="shopClose" class="ghost" type="button">닫기</button></div>
+    <div class="wallet"><span>⭐ 점수 <b id="shopPts2">0</b></span><span>🪙 코인 <b id="shopCoins2">0</b></span></div>
     <p class="tip" style="margin-top:0">누적 점수가 기준에 닿으면 낚시대가 해금돼요. 점수는 차감되지 않으니 해금한 낚시대는 언제든 바꿔 낄 수 있어요. 바꾼 낚시대는 다음 캐스팅부터 적용돼요. 현재 점수 <b id="shopPts">0</b>점</p>
     <div class="shop" id="shop"></div>
     <h2>👑 특별 스킨 <small class="dexcount">보스를 잡으면 해금 · 모양만 바뀌어요</small></h2>
@@ -1375,6 +1380,14 @@ if(save.ctrl!=='tap'&&save.ctrl!=='hold')save.ctrl='hold';
 const TAPMODE=()=>save.ctrl==='tap',TAP_ADD=.2,TAP_MAX=.45;
 function fitAct(){const a=$('act');a.style.fontSize='';let f=parseFloat(getComputedStyle(a).fontSize);while(a.scrollWidth>a.clientWidth&&f>14){f-=1;a.style.fontSize=f+'px'}}
 addEventListener('resize',()=>{try{fitAct()}catch(e){}});
+/* 휴대폰: 버튼 줄까지 한 화면에 들어오도록 바다 화면 높이를 실제 남는 공간에 맞춘다 */
+function fitStage(){const st=document.querySelector('.stage'),row=document.querySelector('.actrow'),wr=document.querySelector('.wrap');if(!st||!row||!wr)return;
+  if(innerWidth>600){st.style.height='';return}
+  const cur=st.getBoundingClientRect().height,bot=row.getBoundingClientRect().bottom+scrollY,pb=parseFloat(getComputedStyle(wr).paddingBottom)||0;
+  const want=Math.max(240,Math.floor(cur+(innerHeight-(bot+pb))));if(Math.abs(want-cur)>1)st.style.height=want+'px'}
+window.fitStage=fitStage;addEventListener('resize',()=>setTimeout(fitStage,50));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitStage());
+setTimeout(fitStage,0);setTimeout(fitStage,600);setInterval(fitStage,1500);
 let hapT=0;
 /* 손맛 진동: 감는 동안 툭툭, 장력이 높을수록 세고 잦게, 고기가 차고 나가면 묵직하게 */
 function fightHaptic(dt){hapT-=dt;if(hapT>0)return;const t=Math.min(1,tens/100);
@@ -1541,7 +1554,7 @@ $('nickForm').addEventListener('submit',e=>{e.preventDefault();
 function renderMenu(){
   $('hello').textContent=save.nick?`반가워요, ${save.nick}님`:'반가워요! 닉네임을 정해 보세요';
   $('mStat').textContent=`점수 ${save.pts.toLocaleString('ko-KR')} · 코인 ${save.coins.toLocaleString('ko-KR')} · ${rod().name} · 도감 ${Object.keys(save.dex).length}/${FISH.length}`;
-  $('coins').textContent=save.coins.toLocaleString('ko-KR');$('shopCoins').textContent=save.coins.toLocaleString('ko-KR');
+  $('coins').textContent=save.coins.toLocaleString('ko-KR');$('shopCoins').textContent=save.coins.toLocaleString('ko-KR');$('shopCoins2').textContent=save.coins.toLocaleString('ko-KR');
   $('chumCnt').textContent=save.items.chum+'개';$('xrayCnt').textContent=save.items.xray+'개';$('chumChip').hidden=save.chumLeft<=0;$('chumLeft').textContent=save.chumLeft;
   const can=save.coins>=CHUM.price;
   $('items').innerHTML=`<div class="item"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#f3e6d3"/><path d="M18 26h28l-3 24H21z" fill="#8a5a2b"/><path d="M16 22h32v6H16z" fill="#6b431e"/><g fill="#c48a4a"><circle cx="26" cy="16" r="3"/><circle cx="34" cy="11" r="2.5"/><circle cx="41" cy="17" r="2"/><circle cx="30" cy="8" r="1.8"/></g></svg>
@@ -1553,7 +1566,7 @@ function renderMenu(){
     <p>가격 ${XRAY.price}코인 · 보유 ${save.items.xray}개</p>
     <button class="buy" type="button" id="buyXray" ${save.coins>=XRAY.price?'':'disabled'}>${save.coins>=XRAY.price?`${XRAY.price}코인으로 사기`:`코인이 부족해요 (${XRAY.price-save.coins}코인 더 필요)`}</button></div>`;
   renderBaitShop();renderWX();renderQuest();renderSpot();renderAdShop();
-  $('nickChip').textContent=nick();$('dexCount').textContent=`${Object.keys(save.dex).length}/${FISH.length}종`;$('shopPts').textContent=save.pts.toLocaleString('ko-KR');
+  $('nickChip').textContent=nick();$('dexCount').textContent=`${Object.keys(save.dex).length}/${FISH.length}종`;$('shopPts').textContent=save.pts.toLocaleString('ko-KR');$('shopPts2').textContent=save.pts.toLocaleString('ko-KR');
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
 }
 /* Android back button: returns true when handled */
