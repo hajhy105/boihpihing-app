@@ -10,8 +10,8 @@ android {
         applicationId 'com.boihpihing.app'
         minSdk 24
         targetSdk 36
-        versionCode 44
-        versionName '4.4'
+        versionCode 45
+        versionName '4.5'
         // 기상청 단기예보 인증키: GitHub 비밀값 KMA_API_KEY에서 빌드 때 넣는다(저장소에는 넣지 않음)
         buildConfigField 'String', 'KMA_KEY', '"' + (System.getenv('KMA_API_KEY') ?: '') + '"'
     }
@@ -84,6 +84,9 @@ android {
 dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
     implementation 'androidx.core:core:1.13.1'
+    // 광고 SDK가 끌어오는 오래된 버전(activity 1.0.0, fragment 1.1.0)을 최신으로 올림 (Play 기술 품질 경고 해결)
+    implementation 'androidx.activity:activity:1.9.3'
+    implementation 'androidx.fragment:fragment:1.8.5'
     // 광고(스토어 빌드만): Google Mobile Ads SDK + 동의 관리(UMP)
     storeImplementation 'com.google.android.gms:play-services-ads:25.4.0'
     storeImplementation 'com.google.android.ump:user-messaging-platform:3.2.0'
