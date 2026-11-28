@@ -299,6 +299,30 @@ body.fs #aim{display:none!important}
 #vaim .vmk .top{position:absolute;left:1px;top:0;width:16px;height:11px;background:#e0403a;border:2px solid #1b1f2b;border-bottom:0;border-radius:8px 8px 0 0}
 #vaim .vmk .bot{position:absolute;left:1px;top:11px;width:16px;height:9px;background:#fff;border:2px solid #1b1f2b;border-top:0;border-radius:0 0 8px 8px}
 #vaim .vlab{font:12px Jua,sans-serif;color:#fff;text-shadow:0 1px 2px #000;font-weight:400}
+/* 친구 · 같이 낚시 */
+.fcard{background:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;padding:10px 12px;margin:0 0 10px}
+.fcard small{display:block;color:#5a6b7d;font-size:12.5px}
+.fcode{display:flex;align-items:center;gap:10px;margin:2px 0 6px}.fcode b{font:28px Jua,sans-serif;letter-spacing:4px;color:#e8603c}
+.frow{display:flex;gap:8px;margin-top:8px}.frow input{flex:1;min-width:0;min-height:44px;border:3px solid #1b1f2b;padding:0 10px;font:16px 'Gowun Dodum',sans-serif;text-transform:uppercase}
+.frow2{display:flex;align-items:center;gap:8px}.frow2 .fi{flex:1;min-width:0}.frow2 .fi b{font:17px Jua,sans-serif;margin-right:6px}
+.frow2 .on{color:#2fae74;font-size:12.5px}.frow2 .off{color:#8a98a8;font-size:12.5px}.fdel{padding:6px 8px!important;font-size:12px!important}
+.frq{display:flex;align-items:center;gap:8px;background:#fff6d6}.frq b{font:17px Jua,sans-serif}.frq .sp{flex:1}
+.rcode{font:20px Jua,sans-serif;color:#e8603c;letter-spacing:2px;margin-left:6px}
+.mrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:2px dashed #dbe8f0}.mrow b{flex:1;font-family:Jua,sans-serif}.mrow small{color:#2fae74}
+.roomchip{background:#ff8a65!important;color:#fff!important}
+.ftag{position:absolute;left:0;top:0;z-index:6;pointer-events:none;background:rgba(12,22,40,.78);color:#fff;border:2px solid #000;padding:2px 7px;font:12px Jua,sans-serif;white-space:nowrap}
+.ftag .fb{display:inline-block;background:#ffd23f;color:#1b1f2b;border:2px solid #1b1f2b;padding:0 5px;margin-right:5px;font-weight:900}.ftag .fb.f{background:#ff8a65}
+.ftag .fe{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);font-size:22px;animation:feup .3s ease-out}
+@keyframes feup{from{transform:translate(-50%,8px);opacity:0}}
+.roomboard{position:absolute;right:8px;top:calc(160px + var(--sat,0px));z-index:6;background:rgba(12,22,40,.7);border:2px solid #000;color:#fff;padding:6px 9px;font:12px/1.6 Jua,sans-serif;max-width:52%;pointer-events:none}
+.roomboard b{color:#ffd84a}
+.emobar{position:fixed;left:12px;bottom:calc(130px + var(--sab,0px));z-index:21;display:flex;flex-direction:column;gap:6px}
+.emobar[hidden]{display:none}
+.emobar button{width:42px;height:42px;border-radius:50%!important;padding:0!important;min-height:0!important;font-size:20px!important;background:rgba(12,22,40,.6)!important;border:2px solid rgba(0,0,0,.7)!important;box-shadow:none!important}
+.myemo{position:absolute;left:50%;bottom:28%;transform:translateX(-50%);font-size:44px;z-index:7;pointer-events:none;animation:myemo 1.8s ease-out forwards}
+@keyframes myemo{0%{transform:translate(-50%,20px);opacity:0}15%{opacity:1}100%{transform:translate(-50%,-60px);opacity:0}}
+.invpop{position:fixed;left:50%;top:calc(120px + var(--sat,0px));transform:translateX(-50%);z-index:90;width:min(330px,92vw);background:#fff;border:3px solid #1b1f2b;box-shadow:4px 4px 0 #1b1f2b;padding:12px;text-align:center;font-size:15px}
+.invpop div{display:flex;gap:8px;justify-content:center;margin-top:10px}.invpop[hidden]{display:none}
 </style>
 </head>
 <body class="fs">
@@ -312,6 +336,7 @@ body.fs #aim{display:none!important}
     <div class="menu-btns">
       <button id="mPlay" class="mbtn main" type="button">게임하기</button>
       <button id="mQuest" class="mbtn" type="button">오늘의 퀘스트</button>
+      <button id="mFriend" class="mbtn" type="button">👫 친구 · 같이 낚시</button>
       <button id="mRank" class="mbtn" type="button">🏆 랭킹</button>
       <button id="mDex" class="mbtn" type="button">어종</button>
       <button id="mShop" class="mbtn" type="button">상점</button>
@@ -348,6 +373,18 @@ body.fs #aim{display:none!important}
   </div>
 </div>
 
+<div id="friendScreen" class="sheet" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head"><h2>👫 친구</h2><button id="friendClose" class="ghost" type="button">닫기</button></div>
+    <div class="fcard"><small>내 친구 코드 · 친구에게 알려주세요</small><div class="fcode"><b id="myCode">······</b><button type="button" class="ghost" id="copyCode">복사</button></div>
+      <div class="frow"><input id="addCode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="친구 코드 6자리"><button type="button" class="okbtn" id="addBtn">친구 추가</button></div><p class="tip" id="addMsg" style="margin:6px 0 0"></p></div>
+    <div id="roomBox"></div>
+    <h2 id="reqHead" hidden>📩 받은 친구 요청</h2><div id="reqList"></div>
+    <h2>친구 <small class="dexcount" id="fCount"></small></h2><div id="fList"></div>
+    <p class="tip" style="opacity:.8">친구에게는 닉네임·도감 수·최대어·접속 상태만 보여요. 같이 낚시 방에서는 채팅 대신 이모티콘으로 반응해요.</p>
+  </div>
+</div>
+<div id="invPop" class="invpop" hidden></div>
 <div id="rankScreen" class="sheet" hidden>
   <div class="sheet-in">
     <div class="sheet-head"><h2>🏆 랭킹</h2><button id="rankClose" class="ghost" type="button">닫기</button></div>
@@ -435,6 +472,7 @@ body.fs #aim{display:none!important}
   <header>
     <div class="hrow"><h1 id="gTitle">보이흐피힝</h1><button id="toMenu" class="hbtn" type="button">‹ 메뉴</button><span class="hsp"></span><button id="toDex" class="hbtn" type="button">어종</button><button id="toShop" class="hbtn" type="button">상점</button><button id="setBtn" class="hbtn" type="button" aria-label="설정">⚙</button></div>
     <div class="chips">
+      <button type="button" class="chip chipbtn roomchip" id="roomChip" hidden>👥</button>
       <span class="chip" id="todChip">☀️ 낮</span>
       <button type="button" class="chip chipbtn" id="spotChip">🏗️ 방파제</button>
       <span class="chip"><b id="nickChip">낚시꾼</b></span>
@@ -460,6 +498,8 @@ body.fs #aim{display:none!important}
     <div id="talk" class="talk"></div>
     <div id="resist" class="resist" hidden>저항 중!</div>
     <div id="xtag" class="xtag" hidden></div>
+    <div id="roomBoard" class="roomboard" hidden></div>
+    <div id="emoBar" class="emobar" hidden><button type="button" data-e="👍">👍</button><button type="button" data-e="😂">😂</button><button type="button" data-e="😮">😮</button><button type="button" data-e="🎉">🎉</button></div>
   </div>
 
   <div id="vaim" hidden><div class="vt"><div class="vfill"></div><i class="good"></i><i class="great"></i><i class="perfect"></i><div class="ticks"></div><div class="vmk"><span class="ant"></span><span class="top"></span><span class="bot"></span></div></div><b class="vlab">파워</b></div>
@@ -523,7 +563,7 @@ const FISH=[
 
 const LIMIT=14;
 const tier=f=>f.boss?['👑 보스','#7a2bd0']:f.kind==='junk'?['잡동사니','#8a96a2']:f.kind==='treasure'?['보물','#c98a00']:f.rar>=12?['흔함','#2fae74']:f.rar>=6?['보통','#3b8fd6']:f.rar>=3?['희귀','#e8892b']:['전설','#e8467a'];
-const KEY='seafish.v1';
+const KEY='seafish.v1'+(()=>{try{const q=new URLSearchParams(location.search).get('slot');return q?'.'+q.replace(/\W/g,''):''}catch(e){return''}})();
 let save={pts:0,dex:{},log:[],rod:'basic',coins:0,items:{chum:0,xray:0},chumLeft:0,xrayArmed:false};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.dex)save=s}catch(e){}
 if(typeof save.coins!=='number')save.coins=0;if(!save.items)save.items={chum:0};if(typeof save.items.chum!=='number')save.items.chum=0;if(typeof save.chumLeft!=='number')save.chumLeft=0;if(typeof save.items.xray!=='number')save.items.xray=0;if(save.xrayArmed){save.items.xray++;save.xrayArmed=false}
@@ -985,6 +1025,7 @@ function drawFrame(c,w,h,t,menu){
   if(!menu&&SPv.land==='none'){const ph=(t%11)/1.7;if(ph<1){const dq=proj(EYE.x+2.5-ph*3,Math.sin(ph*Math.PI)*1.1,-4.5);const sp=dolphin();c.save();c.translate(Math.round(dq[0]),Math.round(dq[1]));c.rotate(-Math.cos(ph*Math.PI)*.8);const k=Math.max(1,Math.round(dq[2]/14));c.scale(-k,k);c.drawImage(sp,-7,-3);c.restore()}}
   if(bobY){c.restore();bq[1]+=bobY}
   const top=menu?drawPier(c,w,h):drawFore(c,w,h,t);
+  if(!menu)drawFriends(c,w,h,t);
   // rod (from the hands at the bottom, out over the water)
   const R=rod(),happy=!menu&&st==='result'&&mood==='happy';
   let hand=[w*.34,h*.9],tip=[w*.6,h*.16];
@@ -1020,7 +1061,7 @@ function drawFrame(c,w,h,t,menu){
   if(!menu&&st==='aim'){const q=xray?proj(EYE.x,0,lerp(XZ0,XZ1,aimPos())):proj(1.2,0,lerp(-1.4,-4.6,aimPos()));if(xray){const r=Math.round(q[2]*.75);c.fillStyle='rgba(255,210,63,.9)';for(let i=0;i<20;i++){const a=i/20*Math.PI*2;c.fillRect(Math.round(q[0]+Math.cos(a)*r),Math.round(q[1]+Math.sin(a)*r*.3),1,1)}}c.fillStyle='rgba(255,255,255,.8)';c.fillRect(Math.round(q[0])-3,Math.round(q[1]),7,1);c.fillRect(Math.round(q[0]),Math.round(q[1])-2,1,5)}
 }
 let todT=0;function syncWorld(){WXA+=((WX.amp||1)*(SPOT().amp||1)-WXA)*.02;if(T-todT>1||T<todT){todT=T;tickWorld();const el=$('todChip');if(el){const v=todLabel(kstHour());if(el.textContent!==v)el.textContent=v}}}
-function render(){ctx.setTransform(1,0,0,1,0,0);drawFrame(ctx,PW,PH,T,false);
+function render(){ctx.setTransform(1,0,0,1,0,0);drawFrame(ctx,PW,PH,T,false);friendTags();
   if(st==='bite'){const b=bobPos(),s=toScreen([b[0],b[1]+.9,b[2]]);pop.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;pop.hidden=false}else pop.hidden=true;
   if(st==='fight'&&run>0){const rt=fish&&fish.kind==='squid'?'먹물 발사!':'저항 중!';if(resist.textContent!==rt)resist.textContent=rt;const b=bobPos(),s=toScreen([b[0],.9,b[2]]);resist.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-100%)`;resist.hidden=false}else resist.hidden=true;
   if(!$('menu').hidden)drawMenu()}
@@ -1254,7 +1295,7 @@ const SPOTS=[
 if(!SPOTS.some(s=>s.id===save.spot))save.spot='pier';
 if(!save.spotsOwn||typeof save.spotsOwn!=='object')save.spotsOwn={};
 if(!save.trip||typeof save.trip!=='object')save.trip={spot:null,left:0};
-const SPOT=()=>SPOTS.find(s=>s.id===save.spot)||SPOTS[0];
+const SPOT=()=>{const rs=ROOM&&ROOM.code&&!ROOM.host&&ROOM.meta&&ROOM.meta.spot;return SPOTS.find(s=>s.id===(rs||save.spot))||SPOTS[0]};
 const spotOpen=s=>s.need===0||save.pts>=s.need||!!save.spotsOwn[s.id];
 const isNight=()=>typeof tod==='function'&&tod().night>.5;
 function spotMul(f){const s=SPOT();let m=s.mul[f.id]||1;if(!s.mul[f.id]){if(s.small&&f.max<1&&f.kind!=='squid')m=s.small;if(s.squid&&f.kind==='squid')m=s.squid;if(s.other)m=s.other}
@@ -1265,9 +1306,9 @@ function goSpot(id){const s=SPOTS.find(x=>x.id===id);if(!s)return false;
   if(!spotOpen(s)){toast('아직 열리지 않은 낚시터예요');return false}
   if(s.night&&!isNight()){toast('집어등 배는 밤(20시~새벽 5시)에만 나가요');return false}
   if(s.fee&&!(save.trip.spot===s.id&&save.trip.left>0)){if(save.coins<s.fee){toast(`출조비 ${s.fee}코인이 부족해요`);return false}save.coins-=s.fee;save.trip={spot:s.id,left:s.trip};sfx.coin();toast(`${s.ico} ${s.name} 출조! ${s.trip}번 던질 수 있어요`)}
-  save.spot=s.id;tripEnd=false;store();renderSide();renderSpot();return true}
+  save.spot=s.id;tripEnd=false;store();renderSide();renderSpot();try{roomHostSync()}catch(e){}return true}
 function buySpot(id){const s=SPOTS.find(x=>x.id===id);if(!s||spotOpen(s)||save.coins<s.price)return;save.coins-=s.price;save.spotsOwn[s.id]=true;store();renderSide();renderSpotList();sfx.coin();toast(`${s.ico} ${s.name}이(가) 열렸어요!`)}
-function tripCast(){const s=SPOT();if(!s.fee)return;save.trip.left=Math.max(0,save.trip.left-1);if(save.trip.left<=0)tripEnd=true;store();renderSpot()}
+function tripCast(){const s=SPOT();if(!s.fee||(ROOM&&ROOM.code&&!ROOM.host))return;save.trip.left=Math.max(0,save.trip.left-1);if(save.trip.left<=0)tripEnd=true;store();renderSpot()}
 function tripCheck(){if(!tripEnd)return;tripEnd=false;const s=SPOT();save.spot='pier';save.trip={spot:null,left:0};store();renderSide();renderSpot();setTimeout(()=>{$('res').classList.remove('on');playTravel(s.id,'pier',()=>toast(`${s.ico} ${s.name} 출조가 끝났어요. 방파제로 돌아왔어요`,3600))},1800)}
 function renderSpot(){const c=$('spotChip');if(!c)return;const s=SPOT(),v=`${s.ico} ${s.name}${s.fee?` ${save.trip.left}회`:''}`;if(c.textContent!==v)c.textContent=v}
 function renderSpotList(){const el=$('spotList');if(!el)return;const night=isNight();
@@ -1401,6 +1442,192 @@ setTimeout(()=>{
   $('rankFish').addEventListener('change',renderRank);
 },0);
 
+/* ================= 친구 · 같이 낚시 (Firestore + Realtime Database REST) ================= */
+const RTDB='https://boihpihing-default-rtdb.asia-southeast1.firebasedatabase.app';
+if(!save.soc||typeof save.soc!=='object')save.soc={};
+const SOC=save.soc;
+var ROOM={code:null,meta:null,tree:{},es:null,esT:0,host:false,joinT:0,lastPush:0,lastSt:'',seen:{},fr:{}};
+const socReady=()=>!!save.nick;
+const fsName=p=>`projects/${FB.pid}/databases/(default)/documents/${p}`;
+function fsF(o){const f={};for(const[k,v]of Object.entries(o))f[k]=typeof v==='string'?{stringValue:v}:Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v};return f}
+const fsUpd=(p,o,extra)=>Object.assign({update:{name:fsName(p),fields:fsF(o)},updateTransforms:[{fieldPath:'upd',setToServerValue:'REQUEST_TIME'}]},extra||{});
+async function fsCommitW(writes){const a=await fbAuth();const r=await fetch(`${FS}:commit?key=${FB.key}`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.tok},body:JSON.stringify({writes})});if(!r.ok)throw new Error('commit '+r.status);return true}
+const fsObj=d=>{const o={id:d.name.split('/').pop()};for(const[k,v]of Object.entries(d.fields||{}))o[k]=v.stringValue!==undefined?v.stringValue:v.integerValue!==undefined?+v.integerValue:v.doubleValue!==undefined?v.doubleValue:v.timestampValue;return o};
+async function fsGetDoc(p){const a=await fbAuth();const r=await fetch(`${FS}/${p}?key=${FB.key}`,{headers:{Authorization:'Bearer '+a.tok}});if(r.status===404)return null;if(!r.ok)throw new Error('get '+r.status);return fsObj(await r.json())}
+async function fsListCol(p){const a=await fbAuth();const r=await fetch(`${FS}/${p}?key=${FB.key}&pageSize=100`,{headers:{Authorization:'Bearer '+a.tok}});if(!r.ok)throw new Error('list '+r.status);const j=await r.json();return(j.documents||[]).map(fsObj)}
+async function rt(path,method,body){const a=await fbAuth();const r=await fetch(`${RTDB}/${path}.json?auth=${encodeURIComponent(a.tok)}`,{method:method||'GET',body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw new Error('rt '+r.status);const t=await r.text();return t?JSON.parse(t):null}
+const TS={'.sv':'timestamp'};
+/* --- 프로필 · 친구 코드 --- */
+const CODE_CH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+async function ensureCode(){if(SOC.code)return SOC.code;const a=await fbAuth();
+  for(let i=0;i<6;i++){let c='';for(let k=0;k<6;k++)c+=CODE_CH[Math.floor(Math.random()*CODE_CH.length)];
+    try{await fsCommitW([{update:{name:fsName('codes/'+c),fields:fsF({uid:a.uid})},currentDocument:{exists:false}}]);SOC.code=c;SOC.uid=a.uid;store();return c}catch(e){}}
+  throw new Error('code')}
+async function pushProfile(){if(!socReady())return;const code=await ensureCode();const a=await fbAuth();
+  let top='',bw=0;for(const[id,d]of Object.entries(save.dex)){if(d&&d.best>bw){const f=FISH.find(x=>x.id===id);if(f){bw=d.best;top=`${f.name} ${(+bw).toFixed(1)}kg`}}}
+  await fsCommitW([fsUpd('users/'+a.uid,{nick:save.nick,code,dex:Object.keys(save.dex).length,top})]);SOC.profT=Date.now();store()}
+/* --- 접속 상태 --- */
+let socStT=0;
+async function pushStatus(force){if(!socReady())return;const now=Date.now();if(!force&&now-socStT<50e3)return;socStT=now;
+  try{const a=await fbAuth();const mh=$('menu')&&!$('menu').hidden;await rt('status/'+a.uid,'PUT',{nick:save.nick,st:ROOM.code?'room':mh?'menu':'fish',spot:SPOT().id,room:ROOM.code||'',t:TS})}catch(e){}}
+/* --- 친구 추가 · 요청 · 목록 --- */
+async function addFriend(code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6)throw new Error('친구 코드는 6자리예요');
+  const me=(await fbAuth()).uid;const d=await fsGetDoc('codes/'+code);if(!d||!d.uid)throw new Error('그런 코드의 친구가 없어요');if(d.uid===me)throw new Error('내 코드예요 😅');
+  const already=await fsGetDoc(`friends/${me}/list/${d.uid}`).catch(()=>null);if(already)throw new Error('이미 친구예요');
+  await fsCommitW([fsUpd(`freq/${d.uid}/from/${me}`,{nick:save.nick})]);return true}
+async function acceptFriend(fid,nick){const me=(await fbAuth()).uid;
+  await fsCommitW([fsUpd(`friends/${me}/list/${fid}`,{nick:nick||'친구'},{currentDocument:{exists:false}}),fsUpd(`friends/${fid}/list/${me}`,{nick:save.nick},{currentDocument:{exists:false}}),{delete:fsName(`freq/${me}/from/${fid}`)}])}
+async function declineFriend(fid){const me=(await fbAuth()).uid;await fsCommitW([{delete:fsName(`freq/${me}/from/${fid}`)}])}
+async function removeFriend(fid){const me=(await fbAuth()).uid;await fsCommitW([{delete:fsName(`friends/${me}/list/${fid}`)},{delete:fsName(`friends/${fid}/list/${me}`)}])}
+/* --- 같이 낚시 방 --- */
+const myRodInfo=()=>{const R=rod();return{rod:R.base?R.base.id:R.id,lv:R.lv||0,skin:R.skin||''}};
+function roomMembers(){const m=(ROOM.tree&&ROOM.tree.m)||{},now=Date.now()+(ROOM.skew||0),out=[];for(const[uid,v]of Object.entries(m)){if(!v||typeof v!=='object')continue;if(v.t&&now-v.t>45e3)continue;out.push({uid,...v})}out.sort((a,b)=>(a.j||0)-(b.j||0));return out}
+const genRoom=()=>String(Math.floor(100000+Math.random()*900000));
+async function createRoom(){if(!socReady())throw new Error('닉네임을 먼저 정해 주세요');await leaveRoom(true);const a=await fbAuth();
+  for(let i=0;i<6;i++){const c=genRoom();try{await rt(`rooms/${c}/meta`,'PUT',{host:a.uid,spot:SPOT().id,wx:WX.id,t:TS});await enterRoom(c);return c}catch(e){}}
+  throw new Error('방을 만들지 못했어요')}
+async function joinRoom(code){code=String(code||'').replace(/\D/g,'');if(code.length!==6)throw new Error('방 코드는 숫자 6자리예요');if(!socReady())throw new Error('닉네임을 먼저 정해 주세요');
+  if(ROOM.code===code)return;const r=await rt(`rooms/${code}`);if(!r||!r.meta)throw new Error('그런 방이 없어요');
+  const now=Date.now(),alive=Object.values(r.m||{}).filter(v=>v&&v.t&&now-v.t<45e3).length;if(alive>=4)throw new Error('방이 꽉 찼어요 (최대 4명)');
+  if(!alive&&r.meta.t&&now-r.meta.t>6*3600e3)throw new Error('끝난 방이에요');
+  await leaveRoom(true);await enterRoom(code)}
+async function enterRoom(code){const a=await fbAuth();ROOM.code=code;ROOM.tree={};ROOM.joinT=Date.now();ROOM.seen={};ROOM.fr={};ROOM.lastSt='';
+  await rt(`rooms/${code}/m/${a.uid}`,'PUT',{nick:save.nick,...myRodInfo(),st:st,bx:+bx0.toFixed(2),bz:+bz0.toFixed(2),j:TS,t:TS});
+  openStream();pushStatus(true);renderRoomUI();toast(`👥 같이 낚시 방 ${code}에 들어왔어요`,2200)}
+async function leaveRoom(silent){if(!ROOM.code)return;const code=ROOM.code;closeStream();
+  try{const a=await fbAuth();const others=roomMembers().filter(m=>m.uid!==a.uid);
+    if(ROOM.tree.meta&&ROOM.tree.meta.host===a.uid){if(others.length)await rt(`rooms/${code}/meta`,'PATCH',{host:others[0].uid});else await rt(`rooms/${code}/meta`,'DELETE')}
+    await rt(`rooms/${code}/m/${a.uid}`,'DELETE')}catch(e){}
+  ROOM.code=null;ROOM.tree={};ROOM.meta=null;ROOM.host=false;ROOM.fr={};WX_OVERRIDE=null;WX=weather();renderWX&&renderWX();
+  for(const el of document.querySelectorAll('.ftag'))el.remove();pushStatus(true);renderRoomUI();renderSide();if(!silent)toast('방에서 나왔어요',1600)}
+function setPath(obj,segs,val){if(!segs.length)return val;const k=segs[0];if(typeof obj!=='object'||obj===null)obj={};const nv=setPath(obj[k],segs.slice(1),val);if(nv===null||nv===undefined)delete obj[k];else obj[k]=nv;return obj}
+function roomApply(kind,path,data){const segs=path.split('/').filter(Boolean);
+  if(kind==='put')ROOM.tree=setPath(ROOM.tree,segs,data)||{};
+  else if(data&&typeof data==='object')for(const[k,v]of Object.entries(data))ROOM.tree=setPath(ROOM.tree,[...segs,...k.split('/').filter(Boolean)],v)||{};
+  roomChanged()}
+function openStream(){closeStream();if(!ROOM.code)return;const code=ROOM.code;
+  fbAuth().then(a=>{if(ROOM.code!==code)return;const es=new EventSource(`${RTDB}/rooms/${code}.json?auth=${encodeURIComponent(a.tok)}`);ROOM.es=es;ROOM.esT=Date.now();
+    const h=kind=>e=>{try{const d=JSON.parse(e.data);roomApply(kind,d.path,d.data)}catch(_){}};
+    es.addEventListener('put',h('put'));es.addEventListener('patch',h('patch'));
+    es.addEventListener('auth_revoked',()=>{if(RK.auth)RK.auth.exp=0;openStream()});
+    es.addEventListener('cancel',()=>{if(RK.auth)RK.auth.exp=0;setTimeout(openStream,1500)});
+  }).catch(()=>setTimeout(openStream,4000))}
+function closeStream(){if(ROOM.es){try{ROOM.es.close()}catch(e){}ROOM.es=null}}
+let roomPrevHost=null;
+function roomChanged(){const t=ROOM.tree||{};ROOM.meta=t.meta||null;const me=RK.auth&&RK.auth.uid;
+  if(!ROOM.meta){if(ROOM.code&&Date.now()-ROOM.joinT>4000){toast('방이 사라졌어요',1800);leaveRoom(true)}return}
+  ROOM.host=ROOM.meta.host===me;if(roomPrevHost!==null&&roomPrevHost!==ROOM.meta.host&&ROOM.host)toast('👑 이제 내가 방장이에요',1800);roomPrevHost=ROOM.meta.host;
+  if(!ROOM.host){if(ROOM.meta.wx&&WX_OVERRIDE!==ROOM.meta.wx){WX_OVERRIDE=ROOM.meta.wx;WX=weather();renderWX&&renderWX()}}else if(WX_OVERRIDE){WX_OVERRIDE=null;WX=weather()}
+  // 새 조과 알림 + 친구 쪽에서 고기 튀어 오르기
+  for(const[id,e]of Object.entries(t.ev||{})){if(ROOM.seen[id]||!e)continue;ROOM.seen[id]=1;if(!e.t||e.t<ROOM.joinT-2000)continue;
+    if(e.uid===me)continue;const f=FISH.find(x=>x.id===e.fid);toast(`🎉 ${esc(e.nick||'친구')}님이 ${esc(e.f||'물고기')} ${(+e.kg||0).toFixed(2)}kg을 낚았어요!`,2600);
+    const fr=ROOM.fr[e.uid];if(f&&fr){sea.push({k:'jump',f,dir:fr.side,x:fr.x,z:fr.z,t:0,dur:1.1,h:1.3,L:Math.min(1.6,.5+(+e.kg||1)*.05)});splash(fr.x,0,fr.z,8);ripple(fr.x,fr.z,1.4)}
+    if(fr){fr.lastCatch=`${e.f} ${(+e.kg||0).toFixed(1)}kg`;fr.catchT=T}}
+  renderRoomUI()}
+/* 내 상태 올리기 */
+function roomPush(force){if(!ROOM.code||!RK.auth)return;const now=Date.now(),sChanged=st!==ROOM.lastSt;
+  const gap=st==='fight'?900:4000;if(!force&&!sChanged&&now-ROOM.lastPush<gap)return;if(!force&&now-ROOM.lastPush<300)return;
+  ROOM.lastPush=now;ROOM.lastSt=st;let bx=bx0,bz=bz0;if(st==='fight'){const b=bobPos();bx=b[0];bz=b[2]}
+  const body={nick:save.nick,...myRodInfo(),st,bx:+bx.toFixed(2),bz:+bz.toFixed(2),tn:Math.round(tens||0),t:TS};
+  rt(`rooms/${ROOM.code}/m/${RK.auth.uid}`,'PATCH',body).catch(()=>{})}
+function roomCatch(f,w){if(!ROOM.code||!RK.auth)return;rt(`rooms/${ROOM.code}/ev`,'POST',{uid:RK.auth.uid,nick:save.nick,f:f.name,fid:f.id,kg:+(+w).toFixed(2),t:TS}).catch(()=>{});roomPush(true)}
+function roomEmo(e){if(!ROOM.code||!RK.auth)return;rt(`rooms/${ROOM.code}/m/${RK.auth.uid}`,'PATCH',{emo:e,emoT:TS,t:TS}).catch(()=>{});showMyEmo(e)}
+function showMyEmo(e){const d=document.createElement('div');d.className='myemo';d.textContent=e;$('stage').appendChild(d);setTimeout(()=>d.remove(),1800)}
+/* 방장: 낚시터·날씨 바뀌면 방에 알림 */
+function roomHostSync(){if(!ROOM.code||!ROOM.host||!ROOM.meta)return;const sp=save.spot,wx=WX.id;if(ROOM.meta.spot!==sp||ROOM.meta.wx!==wx){ROOM.meta.spot=sp;ROOM.meta.wx=wx;rt(`rooms/${ROOM.code}/meta`,'PATCH',{spot:sp,wx}).catch(()=>{})}}
+/* 초대 */
+async function inviteFriend(fid,nick){if(!ROOM.code)await createRoom();const a=await fbAuth();await rt(`inv/${fid}/${a.uid}`,'PUT',{nick:save.nick,room:ROOM.code,t:TS});toast(`📨 ${esc(nick||'친구')}님을 초대했어요`,1800)}
+let invShown={};
+async function pollInvites(){if(!socReady()||!RK.auth)return;try{const a=await fbAuth();const inv=await rt('inv/'+a.uid);if(!inv)return;const now=Date.now();
+  for(const[from,v]of Object.entries(inv)){if(!v||!v.room)continue;if(v.t&&now-v.t>5*60e3){rt(`inv/${a.uid}/${from}`,'DELETE').catch(()=>{});continue}
+    if(ROOM.code===v.room){rt(`inv/${a.uid}/${from}`,'DELETE').catch(()=>{});continue}const key=from+v.room;if(invShown[key])continue;invShown[key]=1;showInvite(from,v);break}}catch(e){}}
+function showInvite(from,v){const p=$('invPop');p.innerHTML=`<b>🎣 ${esc(v.nick||'친구')}님이 같이 낚시하자고 해요!</b><div><button type="button" class="okbtn" id="invYes">참가</button><button type="button" class="ghost" id="invNo">나중에</button></div>`;p.hidden=false;sfx.bite&&sfx.bite();buzz([60,40,60]);
+  const done=async ok=>{p.hidden=true;try{const a=await fbAuth();await rt(`inv/${a.uid}/${from}`,'DELETE')}catch(e){}if(ok){try{await joinRoom(v.room);if(!$('menu').hidden){$('menu').hidden=true}}catch(e){toast(e.message||'참가하지 못했어요',2000)}}};
+  $('invYes').onclick=()=>done(true);$('invNo').onclick=()=>done(false)}
+/* 주기 작업 */
+setInterval(()=>{pushStatus(false);if(ROOM.code){roomPush(true);roomHostSync();if(Date.now()-ROOM.esT>45*60e3)openStream()}},8000);
+setInterval(pollInvites,15000);setTimeout(()=>{pollInvites();pushStatus(true)},4000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)closeStream();else if(ROOM.code){openStream();roomPush(true)}});
+/* ---- 친구 낚싯대 그리기 (나란히 1인칭) ---- */
+const FR_COL=['#3f7fd0','#7a4fd0','#2fae74','#e0a030'];
+function drawFriends(c,w,h,t){if(!ROOM.code)return;const me=RK.auth&&RK.auth.uid;const others=roomMembers().filter(m=>m.uid!==me);const alive={};
+  others.forEach((m,i)=>{if(i>3)return;alive[m.uid]=1;const side=i%2===0?-1:1,row=i>>1;
+    let fr=ROOM.fr[m.uid];if(!fr){fr=ROOM.fr[m.uid]={x:(m.bx||1.2)+side*(row?2.6:1.7),z:(m.bz||-3)-(row?1:0),side}}fr.side=side;fr.nick=m.nick;fr.st=m.st;fr.emo=m.emo;fr.emoT=m.emoT;
+    const tx=(m.bx||1.2)+side*(row?2.6:1.7),tz=(m.bz||-3)-(row?1:0);fr.x+=(tx-fr.x)*.08;fr.z+=(tz-fr.z)*.08;
+    const S=m.st||'idle',out=S==='wait'||S==='bite'||S==='fight'||S==='cast';
+    let y=wave(fr.x,fr.z,t);if(S==='bite')y-=.12+Math.sin(t*21)*.05;if(S==='fight')y-=.12;
+    const bq=proj(fr.x,y,fr.z),sc=bq[2];
+    const hand=row?[side<0?-w*.03:w*1.03,h*.74]:[side<0?w*.03:w*.97,h*.98];
+    let tip=row?[hand[0]-side*w*.2,h*.36]:[hand[0]-side*w*.2,h*.28];
+    if(S==='aim')tip=[hand[0]-side*w*.06,h*.2];
+    const bend=S==='fight'?.75:S==='bite'?.2:0;if(bend&&out)tip=[lerp(tip[0],bq[0],bend*.45),tip[1]+bend*h*.12];
+    if(S==='fight'){tip[0]+=Math.sin(t*23+i)*1.2;tip[1]+=Math.sin(t*29+i)*1.2}
+    const ctrl=[lerp(hand[0],tip[0],.45)-side*2,lerp(hand[1],tip[1],.45)+bend*h*.05-h*.02];
+    // 팔
+    const col=FR_COL[i%4];for(let k=0;k<14;k++){const yy=hand[1]+k*u(1.2);px(c,hand[0]+side*(k*u(1)+u(2))-u(3),yy,u(6),u(1.4)+1,col)}px(c,hand[0]-u(2),hand[1]-u(2),u(4),u(4),'#f2c9a0');
+    if(out){pcurve(c,tip,[(tip[0]+bq[0])/2,Math.max(tip[1],bq[1])+(S==='fight'?0:6)],[bq[0],bq[1]-Math.max(2,sc*.3)],S==='fight'?'rgba(255,200,190,.85)':'rgba(255,255,255,.7)',18);
+      const s=Math.max(1,Math.round(sc*.09)),x=Math.round(bq[0]),yy=Math.round(bq[1]);px(c,x,yy-s*4,1,s*2,PAL.yel);px(c,x-s,yy-s*2,s*2+1,s*2,PAL.red);px(c,x-s,yy,s*2+1,1,'rgba(255,255,255,.8)');
+      if(S==='fight'&&Math.random()<.06){splash(fr.x,0,fr.z,2)}}
+    const Rf=RODS.find(r=>r.id===m.rod)||RODS[0];drawRodPx(c,hand,ctrl,tip,{...Rf,lv:m.lv||0,skin:m.skin||''},t,S==='fight',!row,side<0);
+    fr.tagX=bq[0];fr.tagY=bq[1]-sc*.9-6;fr.out=out});
+  for(const uid of Object.keys(ROOM.fr))if(!alive[uid])delete ROOM.fr[uid]}
+function friendTags(){const st0=$('stage');const keep={};if(ROOM.code&&$('menu').hidden){for(const[uid,fr]of Object.entries(ROOM.fr)){keep[uid]=1;let el=st0.querySelector(`.ftag[data-u="${uid}"]`);if(!el){el=document.createElement('div');el.className='ftag';el.dataset.u=uid;st0.appendChild(el)}
+    const now=Date.now()+(ROOM.skew||0),emo=fr.emo&&fr.emoT&&now-fr.emoT<3500?`<span class="fe">${esc(fr.emo)}</span>`:'',bang=fr.st==='bite'?'<span class="fb">!</span>':fr.st==='fight'?'<span class="fb f">🎣</span>':'',cat=fr.lastCatch&&T-fr.catchT<4?` · ${esc(fr.lastCatch)}`:'';
+    const html=`${emo}${bang}${esc(fr.nick||'친구')}${cat}`;if(el.innerHTML!==html)el.innerHTML=html;
+    const x=fr.out?fr.tagX:(fr.side<0?PW*.16:PW*.84),y=fr.out?fr.tagY:PH*.5;el.style.transform=`translate(${x*PXS}px,${y*PXS}px) translate(-50%,-100%)`}}
+  for(const el of st0.querySelectorAll('.ftag'))if(!keep[el.dataset.u])el.remove()}
+/* ---- 화면: 친구 · 방 ---- */
+function roomBoardHTML(){const best={},me=RK.auth&&RK.auth.uid,names={};for(const m of roomMembers())names[m.uid]=m.uid===me?'나':m.nick;
+  for(const e of Object.values((ROOM.tree&&ROOM.tree.ev)||{})){if(!e||!e.t||e.t<ROOM.joinT-60e3)continue;if(!best[e.uid]||e.kg>best[e.uid].kg)best[e.uid]={kg:+e.kg,f:e.f,n:names[e.uid]||e.nick}}
+  const L=Object.values(best).sort((a,b)=>b.kg-a.kg).slice(0,4);return L.length?'🏆 이번 낚시<br>'+L.map((b,i)=>`<b>${i+1}.</b> ${esc(b.n)} ${esc(b.f)} ${b.kg.toFixed(1)}kg`).join('<br>'):'🏆 첫 고기를 낚아 보세요!'}
+function renderRoomUI(){const chip=$('roomChip'),board=$('roomBoard'),emo=$('emoBar');const on=!!ROOM.code;
+  if(chip){chip.hidden=!on;if(on)chip.textContent=`👥 ${roomMembers().length}명 · ${ROOM.code}`}
+  if(board){board.hidden=!on;if(on)board.innerHTML=roomBoardHTML()}if(emo)emo.hidden=!on;
+  if(!$('friendScreen').hidden)renderRoomBox()}
+function renderRoomBox(){const box=$('roomBox');if(!box)return;const me=RK.auth&&RK.auth.uid;
+  if(!ROOM.code){box.innerHTML=`<div class="fcard"><b>🎣 같이 낚시</b><p class="tip" style="margin:4px 0 8px">방을 만들고 친구를 초대하거나, 방 코드로 들어가요. 최대 4명.</p>
+    <button type="button" class="okbtn" id="mkRoom" style="width:100%">방 만들기</button><div class="frow"><input id="roomCodeIn" inputmode="numeric" maxlength="6" placeholder="방 코드 6자리"><button type="button" class="ghost" id="joinRoomBtn">참가</button></div></div>`;return}
+  const ms=roomMembers();box.innerHTML=`<div class="fcard"><b>🎣 같이 낚시 방 <span class="rcode">${ROOM.code}</span></b><p class="tip" style="margin:4px 0 8px">낚시터 ${SPOT().ico} ${SPOT().name} · ${ROOM.host?'내가 방장이에요 (낚시터를 바꾸면 다 같이 이동)':'방장이 고른 낚시터·날씨로 함께해요'}</p>
+    ${ms.map(m=>`<div class="mrow"><span>${m.uid===me?'🙋':'🎣'}</span><b>${esc(m.nick||'?')}${ROOM.meta&&ROOM.meta.host===m.uid?' 👑':''}</b><small>${stLabel(m.st)}</small></div>`).join('')}
+    <div class="frow"><button type="button" class="okbtn" id="goFish" style="flex:1">낚시하러 가기</button><button type="button" class="ghost" id="leaveRoomBtn">방 나가기</button></div></div>`}
+const stLabel=s=>({idle:'준비',aim:'조준 중',cast:'던지는 중',wait:'기다리는 중',bite:'입질!',fight:'파이팅!',result:'쉬는 중'}[s]||'');
+async function renderFriends(){const L=$('fList'),R=$('reqList');$('myCode').textContent=SOC.code||'······';
+  if(!socReady()){L.innerHTML='<p class="tip">닉네임을 정하면 친구 코드가 생겨요.</p>';R.innerHTML='';$('reqHead').hidden=true;renderRoomBox();return}
+  renderRoomBox();
+  try{await pushProfile();$('myCode').textContent=SOC.code;const me=(await fbAuth()).uid;
+    const reqs=await fsListCol(`freq/${me}/from`);$('reqHead').hidden=!reqs.length;
+    R.innerHTML=reqs.map(r=>`<div class="fcard frq"><b>${esc(r.nick||'?')}</b><small>친구 요청</small><span class="sp"></span><button type="button" class="okbtn" data-acc="${r.id}" data-n="${esc(r.nick||'')}">수락</button><button type="button" class="ghost" data-dec="${r.id}">거절</button></div>`).join('');
+    const fr=await fsListCol(`friends/${me}/list`);$('fCount').textContent=fr.length?`${fr.length}명`:'';
+    if(!fr.length){L.innerHTML='<p class="tip">아직 친구가 없어요. 위의 내 코드를 친구에게 알려주거나, 친구 코드를 입력해 보세요.</p>';return}
+    const rows=await Promise.all(fr.map(async f=>{const[p,s]=await Promise.all([fsGetDoc('users/'+f.id).catch(()=>null),rt('status/'+f.id).catch(()=>null)]);return{f,p,s}}));
+    const now=Date.now();L.innerHTML=rows.map(({f,p,s})=>{const on=s&&s.t&&now-s.t<120e3;const nick=(p&&p.nick)||f.nick||'친구';
+      const stt=!on?`<span class="off">○ ${s&&s.t?agoText(now-s.t):'오프라인'}</span>`:s.st==='room'?`<span class="on">● 같이 낚시 중</span>`:s.st==='fish'?`<span class="on">● 낚시 중</span>`:`<span class="on">● 접속 중</span>`;
+      const btn=on&&s.st==='room'&&s.room&&s.room!==ROOM.code?`<button type="button" class="okbtn" data-join="${s.room}">참가</button>`:on?`<button type="button" class="okbtn" data-inv="${f.id}" data-n="${esc(nick)}">초대</button>`:'';
+      return`<div class="fcard frow2"><div class="fi"><b>${esc(nick)}</b>${stt}<small>${p?`도감 ${p.dex||0}/${FISH.length}${p.top?' · 최대어 '+esc(p.top):''}`:''}</small></div>${btn}<button type="button" class="ghost fdel" data-del="${f.id}" data-n="${esc(nick)}">삭제</button></div>`}).join('')
+  }catch(e){L.innerHTML='<p class="tip">친구 정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</p>'}}
+const agoText=ms=>{const m=Math.floor(ms/60e3);return m<60?`${m}분 전`:m<1440?`${Math.floor(m/60)}시간 전`:`${Math.floor(m/1440)}일 전`};
+function openFriends(){$('friendScreen').hidden=false;renderFriends()}
+setTimeout(()=>{
+  $('mFriend').addEventListener('click',()=>{sfx.click&&sfx.click();openFriends()});
+  $('friendClose').addEventListener('click',()=>{$('friendScreen').hidden=true});
+  $('roomChip').addEventListener('click',()=>{if(!idleNow||idleNow())openFriends();else toast('결과가 나온 뒤에 열 수 있어요',1500)});
+  $('copyCode').addEventListener('click',()=>{const c=SOC.code;if(!c)return;try{navigator.clipboard.writeText(c);toast('친구 코드를 복사했어요',1400)}catch(e){toast('코드: '+c,2000)}});
+  $('addBtn').addEventListener('click',async()=>{const m=$('addMsg');m.textContent='보내는 중…';try{await addFriend($('addCode').value);m.textContent='✅ 친구 요청을 보냈어요! 상대가 수락하면 친구가 돼요.';$('addCode').value=''}catch(e){m.textContent='⚠ '+(e.message&&!/^(commit|get|list|rt) /.test(e.message)?e.message:'요청을 보내지 못했어요')}});
+  $('friendScreen').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+    try{
+      if(b.id==='mkRoom'){b.disabled=true;await createRoom();renderFriends()}
+      else if(b.id==='joinRoomBtn'){await joinRoom($('roomCodeIn').value);renderFriends()}
+      else if(b.id==='leaveRoomBtn'){await leaveRoom();renderFriends()}
+      else if(b.id==='goFish'){$('friendScreen').hidden=true;$('menu').hidden=true}
+      else if(b.dataset.acc){await acceptFriend(b.dataset.acc,b.dataset.n);toast('친구가 됐어요! 🎉',1600);renderFriends()}
+      else if(b.dataset.dec){await declineFriend(b.dataset.dec);renderFriends()}
+      else if(b.dataset.inv){await inviteFriend(b.dataset.inv,b.dataset.n);renderFriends()}
+      else if(b.dataset.join){await joinRoom(b.dataset.join);renderFriends()}
+      else if(b.dataset.del){if(b.dataset.sure){await removeFriend(b.dataset.del);renderFriends()}else{b.dataset.sure=1;b.textContent='정말 삭제?'}}
+    }catch(err){toast((err&&err.message&&!/^(commit|get|list|rt) /.test(err.message))?err.message:'인터넷 연결을 확인해 주세요',2000);b.disabled=false}});
+  $('emoBar').addEventListener('click',e=>{const b=e.target.closest('button[data-e]');if(b)roomEmo(b.dataset.e)});
+},0);
+
 /* ---------- game ---------- */
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
 const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
@@ -1468,7 +1695,7 @@ function finish(ok,kind){
     const pts=f.boss?3000+Math.round(fw*5):Math.round(Math.min(fw,30)*10*Math.sqrt(20/f.rar));
     const coin=f.boss?300+Math.floor(Math.random()*201):fw<2?1+Math.floor(Math.random()*4):fw<5?5+Math.floor(Math.random()*10):15+Math.floor(Math.random()*(Math.round(Math.min(fw,40)*2)+1));save.coins+=coin;
     const d=save.dex[f.id]||{n:0,best:0};const rec=fw>d.best;
-    d.n++;if(rec)d.best=fw;save.dex[f.id]=d;const prev=save.pts;save.pts+=pts;try{rkAdd(pts,f,fw)}catch(e){}
+    d.n++;if(rec)d.best=fw;save.dex[f.id]=d;const prev=save.pts;save.pts+=pts;try{rkAdd(pts,f,fw)}catch(e){}try{roomCatch(f,fw)}catch(e){}
     const unl=RODS.filter(r=>prev<r.need&&save.pts>=r.need);
     save.log.unshift({id:f.id,w:fw,l:len,ok:1,t:Date.now()});
     html=`<h3>${esc(f.name)} 낚았다!</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · ${len}cm</p><p><span style="color:${t[1]}">●</span> ${t[0]} · +${pts}점 · <b style="color:#c98a00">+${coin}코인</b></p><p>캐스팅 <b style="color:${GRADES[grade].col}">${GRADES[grade].ko}</b>${chumUsed?' · 떡밥 효과':''}</p>${rec&&d.n>1?'<span class="badge">개인 최고 기록!</span>':d.n===1?'<span class="badge">도감 신규 등록!</span>':''}${unl.map(r=>`<p class="unl">${r.name} 해금! 상점에서 장착하세요</p>`).join('')}`;
@@ -1490,6 +1717,7 @@ function finish(ok,kind){
 
 let reelAcc=0,creakAcc=0,snagAcc=0;
 function update(dt){
+  if(ROOM.code)roomPush(false);
   if(TAPMODE()&&st==='fight'){tapT=Math.max(0,tapT-dt);holding=tapT>0}
   if(st==='fight'&&SPOT().snag&&heavy&&tens>80){snagAcc+=dt;if(snagAcc>1){snagAcc=0;if(Math.random()<.1){finish(false,'snag');return}}}
   if(st==='fight'){if(holding){reelAcc+=dt;if(reelAcc>.075){reelAcc=0;sfx.reel()}}if(tens>75){creakAcc+=dt;if(creakAcc>.5){creakAcc=0;sfx.creak()}}}
@@ -1615,7 +1843,7 @@ $('nickForm').addEventListener('submit',e=>{e.preventDefault();
   const v=$('nickInput').value.replace(/\s+/g,' ').trim();
   if(v.length<2||v.length>10){$('nickErr').textContent='2~10자로 입력해 주세요.';return}
   if(!/^[가-힣A-Za-z0-9 ]+$/.test(v)){$('nickErr').textContent='한글·영문·숫자만 쓸 수 있어요.';return}
-  save.nick=v;store();renderSide();nickEl.hidden=true;try{rkFlush()}catch(e){}});
+  save.nick=v;store();renderSide();nickEl.hidden=true;try{rkFlush()}catch(e){}try{pushProfile().catch(()=>{});pushStatus(true)}catch(e){}});
 function renderMenu(){
   $('hello').textContent=save.nick?`반가워요, ${save.nick}님`:'반가워요! 닉네임을 정해 보세요';
   $('mStat').textContent=`점수 ${save.pts.toLocaleString('ko-KR')} · 코인 ${save.coins.toLocaleString('ko-KR')} · ${rod().name} · 도감 ${Object.keys(save.dex).length}/${FISH.length}`;
@@ -1682,7 +1910,7 @@ function tickWorld(){fetchRealWx();WX=weather();if(WX.id!==wxPrev){wxPrev=WX.id;
 function fitTitle(){const h=$('gTitle');if(!h)return;const row=h.parentElement;h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize),n=0;
   while(row.scrollWidth>row.clientWidth+1&&f>13&&n++<20){f-=1;h.style.fontSize=f+'px'}}
 addEventListener('resize',fitTitle);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitTitle);setTimeout(fitTitle,50);
-$('spotChip').addEventListener('click',()=>{if(!idleNow()){toast('결과가 나온 뒤에 낚시터를 옮길 수 있어요');return}openSpots()});
+$('spotChip').addEventListener('click',()=>{if(ROOM.code&&!ROOM.host){toast('같이 낚시 중에는 방장이 낚시터를 정해요',1800);return}if(!idleNow()){toast('결과가 나온 뒤에 낚시터를 옮길 수 있어요');return}openSpots()});
 $('spotClose').addEventListener('click',spotDone);
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-gospot],[data-buyspot]');if(!t||t.disabled)return;
   if(t.dataset.buyspot)buySpot(t.dataset.buyspot);else{const from=save.spot;if(goSpot(t.dataset.gospot)){sfx.click();if(from!==save.spot){$('spotScreen').hidden=true;playTravel(from,save.spot,spotDone)}else spotDone()}}});
@@ -1801,6 +2029,7 @@ window.appBack=()=>{
   if(!shopEl.hidden){shopEl.hidden=true;return true}
   if(!dexEl.hidden){dexEl.hidden=true;return true}
   if(!$('rankScreen').hidden){$('rankScreen').hidden=true;return true}
+  if(!$('friendScreen').hidden){$('friendScreen').hidden=true;return true}
   if(menuEl.hidden){if(canLeave()){$('res').classList.remove('on');menuEl.hidden=false}return true}
   return false;
 };

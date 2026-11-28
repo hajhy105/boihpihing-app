@@ -11,7 +11,7 @@ h1{font-size:1.5em}h2{font-size:1.15em;margin-top:1.8em}small{color:#5d7286}hr{m
 </head>
 <body>
 <h1>보이흐피힝 개인정보처리방침</h1>
-<p><small>시행일: 2026년 11월 28일 (개정: 온라인 랭킹 추가)</small></p>
+<p><small>시행일: 2026년 11월 28일 (개정: 온라인 랭킹, 친구·같이 낚시 추가)</small></p>
 <p>이 방침은 안드로이드 게임 앱 <b>보이흐피힝</b>(패키지 이름 com.boihpihing.fishing, 이하 "앱")에 적용됩니다.</p>
 
 <h2>1. 수집하는 개인정보</h2>
@@ -20,6 +20,8 @@ h1{font-size:1.5em}h2{font-size:1.15em;margin-top:1.8em}small{color:#5d7286}hr{m
 <li>게임에서 직접 정한 <b>닉네임</b></li>
 <li>무작위로 만들어지는 <b>익명 사용자 ID</b>(Firebase 익명 인증) — 이름·이메일과 연결되지 않습니다</li>
 <li>랭킹 기록: 주간 점수 합계, 낚은 마릿수, 어종별 최대 무게, 기록 시각</li>
+<li>친구 기능: 친구 코드, 친구 목록과 친구 요청, 도감 수·최대어 요약, 접속 상태(접속 중/낚시 중, 마지막 접속 시각)</li>
+<li>같이 낚시 방: 방 코드, 참가 중인 동안의 낚시 상태(던지기·입질·파이팅, 찌 위치), 낚시대 종류, 낚은 물고기와 무게, 보낸 이모티콘</li>
 </ul>
 
 <h2>2. 기기에만 저장되는 정보</h2>
@@ -39,8 +41,9 @@ h1{font-size:1.5em}h2{font-size:1.15em;margin-top:1.8em}small{color:#5d7286}hr{m
 <p>유럽 경제 지역 등 동의가 필요한 지역에서는 처음 실행할 때 동의 여부를 묻고, 설정 화면의 '광고 개인정보 설정'에서 언제든지 바꿀 수 있습니다. 휴대폰 설정에서 광고 ID를 재설정하거나 맞춤 광고를 끌 수도 있습니다.</p>
 <p>위의 날씨 서비스, 광고 서비스, 랭킹 서버 외에는 분석 도구나 다른 제3자 SDK를 사용하지 않으며, 개인정보를 판매하지 않습니다.</p>
 
-<h2>5. 온라인 랭킹 (Google Firebase)</h2>
+<h2>5. 온라인 랭킹 · 친구 · 같이 낚시 (Google Firebase)</h2>
 <p>주간 랭킹과 어종별 최대어 랭킹을 위해 Google의 <b>Firebase</b>(익명 인증, Cloud Firestore, 서울 리전)를 사용합니다. 저장되는 정보는 1항의 닉네임, 익명 사용자 ID, 랭킹 기록뿐이며, 닉네임과 기록은 <b>다른 이용자에게 랭킹 화면으로 공개</b>됩니다. 저장된 정보는 랭킹 제공 목적으로만 쓰이며, 주간 랭킹 기록은 해당 주가 끝난 뒤 정리될 수 있습니다.</p>
+<p>친구 기능과 같이 낚시 방에는 Firebase의 <b>Realtime Database</b>(싱가포르 리전)도 사용합니다. 친구에게는 닉네임·도감 수·최대어·접속 상태가 보이고, 같은 방 참가자에게는 낚시 상태와 조과, 이모티콘이 실시간으로 보입니다. 채팅 기능은 없습니다. 방을 나가면 방의 참가 정보는 지워집니다.</p>
 <p><b>참여하지 않기:</b> 닉네임을 정하지 않거나 설정에서 '랭킹 참여'를 끄면 기록이 서버로 전송되지 않습니다. <b>삭제 요청:</b> 이미 올라간 기록의 삭제를 원하면 아래 문의처로 닉네임과 함께 연락해 주세요. 확인 후 지체 없이 삭제합니다. Firebase의 데이터 처리는 <a href="https://firebase.google.com/support/privacy">Firebase 개인정보 보호 안내</a>를 따릅니다.</p>
 
 <h2>6. 권한</h2>
@@ -66,8 +69,8 @@ h1{font-size:1.5em}h2{font-size:1.15em;margin-top:1.8em}small{color:#5d7286}hr{m
 <p>To keep your progress, the app stores your in-game nickname, score, coins, fish collection, items, selected rod/bait/fishing spot, daily quest progress and sound settings <b>locally on your device</b>. Apart from the leaderboard records above, this data is not sent to any server and is deleted when you uninstall the app or clear its data.</p>
 <h2>Internet, ads and third parties</h2>
 <p>To show real Korean weather in the game, the app requests weather data from the <b>Korea Meteorological Administration</b> short-term forecast service (data.go.kr; the web preview uses Open-Meteo). The only information sent is the <b>fixed coordinates of the region you choose</b> in settings (for example, Busan); the device's location (GPS) is not used. As with any internet request, your device's IP address may be visible to the weather service's servers, but the app does not collect or store it. Turning off "real weather" in settings stops these requests. </p>
-<h2>Online leaderboards (Google Firebase)</h2>
-<p>Leaderboards use Google <b>Firebase</b> (Anonymous Authentication and Cloud Firestore, Seoul region). Your nickname and records are <b>shown publicly to other players</b> on the leaderboard screens and are used only to provide leaderboards. If you do not set a nickname, or turn off "랭킹 참여" (leaderboards) in settings, nothing is sent. To have your records deleted, contact us with your nickname and we will delete them promptly. See <a href="https://firebase.google.com/support/privacy">Firebase privacy information</a>.</p>
+<h2>Online leaderboards, friends and group fishing (Google Firebase)</h2>
+<p>Leaderboards use Google <b>Firebase</b> (Anonymous Authentication and Cloud Firestore, Seoul region). Your nickname and records are <b>shown publicly to other players</b> on the leaderboard screens and are used only to provide leaderboards. Friends and group fishing rooms also use Firebase <b>Realtime Database</b> (Singapore region): friends can see your nickname, collection count, best catch and online status, and players in the same room see each other's fishing state, catches and emoji reactions in real time (there is no chat). If you do not set a nickname, or turn off "랭킹 참여" (leaderboards) in settings, nothing is sent. To have your records deleted, contact us with your nickname and we will delete them promptly. See <a href="https://firebase.google.com/support/privacy">Firebase privacy information</a>.</p>
 <h2>Advertising (Google AdMob)</h2>
 <p>The Google Play version of the app shows ads using Google <b>AdMob</b>: a banner at the bottom of the menu, shop and collection screens, and rewarded ads that play only when you tap a button (to receive coins or to retry a lost fish). To serve and measure ads, Google may collect and process device identifiers such as the advertising ID, IP address and approximate location derived from it, ad interactions, and app performance/diagnostic data, under <a href="https://policies.google.com/technologies/partner-sites">Google's policies</a>. The developer does not receive or store this data. Where consent is required (e.g., the EEA/UK), the app asks for consent on first launch, and you can change it at any time via "광고 개인정보 설정" in the settings screen. You can also reset your advertising ID or opt out of personalized ads in your phone's settings. Apart from the weather service and the ad service, the app uses no analytics or other third-party SDKs and does not sell personal data.</p>
 <h2>Permissions</h2>
