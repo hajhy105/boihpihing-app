@@ -11,14 +11,19 @@ h1{font-size:1.5em}h2{font-size:1.15em;margin-top:1.8em}small{color:#5d7286}hr{m
 </head>
 <body>
 <h1>보이흐피힝 개인정보처리방침</h1>
-<p><small>시행일: 2026년 11월 26일 (개정: 실제 날씨 기능, 광고 추가)</small></p>
+<p><small>시행일: 2026년 11월 28일 (개정: 온라인 랭킹 추가)</small></p>
 <p>이 방침은 안드로이드 게임 앱 <b>보이흐피힝</b>(패키지 이름 com.boihpihing.fishing, 이하 "앱")에 적용됩니다.</p>
 
 <h2>1. 수집하는 개인정보</h2>
-<p>앱은 이용자의 개인정보를 <b>수집하지 않습니다</b>. 회원가입이나 로그인이 없고, 이름·이메일·전화번호·위치·연락처·기기 식별자 같은 정보를 요청하거나 보내지 않습니다.</p>
+<p>앱은 회원가입이 없고 이름·이메일·전화번호·위치(GPS)·연락처를 요청하지 않습니다. 다만 <b>온라인 랭킹</b>에 참여하면 아래 정보가 서버에 저장됩니다(5항).</p>
+<ul>
+<li>게임에서 직접 정한 <b>닉네임</b></li>
+<li>무작위로 만들어지는 <b>익명 사용자 ID</b>(Firebase 익명 인증) — 이름·이메일과 연결되지 않습니다</li>
+<li>랭킹 기록: 주간 점수 합계, 낚은 마릿수, 어종별 최대 무게, 기록 시각</li>
+</ul>
 
 <h2>2. 기기에만 저장되는 정보</h2>
-<p>게임 진행을 이어가기 위해 다음 정보를 <b>이용자의 기기 안에만</b> 저장합니다. 이 정보는 외부 서버로 전송되지 않습니다.</p>
+<p>게임 진행을 이어가기 위해 다음 정보를 <b>이용자의 기기 안에</b> 저장합니다. 랭킹용 기록(1항)을 제외하면 외부 서버로 전송되지 않습니다.</p>
 <ul>
 <li>게임에서 직접 입력한 닉네임</li>
 <li>점수, 코인, 잡은 물고기 기록(도감), 아이템, 낚시대·미끼·낚시터 선택, 일일 퀘스트 진행도</li>
@@ -32,31 +37,37 @@ h1{font-size:1.5em}h2{font-size:1.15em;margin-top:1.8em}small{color:#5d7286}hr{m
 <p>구글 플레이 스토어 버전의 앱은 무료로 제공하기 위해 Google의 광고 서비스 <b>AdMob</b>을 사용합니다. 광고는 메뉴·상점·도감 화면 아래쪽의 배너와, 이용자가 직접 누를 때만 재생되는 보상형 광고(코인 받기, 놓친 고기 한 번 더 걸기)로 보여집니다.</p>
 <p>광고를 보여주고 성과를 측정하기 위해 Google은 다음 정보를 수집·처리할 수 있습니다: 광고 ID 등 기기 식별자, IP 주소와 이를 바탕으로 한 대략적인 위치, 광고와의 상호작용(노출·클릭), 앱 성능·오류 정보. 이 정보는 Google의 개인정보처리방침에 따라 처리되며, 개발자는 이 정보를 직접 받거나 저장하지 않습니다. 자세한 내용: <a href="https://policies.google.com/technologies/partner-sites">Google이 파트너의 사이트나 앱을 사용할 때 데이터를 사용하는 방법</a></p>
 <p>유럽 경제 지역 등 동의가 필요한 지역에서는 처음 실행할 때 동의 여부를 묻고, 설정 화면의 '광고 개인정보 설정'에서 언제든지 바꿀 수 있습니다. 휴대폰 설정에서 광고 ID를 재설정하거나 맞춤 광고를 끌 수도 있습니다.</p>
-<p>위의 날씨 서비스와 광고 서비스 외에는 분석 도구나 다른 제3자 SDK를 사용하지 않으며, 개인정보를 판매하지 않습니다.</p>
+<p>위의 날씨 서비스, 광고 서비스, 랭킹 서버 외에는 분석 도구나 다른 제3자 SDK를 사용하지 않으며, 개인정보를 판매하지 않습니다.</p>
 
-<h2>5. 권한</h2>
+<h2>5. 온라인 랭킹 (Google Firebase)</h2>
+<p>주간 랭킹과 어종별 최대어 랭킹을 위해 Google의 <b>Firebase</b>(익명 인증, Cloud Firestore, 서울 리전)를 사용합니다. 저장되는 정보는 1항의 닉네임, 익명 사용자 ID, 랭킹 기록뿐이며, 닉네임과 기록은 <b>다른 이용자에게 랭킹 화면으로 공개</b>됩니다. 저장된 정보는 랭킹 제공 목적으로만 쓰이며, 주간 랭킹 기록은 해당 주가 끝난 뒤 정리될 수 있습니다.</p>
+<p><b>참여하지 않기:</b> 닉네임을 정하지 않거나 설정에서 '랭킹 참여'를 끄면 기록이 서버로 전송되지 않습니다. <b>삭제 요청:</b> 이미 올라간 기록의 삭제를 원하면 아래 문의처로 닉네임과 함께 연락해 주세요. 확인 후 지체 없이 삭제합니다. Firebase의 데이터 처리는 <a href="https://firebase.google.com/support/privacy">Firebase 개인정보 보호 안내</a>를 따릅니다.</p>
+
+<h2>6. 권한</h2>
 <p>앱은 물고기가 물었을 때 휴대폰을 진동시키기 위한 <b>진동</b> 권한과, 실제 날씨와 광고를 불러오기 위한 <b>인터넷</b> 권한을 사용합니다. 스토어 버전은 광고를 위해 <b>광고 ID</b> 권한(com.google.android.gms.permission.AD_ID)도 사용합니다. 위치(GPS) 권한은 사용하지 않습니다.</p>
 
-<h2>6. 아동의 개인정보</h2>
+<h2>7. 아동의 개인정보</h2>
 <p>앱은 만 13세 미만 아동을 대상으로 하지 않습니다. 개발자는 어떤 연령의 이용자로부터도 개인정보를 직접 수집하지 않습니다.</p>
 
-<h2>7. 방침의 변경</h2>
+<h2>8. 방침의 변경</h2>
 <p>이 방침이 바뀌면 이 페이지에 변경 내용과 시행일을 게시합니다.</p>
 
-<h2>8. 문의</h2>
+<h2>9. 문의</h2>
 <p>개인정보와 관련한 문의는 구글 플레이 스토어의 앱 정보에 적힌 개발자 이메일로 보내 주세요.</p>
 
 <hr>
 
 <h1>Boihpihing Privacy Policy</h1>
-<p><small>Effective date: November 26, 2026</small></p>
+<p><small>Effective date: November 28, 2026 (online leaderboards added)</small></p>
 <p>This policy applies to the Android game <b>Boihpihing</b> (package name com.boihpihing.fishing).</p>
 <h2>Information we collect</h2>
-<p>The app does <b>not collect any personal information</b>. There is no account or login, and the app does not request or transmit names, email addresses, phone numbers, location, contacts or device identifiers.</p>
+<p>There is no account registration, and the app does not request names, email addresses, phone numbers, GPS location or contacts. If you take part in the <b>online leaderboards</b>, the app stores on its server: the <b>nickname</b> you choose, a randomly generated <b>anonymous user ID</b> (Firebase Anonymous Authentication, not linked to your name or email), and your leaderboard records (weekly score total, number of fish, best weight per species, time of record).</p>
 <h2>Data stored only on your device</h2>
-<p>To keep your progress, the app stores your in-game nickname, score, coins, fish collection, items, selected rod/bait/fishing spot, daily quest progress and sound settings <b>locally on your device only</b>. This data is never sent to any server and is deleted when you uninstall the app or clear its data.</p>
+<p>To keep your progress, the app stores your in-game nickname, score, coins, fish collection, items, selected rod/bait/fishing spot, daily quest progress and sound settings <b>locally on your device</b>. Apart from the leaderboard records above, this data is not sent to any server and is deleted when you uninstall the app or clear its data.</p>
 <h2>Internet, ads and third parties</h2>
 <p>To show real Korean weather in the game, the app requests weather data from the <b>Korea Meteorological Administration</b> short-term forecast service (data.go.kr; the web preview uses Open-Meteo). The only information sent is the <b>fixed coordinates of the region you choose</b> in settings (for example, Busan); the device's location (GPS) is not used. As with any internet request, your device's IP address may be visible to the weather service's servers, but the app does not collect or store it. Turning off "real weather" in settings stops these requests. </p>
+<h2>Online leaderboards (Google Firebase)</h2>
+<p>Leaderboards use Google <b>Firebase</b> (Anonymous Authentication and Cloud Firestore, Seoul region). Your nickname and records are <b>shown publicly to other players</b> on the leaderboard screens and are used only to provide leaderboards. If you do not set a nickname, or turn off "랭킹 참여" (leaderboards) in settings, nothing is sent. To have your records deleted, contact us with your nickname and we will delete them promptly. See <a href="https://firebase.google.com/support/privacy">Firebase privacy information</a>.</p>
 <h2>Advertising (Google AdMob)</h2>
 <p>The Google Play version of the app shows ads using Google <b>AdMob</b>: a banner at the bottom of the menu, shop and collection screens, and rewarded ads that play only when you tap a button (to receive coins or to retry a lost fish). To serve and measure ads, Google may collect and process device identifiers such as the advertising ID, IP address and approximate location derived from it, ad interactions, and app performance/diagnostic data, under <a href="https://policies.google.com/technologies/partner-sites">Google's policies</a>. The developer does not receive or store this data. Where consent is required (e.g., the EEA/UK), the app asks for consent on first launch, and you can change it at any time via "광고 개인정보 설정" in the settings screen. You can also reset your advertising ID or opt out of personalized ads in your phone's settings. Apart from the weather service and the ad service, the app uses no analytics or other third-party SDKs and does not sell personal data.</p>
 <h2>Permissions</h2>

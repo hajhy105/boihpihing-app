@@ -231,6 +231,13 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 .wrap{padding-top:max(calc(18px + var(--sat,0px)),env(safe-area-inset-top))}
 @media(max-width:600px){.wrap{padding-top:max(calc(8px + var(--sat,0px)),env(safe-area-inset-top))}}
 .sheet-in{padding-top:max(calc(18px + var(--sat,0px)),env(safe-area-inset-top))}
+.rtabs{display:flex;gap:8px;margin:4px 0 10px}.rtabs button{flex:1;min-height:44px;font:16px Jua,sans-serif;background:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;color:#1b1f2b}.rtabs button.on{background:#ff8a65;color:#fff}
+.rsel select{width:100%;min-height:44px;font:16px 'Gowun Dodum',sans-serif;border:3px solid #1b1f2b;padding:0 10px;margin-bottom:8px;background:#fff}
+.rme{margin:6px 0 10px;padding:10px 12px;background:#fff6d6;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;font-size:15px}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rlist li{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid #1b1f2b;padding:8px 12px;font-size:15px}
+.rlist li.me{background:#e7f6ff;border-color:#1f6fb2}
+.rlist .rk{font:18px Jua,sans-serif;width:34px;text-align:center}.rlist .nm{flex:1;font-family:Jua,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rlist .sc{font-family:Jua,sans-serif;color:#e8603c}.rlist small{color:#6a7a8c;margin-left:4px}
 </style>
 </head>
 <body>
@@ -244,6 +251,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div class="menu-btns">
       <button id="mPlay" class="mbtn main" type="button">게임하기</button>
       <button id="mQuest" class="mbtn" type="button">오늘의 퀘스트</button>
+      <button id="mRank" class="mbtn" type="button">🏆 랭킹</button>
       <button id="mDex" class="mbtn" type="button">어종</button>
       <button id="mShop" class="mbtn" type="button">상점</button>
       <button id="mNick" class="mbtn" type="button">닉네임 설정</button>
@@ -278,6 +286,17 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
   </div>
 </div>
 
+<div id="rankScreen" class="sheet" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head"><h2>🏆 랭킹</h2><button id="rankClose" class="ghost" type="button">닫기</button></div>
+    <div class="rtabs"><button type="button" data-rt="week" class="on">주간 점수</button><button type="button" data-rt="fish">어종별 최대어</button></div>
+    <div id="rankFishSel" class="rsel" hidden><select id="rankFish"></select></div>
+    <p class="tip" id="rankInfo"></p>
+    <div id="rankMe" class="rme"></div>
+    <ol id="rankList" class="rlist"></ol>
+    <p class="tip" style="opacity:.8">주간 점수는 매주 월요일 0시(한국 시간)에 새로 시작해요. 닉네임과 기록(점수·무게)만 서버에 올라가요.</p>
+  </div>
+</div>
 <div id="dexScreen" class="sheet" hidden>
   <div class="sheet-in">
     <div class="sheet-head"><h2>어종 도감 <small id="dexCount" class="dexcount"></small></h2><button id="dexClose" class="ghost" type="button">닫기</button></div>
@@ -308,6 +327,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div class="setrow"><span>🔊 효과음</span><button id="tgSfx" class="tg" type="button"></button></div>
     <div class="setrow"><span>📳 진동</span><button id="tgVib" class="tg" type="button"></button></div>
     <div class="setrow"><span>🎮 감기 방식</span><button id="tgCtrl" class="tg on" type="button"></button></div>
+    <div class="setrow"><span>🏆 랭킹 참여</span><button id="tgRank" class="tg" type="button"></button></div>
     <button id="setHow" class="okbtn" type="button" style="width:100%;margin-top:10px">📖 게임 방법 보기</button>
     <div class="setrow"><span>🌦️ 실제 날씨</span><button id="tgRealWx" class="tg" type="button"></button></div>
     <div class="setrow"><span>📍 날씨 지역</span><select id="wxRegion" class="wxsel"></select></div>
@@ -1253,6 +1273,68 @@ function specialResult(ok,kind){const f=fish;let html='';
   const msg=f.art==='letter'?`편지에는 이렇게 적혀 있어요: ${LETTERS[Math.floor(Math.random()*LETTERS.length)]}`:f.msg;
   return`<h3>${esc(f.name)} 발견!</h3><canvas id="rc"></canvas><p class="stat">✨ 보물</p><p>${msg}</p><p><b style="color:#c98a00">+${coin}코인</b>${extra}</p>`}
 FISH.push(...BOSSES);
+/* ================= 랭킹 (Firebase: 익명 로그인 + Firestore REST) ================= */
+const FB={key:'AIzaSyAfk_aBLYXddEb9lU_OrP-2AfFweigGtF0',pid:'boihpihing'};
+const FS=`https://firestore.googleapis.com/v1/projects/${FB.pid}/databases/(default)/documents`;
+if(!save.rk||typeof save.rk!=='object')save.rk={};
+const RK=save.rk;if(RK.on===undefined)RK.on=true;if(!RK.best)RK.best={};
+if(!RK.seeded){RK.bestQ=RK.bestQ||{};for(const[fid,d]of Object.entries(save.dex||{}))if(d&&d.best>0)RK.bestQ[fid]=+(+d.best).toFixed(2);RK.seeded=1}
+function weekId(){const d=new Date(Date.now()+9*3600e3);const wd=(d.getUTCDay()+6)%7;d.setUTCDate(d.getUTCDate()-wd);return d.toISOString().slice(0,10)}
+async function fbAuth(){const a=RK.auth;if(a&&a.tok&&a.exp>Date.now()+60e3)return a;
+  let r;if(a&&a.ref){r=await fetch(`https://securetoken.googleapis.com/v1/token?key=${FB.key}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(a.ref)});
+    if(r.ok){const j=await r.json();RK.auth={uid:j.user_id,tok:j.id_token,ref:j.refresh_token,exp:Date.now()+(+j.expires_in)*1000};store();return RK.auth}}
+  r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB.key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{"returnSecureToken":true}'});
+  if(!r.ok)throw new Error('auth '+r.status);const j=await r.json();RK.auth={uid:j.localId,tok:j.idToken,ref:j.refreshToken,exp:Date.now()+(+j.expiresIn)*1000};store();return RK.auth}
+async function fsCommit(path,fields){const a=await fbAuth();const f={};for(const[k,v]of Object.entries(fields))f[k]=typeof v==='string'?{stringValue:v}:Number.isInteger(v)&&k!=='kg'?{integerValue:String(v)}:{doubleValue:v};
+  const r=await fetch(`${FS}:commit?key=${FB.key}`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.tok},body:JSON.stringify({writes:[{update:{name:`projects/${FB.pid}/databases/(default)/documents/${path}`,fields:f},updateTransforms:[{fieldPath:'upd',setToServerValue:'REQUEST_TIME'}]}]})});
+  if(!r.ok)throw new Error('commit '+r.status);return true}
+async function fsTop(parent,field,lim){const r=await fetch(`${FS}/${parent}:runQuery?key=${FB.key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'u'}],orderBy:[{field:{fieldPath:field},direction:'DESCENDING'}],limit:lim}})});
+  if(!r.ok)throw new Error('query '+r.status);const j=await r.json();return j.filter(x=>x.document).map(x=>{const f=x.document.fields,v=o=>o?(o.stringValue??+(o.integerValue??o.doubleValue)):0;return{uid:x.document.name.split('/').pop(),nick:v(f.nick),pts:v(f.pts),fish:v(f.fish),kg:v(f.kg)}})}
+async function fsAbove(parent,field,val){const r=await fetch(`${FS}/${parent}:runAggregationQuery?key=${FB.key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredAggregationQuery:{structuredQuery:{from:[{collectionId:'u'}],where:{fieldFilter:{field:{fieldPath:field},op:'GREATER_THAN',value:field==='kg'?{doubleValue:val}:{integerValue:String(val)}}}},aggregations:[{alias:'c',count:{}}]}})});
+  if(!r.ok)return null;const j=await r.json();return +(j[0]&&j[0].result&&j[0].result.aggregateFields.c.integerValue||0)}
+const rkReady=()=>RK.on&&!!save.nick;
+function rkAdd(pts,f,w){const wk=weekId();if(RK.wk!==wk){RK.wk=wk;RK.pts=0;RK.fish=0;RK.sPts=0;RK.sFish=0}
+  RK.pts+=Math.max(0,Math.round(pts));RK.fish++;
+  if(w>(RK.best[f.id]||0))RK.bestQ=Object.assign(RK.bestQ||{},{[f.id]:+w.toFixed(2)});store();rkFlush()}
+let rkBusy=false,rkTimer=0;
+async function rkFlush(){if(!rkReady()||rkBusy)return;clearTimeout(rkTimer);
+  const wait=(RK.last||0)+16e3-Date.now();if(wait>0){rkTimer=setTimeout(rkFlush,wait+300);return}
+  rkBusy=true;try{
+    if(RK.wk===weekId()&&(RK.pts>RK.sPts||RK.fish>RK.sFish||RK.nickSent!==save.nick)){
+      const pts=Math.min(RK.pts,RK.sPts+20000),fish=Math.min(RK.fish,RK.sFish+20);
+      await fsCommit(`lb/${RK.wk}/u/${(await fbAuth()).uid}`,{nick:save.nick,pts,fish});RK.sPts=pts;RK.sFish=fish;RK.nickSent=save.nick;RK.last=Date.now();store()}
+    for(const[fid,kg]of Object.entries(RK.bestQ||{})){if(kg<=(RK.best[fid]||0)){delete RK.bestQ[fid];continue}
+      await fsCommit(`best/${fid}/u/${(await fbAuth()).uid}`,{nick:save.nick,kg:Math.min(kg,700)});RK.best[fid]=kg;delete RK.bestQ[fid];store()}
+  }catch(e){RK.last=Date.now()}finally{rkBusy=false}
+  if(RK.pts>RK.sPts||Object.keys(RK.bestQ||{}).length)rkTimer=setTimeout(rkFlush,17e3)}
+setTimeout(rkFlush,3000);
+/* 랭킹 화면 */
+let rkTab='week';
+async function renderRank(){const L=$('rankList'),me=$('rankMe'),info=$('rankInfo');L.innerHTML='<li>불러오는 중…</li>';me.innerHTML='';
+  $('rankFishSel').hidden=rkTab!=='fish';
+  if(!save.nick){me.innerHTML='닉네임을 정하면 내 기록도 랭킹에 올라가요. <button type="button" class="ghost" id="rkNick">닉네임 정하기</button>';setTimeout(()=>{const b=$('rkNick');b&&b.addEventListener('click',()=>{$('rankScreen').hidden=true;openNick()})})}
+  else if(!RK.on)me.textContent='설정에서 랭킹 참여가 꺼져 있어요. 내 기록은 올라가지 않아요.';
+  const uid=RK.auth&&RK.auth.uid;
+  try{
+    if(rkTab==='week'){const wk=weekId();info.textContent=`${wk.slice(5).replace('-','월 ')}일부터 이번 주 · 낚은 점수 합계`;
+      const rows=await fsTop(`lb/${wk}`,'pts',50);
+      L.innerHTML=rows.length?rows.map((r,i)=>`<li class="${r.uid===uid?'me':''}"><span class="rk">${i<3?['🥇','🥈','🥉'][i]:i+1}</span><span class="nm">${esc(r.nick)}</span><span class="sc">${r.pts.toLocaleString('ko-KR')}점<small>${r.fish}마리</small></span></li>`).join(''):'<li>아직 이번 주 기록이 없어요. 첫 번째 주인공이 돼 보세요!</li>';
+      if(save.nick&&RK.on&&RK.wk===wk&&RK.sPts>0){const i=rows.findIndex(r=>r.uid===uid);const rank=i>=0?i+1:((await fsAbove(`lb/${wk}`,'pts',RK.sPts))??0)+1;me.innerHTML=`내 순위 <b>${rank}위</b> · ${RK.sPts.toLocaleString('ko-KR')}점 · ${RK.sFish}마리${RK.pts>RK.sPts?' <small>(최근 기록 올리는 중…)</small>':''}`}
+      else if(save.nick&&RK.on)me.textContent='이번 주에 고기를 낚으면 랭킹에 올라가요!'}
+    else{const sel=$('rankFish');if(!sel.options.length)sel.innerHTML=FISH.filter(f=>!f.boss||save.dex[f.id]).map(f=>`<option value="${f.id}">${f.boss?'👑 ':''}${f.name}</option>`).join('');
+      const f=FISH.find(x=>x.id===sel.value)||FISH[0];info.textContent=`${f.name} 역대 최대어 (전체 기간)`;
+      const rows=await fsTop(`best/${f.id}`,'kg',50);
+      L.innerHTML=rows.length?rows.map((r,i)=>`<li class="${r.uid===uid?'me':''}"><span class="rk">${i<3?['🥇','🥈','🥉'][i]:i+1}</span><span class="nm">${esc(r.nick)}</span><span class="sc">${(+r.kg).toFixed(2)}kg</span></li>`).join(''):'<li>아직 기록이 없어요.</li>';
+      const mine=RK.best[f.id];if(save.nick&&RK.on&&mine){const i=rows.findIndex(r=>r.uid===uid);const rank=i>=0?i+1:((await fsAbove(`best/${f.id}`,'kg',mine))??0)+1;me.innerHTML=`내 기록 <b>${mine.toFixed(2)}kg</b> · <b>${rank}위</b>`}}
+  }catch(e){L.innerHTML='<li>랭킹을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</li>'}}
+function openRank(){$('rankScreen').hidden=false;rkFlush();renderRank()}
+setTimeout(()=>{
+  $('mRank').addEventListener('click',()=>{sfx.click&&sfx.click();openRank()});
+  $('rankClose').addEventListener('click',()=>{$('rankScreen').hidden=true});
+  document.querySelectorAll('[data-rt]').forEach(b=>b.addEventListener('click',()=>{rkTab=b.dataset.rt;document.querySelectorAll('[data-rt]').forEach(x=>x.classList.toggle('on',x===b));renderRank()}));
+  $('rankFish').addEventListener('change',renderRank);
+},0);
+
 /* ---------- game ---------- */
 /* casting timing: grade boosts rarer tiers (common, normal, rare, legend) */
 const GRADES={perfect:{lab:'PERFECT!',ko:'퍼펙트',col:'#ffb400',m:[1,2.2,4,6],w:.035},great:{lab:'GREAT!',ko:'그레이트',col:'#ff7a59',m:[1,1.6,2.2,3],w:.09},good:{lab:'GOOD',ko:'굿',col:'#3b8fd6',m:[1,1.2,1.4,1.6],w:.18},miss:{lab:'아쉬워요',ko:'미스',col:'#8aa3b8',m:[1,.8,.6,.5],w:1}};
@@ -1311,7 +1393,7 @@ function finish(ok,kind){
     const pts=f.boss?3000+Math.round(fw*5):Math.round(Math.min(fw,30)*10*Math.sqrt(20/f.rar));
     const coin=f.boss?300+Math.floor(Math.random()*201):fw<2?1+Math.floor(Math.random()*4):fw<5?5+Math.floor(Math.random()*10):15+Math.floor(Math.random()*(Math.round(Math.min(fw,40)*2)+1));save.coins+=coin;
     const d=save.dex[f.id]||{n:0,best:0};const rec=fw>d.best;
-    d.n++;if(rec)d.best=fw;save.dex[f.id]=d;const prev=save.pts;save.pts+=pts;
+    d.n++;if(rec)d.best=fw;save.dex[f.id]=d;const prev=save.pts;save.pts+=pts;try{rkAdd(pts,f,fw)}catch(e){}
     const unl=RODS.filter(r=>prev<r.need&&save.pts>=r.need);
     save.log.unshift({id:f.id,w:fw,l:len,ok:1,t:Date.now()});
     html=`<h3>${esc(f.name)} 낚았다!</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · ${len}cm</p><p><span style="color:${t[1]}">●</span> ${t[0]} · +${pts}점 · <b style="color:#c98a00">+${coin}코인</b></p><p>캐스팅 <b style="color:${GRADES[grade].col}">${GRADES[grade].ko}</b>${chumUsed?' · 떡밥 효과':''}</p>${rec&&d.n>1?'<span class="badge">개인 최고 기록!</span>':d.n===1?'<span class="badge">도감 신규 등록!</span>':''}${unl.map(r=>`<p class="unl">${r.name} 해금! 상점에서 장착하세요</p>`).join('')}`;
@@ -1455,7 +1537,7 @@ $('nickForm').addEventListener('submit',e=>{e.preventDefault();
   const v=$('nickInput').value.replace(/\s+/g,' ').trim();
   if(v.length<2||v.length>10){$('nickErr').textContent='2~10자로 입력해 주세요.';return}
   if(!/^[가-힣A-Za-z0-9 ]+$/.test(v)){$('nickErr').textContent='한글·영문·숫자만 쓸 수 있어요.';return}
-  save.nick=v;store();renderSide();nickEl.hidden=true});
+  save.nick=v;store();renderSide();nickEl.hidden=true;try{rkFlush()}catch(e){}});
 function renderMenu(){
   $('hello').textContent=save.nick?`반가워요, ${save.nick}님`:'반가워요! 닉네임을 정해 보세요';
   $('mStat').textContent=`점수 ${save.pts.toLocaleString('ko-KR')} · 코인 ${save.coins.toLocaleString('ko-KR')} · ${rod().name} · 도감 ${Object.keys(save.dex).length}/${FISH.length}`;
@@ -1475,7 +1557,7 @@ function renderMenu(){
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
 }
 /* Android back button: returns true when handled */
-function renderSet(){{const b=$('tgCtrl');b.textContent=TAPMODE()?'연타':'꾹 누르기';b.classList.add('on')}for(const [id,k] of [['tgMusic','music'],['tgSfx','sfx'],['tgVib','vib']]){const b=$(id);b.textContent=save.snd[k]?'켜짐':'꺼짐';b.classList.toggle('on',save.snd[k]);b.setAttribute('aria-pressed',save.snd[k])}}
+function renderSet(){{const b=$('tgRank');b.textContent=RK.on?'켜짐':'꺼짐';b.classList.toggle('on',RK.on)}{const b=$('tgCtrl');b.textContent=TAPMODE()?'연타':'꾹 누르기';b.classList.add('on')}for(const [id,k] of [['tgMusic','music'],['tgSfx','sfx'],['tgVib','vib']]){const b=$(id);b.textContent=save.snd[k]?'켜짐':'꺼짐';b.classList.toggle('on',save.snd[k]);b.setAttribute('aria-pressed',save.snd[k])}}
 function renderSetWx(){const b=$('tgRealWx');b.textContent=save.wxSet.real?'켜짐':'꺼짐';b.classList.toggle('on',save.wxSet.real);const sel=$('wxRegion');if(!sel.options.length)sel.innerHTML=WX_REGIONS.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');sel.value=save.wxSet.region;sel.disabled=!save.wxSet.real;
   $('wxInfo').textContent=!save.wxSet.real?'게임 날씨(30분마다 바뀜)를 쓰고 있어요.':realFresh()?`${wxRegion().name}: ${WEATHERS[WX_REAL.id].ico} ${WEATHERS[WX_REAL.id].name} · ${WX_REAL.temp}°C · 바람 ${WX_REAL.wind}m/s${WX_REAL.wave?` · 파고 ${WX_REAL.wave}m`:''} (${new Date(WX_REAL.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준)`:wxFetching?'날씨를 불러오는 중…':'인터넷에 연결되면 실제 날씨를 불러와요. 그전까지는 게임 날씨를 써요.'}
 $('tgRealWx').addEventListener('click',()=>{save.wxSet.real=!save.wxSet.real;store();if(save.wxSet.real)fetchRealWx(true);tickWorld();renderSetWx();sfx.click()});
@@ -1486,6 +1568,7 @@ $('setClose').addEventListener('click',()=>{$('setModal').hidden=true});
 $('setModal').addEventListener('click',e=>{if(e.target.id==='setModal')$('setModal').hidden=true});
 $('tgMusic').addEventListener('click',()=>{save.snd.music=!save.snd.music;store();SND.unlock();SND.apply();renderSet()});
 $('tgSfx').addEventListener('click',()=>{save.snd.sfx=!save.snd.sfx;store();SND.unlock();SND.apply();renderSet();sfx.click()});
+$('tgRank').addEventListener('click',()=>{RK.on=!RK.on;store();renderSet();sfx.click();if(RK.on)rkFlush()});
 $('tgCtrl').addEventListener('click',()=>{save.ctrl=TAPMODE()?'hold':'tap';store();renderSet();sfx.click();toast(TAPMODE()?'🎮 연타 방식: 빠르게 여러 번 눌러 감아요':'🎮 꾹 누르기 방식: 누르고 있으면 감겨요',2200)});
 $('tgVib').addEventListener('click',()=>{save.snd.vib=!save.snd.vib;store();renderSet();sfx.click();if(save.snd.vib)buzz([120,60,120],255)});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.mbtn,.hbtn,.ghost,.okbtn,.buy');if(b&&!b.disabled&&b.id!=='buyChum'&&b.id!=='buyXray')sfx.click()});
@@ -1646,6 +1729,7 @@ window.appBack=()=>{
   if(!nickEl.hidden){nickEl.hidden=true;return true}
   if(!shopEl.hidden){shopEl.hidden=true;return true}
   if(!dexEl.hidden){dexEl.hidden=true;return true}
+  if(!$('rankScreen').hidden){$('rankScreen').hidden=true;return true}
   if(menuEl.hidden){if(canLeave()){$('res').classList.remove('on');menuEl.hidden=false}return true}
   return false;
 };
