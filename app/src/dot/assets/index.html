@@ -242,9 +242,66 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
 .modal{padding:calc(12px + var(--sat,0px)) 12px calc(12px + var(--sab,0px))}
 .modal-card{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .wallet{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px}.wallet span{background:#fff;border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b;padding:6px 12px;font:16px Jua,sans-serif}.wallet b{color:#e8603c}
+/* ===== 전체화면 모드(3안): 바다가 화면을 꽉 채우고, 위 칩·아래 버튼은 반투명으로 겹친다 ===== */
+body.fs{overflow:hidden}
+body.fs .wrap{padding:0!important;max-width:none}
+body.fs .stage{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;border:0!important;border-radius:0!important;box-shadow:none!important;z-index:1;aspect-ratio:auto!important}
+body.fs #hint{display:none!important}
+body.fs header{position:fixed;left:0;right:0;top:0;z-index:20;padding:calc(6px + var(--sat,0px)) 6px 0;pointer-events:none;margin:0}
+body.fs header *{pointer-events:auto}
+body.fs #gTitle{display:none}
+body.fs .hrow{gap:6px;margin:0 0 6px}
+body.fs .hbtn{background:rgba(12,22,40,.62)!important;color:#fff!important;border:2px solid rgba(0,0,0,.65)!important;box-shadow:none!important;min-height:36px;padding:4px 11px;font-size:14px}
+body.fs .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:5px;margin:0}
+body.fs .chips::-webkit-scrollbar{display:none}
+body.fs .chip{background:rgba(12,22,40,.62)!important;color:#fff!important;border:2px solid rgba(0,0,0,.65)!important;box-shadow:none!important;font-size:12.5px;padding:5px 9px;min-height:0;white-space:nowrap;flex:none}
+body.fs .chip b{color:#ffd84a}
+body.fs .hud{display:none!important}
+body.fs .actrow{position:fixed;left:12px;right:12px;bottom:calc(14px + var(--sab,0px));z-index:20;gap:10px;align-items:flex-end;pointer-events:none}
+body.fs .actrow>*{pointer-events:auto}
+body.fs #act{white-space:pre-line!important;flex:none;margin-left:auto;width:96px;height:96px;min-height:0!important;border-radius:50%!important;padding:0!important;font-size:21px!important;line-height:1.1;white-space:normal!important;overflow:hidden;background:rgba(255,138,101,.88)!important;border:4px solid #1b1f2b!important;box-shadow:3px 4px 0 #1b1f2b!important}
+body.fs #act:active{transform:translateY(2px)}
+body.fs .chumbtn{width:58px!important;min-width:0!important;height:58px;min-height:0!important;border-radius:50%!important;padding:0!important;background:rgba(12,22,40,.62)!important;border:3px solid rgba(0,0,0,.65)!important;box-shadow:none!important;color:#fff!important;font-size:14px!important;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+body.fs .chumbtn small{font-size:11px!important;color:#ffd84a!important}
+body.fs .chumbtn:disabled{opacity:.45}
+body.fs #talk{bottom:calc(124px + var(--sab,0px))}
+body.fs #aim{position:fixed;left:12px!important;right:auto;transform:none!important;width:calc(100vw - 96px - 36px)!important;max-width:300px;bottom:calc(36px + var(--sab,0px))!important;z-index:21;padding:5px;background:rgba(255,255,255,.88)}
+body.fs #res{max-height:calc(100% - 220px - var(--sat,0px) - var(--sab,0px))}
+body.fs .toast{top:calc(112px + var(--sat,0px));bottom:auto;height:auto;max-height:none;width:max-content;max-width:86%;background:rgba(11,42,60,.88)}
+/* 파이팅 때만: 오른쪽 아래(버튼 위)에 작은 게이지 상자 */
+#ov{display:none}
+body.fs #ov.on{display:block;position:fixed;left:12px;bottom:calc(18px + var(--sab,0px));z-index:21;width:min(170px,calc(100vw - 96px - 36px));padding:7px 9px 8px;background:rgba(12,22,40,.66);border:2px solid rgba(0,0,0,.7);box-shadow:2px 2px 0 #1b1f2b}
+#ov .r{display:grid;grid-template-columns:30px 1fr;align-items:center;gap:6px;margin-top:4px}
+#ov .r:first-child{margin-top:0}
+#ov .r b{font:11px Jua,sans-serif;color:#fff;font-weight:400}
+#ov .b{height:9px;background:rgba(255,255,255,.18);border:1.5px solid #000;position:relative;overflow:hidden}
+#ov .b i{position:absolute;left:0;top:0;bottom:0;transition:width .08s linear}
+#ov .g i{background:#3fbf7f}#ov .t i{background:linear-gradient(90deg,#7ee0b0,#ffd166 60%,#ff6b8b)}#ov .tm i{background:#8fd3ff}
+#ov .t .red{position:absolute;right:0;top:0;bottom:0;width:30%;background:repeating-linear-gradient(45deg,#e04030aa 0 3px,transparent 3px 6px)}
+#ov .r.off{opacity:.35}
+#ov .warn i{animation:blink .4s steps(2) infinite}
+@keyframes blink{50%{filter:brightness(1.6)}}
+#chumBtn,#xrayBtn,#chumChip,#xrayChip{display:none!important}
+#items:empty{display:none}
+.adhead:has(+ #items:empty + #adShop[hidden]){display:none}
+/* 세로 찌 파워 게이지 (던지기 타이밍) */
+body.fs #aim{display:none!important}
+#vaim{position:fixed;right:calc(12px + 96px + 12px);bottom:calc(18px + var(--sab,0px));z-index:21;display:flex;flex-direction:column;align-items:center;gap:4px}
+#vaim[hidden]{display:none}
+#vaim .vt{position:relative;width:26px;height:min(150px,24vh);background:rgba(12,22,40,.72);border:3px solid #1b1f2b;box-shadow:3px 3px 0 #1b1f2b}
+#vaim .vt i{position:absolute;left:0;right:0}
+#vaim .good{background:rgba(124,200,255,.55)}#vaim .great{background:rgba(255,154,60,.75)}#vaim .perfect{background:#ffd23f;box-shadow:0 0 8px #ffd23f;animation:pgl .5s steps(2) infinite}
+@keyframes pgl{50%{background:#fff0a0}}
+#vaim .vfill{position:absolute;left:7px;right:7px;bottom:0;background:linear-gradient(0deg,rgba(255,255,255,.25),rgba(255,255,255,.55));pointer-events:none}
+#vaim .ticks{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 9px,rgba(255,255,255,.35) 9px 10px);pointer-events:none}
+#vaim .vmk{position:absolute;left:50%;width:18px;height:22px;margin-left:-9px;margin-bottom:-11px;transform:scale(.8);z-index:2;filter:drop-shadow(0 0 3px #fff);pointer-events:none}
+#vaim .vmk .ant{position:absolute;left:8px;top:-8px;width:2px;height:8px;background:#ffd23f;box-shadow:0 0 0 1px #1b1f2b}
+#vaim .vmk .top{position:absolute;left:1px;top:0;width:16px;height:11px;background:#e0403a;border:2px solid #1b1f2b;border-bottom:0;border-radius:8px 8px 0 0}
+#vaim .vmk .bot{position:absolute;left:1px;top:11px;width:16px;height:9px;background:#fff;border:2px solid #1b1f2b;border-top:0;border-radius:0 0 8px 8px}
+#vaim .vlab{font:12px Jua,sans-serif;color:#fff;text-shadow:0 1px 2px #000;font-weight:400}
 </style>
 </head>
-<body>
+<body class="fs">
 <script>window.__setSafe=function(t,b){var r=document.documentElement.style;r.setProperty('--sat',(t||0)+'px');r.setProperty('--sab',(b||0)+'px');setTimeout(function(){window.fitStage&&window.fitStage()},60)};try{if(window.AppSafe){var q=AppSafe.safe().split(',');__setSafe(+q[0],+q[1])}}catch(e){}</script>
 <div id="menu" class="menu">
   <canvas id="menuCv" class="menu-art" aria-hidden="true"></canvas>
@@ -283,11 +340,11 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div class="shop" id="shop"></div>
     <h2>👑 특별 스킨 <small class="dexcount">보스를 잡으면 해금 · 모양만 바뀌어요</small></h2>
     <div class="shop" id="skins"></div>
-    <h2>코인 아이템 <small class="dexcount">보유 코인 <b id="shopCoins">0</b></small></h2>
+    <h2>미끼·채비 <small class="dexcount">떡밥도 여기서 · 보유 코인 <b id="shopCoins">0</b></small></h2>
+    <div class="items" id="baitShop"></div>
+    <h2 class="adhead">📺 코인 받기</h2>
     <div class="items" id="items"></div>
     <div class="items" id="adShop" hidden></div>
-    <h2>미끼·채비 <small class="dexcount">던지기 전에 위쪽 미끼 칩을 눌러 바꿔요</small></h2>
-    <div class="items" id="baitShop"></div>
   </div>
 </div>
 
@@ -405,6 +462,8 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1f2b!importan
     <div id="xtag" class="xtag" hidden></div>
   </div>
 
+  <div id="vaim" hidden><div class="vt"><div class="vfill"></div><i class="good"></i><i class="great"></i><i class="perfect"></i><div class="ticks"></div><div class="vmk"><span class="ant"></span><span class="top"></span><span class="bot"></span></div></div><b class="vlab">파워</b></div>
+  <div id="ov"><div class="r"><b>감기</b><div class="b g"><i></i></div></div><div class="r rt"><b>장력</b><div class="b t"><div class="red"></div><i></i></div></div><div class="r"><b>시간</b><div class="b tm"><i></i></div></div></div>
   <div class="hud">
     <div class="row" id="grow"><span>챔질 게이지</span><div class="bar" id="gbar"><i></i></div><span id="gval">0%</span></div>
     <div class="row off" id="trow"><span>줄 장력</span><div class="bar" id="tbar"><i></i></div><span id="tval">–</span></div>
@@ -899,7 +958,7 @@ function drawFrame(c,w,h,t,menu){
   drawGlow(c,w,h,TD);
   drawWeatherBack(c,w,h,t);
   // chum cloud
-  if(!menu&&save.chumLeft>0){const q=proj(1.1,0,-2.8),r=q[2]*1.6;for(let i=0;i<60;i++){const a=i*2.4+t*.25,rr=(i%10)/10*r;px(c,q[0]+Math.cos(a)*rr*1.4,q[1]+Math.sin(a)*rr*.35,2,1,'rgba(122,79,38,.35)')}}
+  if(!menu&&(save.chumLeft>0||(save.bait==='chum'&&st!=='idle'))){const q=proj(1.1,0,-2.8),r=q[2]*1.6;for(let i=0;i<60;i++){const a=i*2.4+t*.25,rr=(i%10)/10*r;px(c,q[0]+Math.cos(a)*rr*1.4,q[1]+Math.sin(a)*rr*.35,2,1,'rgba(122,79,38,.35)')}}
   // swimming shadows
   for(const o of sea)if(o.k==='swim'){const q=proj(o.x,-.2,o.z);if(q[1]<=yH)continue;c.globalAlpha=XR?1:.45;drawSprite(c,(XR?fishSprite:fishShadow)(o.f,o.L*q[2]),q[0],q[1]+Math.sin(T*2+o.t),o.dir<0,0);c.globalAlpha=1}
   // ripples (perspective ellipses)
@@ -1149,8 +1208,10 @@ const BAITS=[
   {id:'krill',name:'크릴',ico:'🦐',price:0,desc:'모든 어종이 고르게 무는 기본 미끼예요. 무제한.'},
   {id:'worm',name:'갯지렁이',ico:'🪱',price:12,pack:10,desc:'바닥 고기(우럭·노래미·볼락·광어·도다리·감성돔·돌돔)가 2배 잘 물어요. 던질 때마다 1개씩 써요.',mul:{ur:2,nr:2,bl:2,gw:2,dd:2,gs:2,dl:2,md:2,bj:2.5,sb:2,ns:1.5}},
   {id:'egi',name:'에기',ico:'🦑',price:35,pack:1,lure:true,desc:'오징어 전용 루어. 오징어류가 5배 잘 물고 물고기는 잘 안 물어요. 줄이 끊어지면 잃어버려요.',squid:5,fish:.25},
+  {id:'chum',name:'떡밥',ico:'🟤',price:30,pack:5,chum:true,desc:'밑밥을 뿌려 고기를 모아요. 전설 어종(부시리·참다랑어 등)이 4배, 보스도 2배 잘 나와요. 던질 때마다 1개씩 써요.'},
   {id:'jig',name:'메탈지그',ico:'🐟',price:45,pack:1,lure:true,desc:'회유어(고등어·삼치·방어·부시리·참다랑어)가 2.5배 잘 물고, 작은 고기는 덜 물어요. 줄이 끊어지면 잃어버려요.',mul:{gd:2.5,ss:2.5,by:2.5,bs:2.5,cs:2.5,jg:1.5,hsc:2,dg:1.5},small:.5}];
 if(!save.baits||typeof save.baits!=='object')save.baits={};for(const b of BAITS)if(b.id!=='krill'&&typeof save.baits[b.id]!=='number')save.baits[b.id]=0;
+if(!save.itemsMigrated){const it=save.items||{};save.baits.chum=(save.baits.chum||0)+(it.chum||0)*5+(save.chumLeft||0);const xr=(it.xray||0);if(xr>0)save.coins+=xr*40;save.items={chum:0,xray:0};save.chumLeft=0;save.itemsMigrated=1;try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}}
 if(!BAITS.some(b=>b.id===save.bait))save.bait='krill';
 const bait=()=>BAITS.find(b=>b.id===save.bait)||BAITS[0];
 function baitMul(f){const b=bait();if(b.id==='krill')return 1;if(b.squid)return f.kind==='squid'?b.squid:b.fish;
@@ -1274,7 +1335,7 @@ function specialResult(ok,kind){const f=fish;let html='';
   if(f.kind==='junk'){const coin=1+Math.floor(Math.random()*3);save.coins+=coin;talk(f.say,1800);sfx.coin();
     return`<h3>${esc(f.name)}을(를) 낚았다…</h3><canvas id="rc"></canvas><p class="stat">${fw.toFixed(2)}kg · 바다 청소</p><p>${f.msg} <b style="color:#c98a00">+${coin}코인</b> (청소 보너스)</p>`}
   const coin=f.coin[0]+Math.floor(Math.random()*(f.coin[1]-f.coin[0]+1));save.coins+=coin;talk(f.say,1800);sfx.catch(true);setTimeout(()=>sfx.coin(),650);
-  let extra='';if(f.item){const r=Math.random();if(r<.4){save.items.xray++;extra=' · 투시 안경 1개'}else if(r<.8){save.items.chum++;extra=' · 떡밥 1개'}}
+  let extra='';if(f.item){const r=Math.random();if(r<.4){save.coins+=40;extra=' · 보너스 40코인'}else if(r<.8){save.baits.chum+=5;extra=' · 떡밥 미끼 5개'}}
   const msg=f.art==='letter'?`편지에는 이렇게 적혀 있어요: ${LETTERS[Math.floor(Math.random()*LETTERS.length)]}`:f.msg;
   return`<h3>${esc(f.name)} 발견!</h3><canvas id="rc"></canvas><p class="stat">✨ 보물</p><p>${msg}</p><p><b style="color:#c98a00">+${coin}코인</b>${extra}</p>`}
 FISH.push(...BOSSES);
@@ -1356,12 +1417,13 @@ function pickFish(g,chum){const m=GRADES[g].m,wt=f=>f.boss?0:f.rar*m[tierIx(f)]*
   for(const f of FISH){if((r-=wt(f))<=0)return f}return FISH[0];
 }
 function startAim(){$('res').classList.remove('on');if(xray&&xrayCast)xrayEnd();st='aim';aimT=rnd(0,AIM_SWEEP);aimZ=rnd(.58,.9);
-  const z=$('aimz');for(const k of['good','great','perfect']){const e=z.querySelector('.'+k),w=GRADES[k].w;e.style.left=((aimZ-w)*100)+'%';e.style.width=(w*200)+'%'}}
+  const z=$('aimz');for(const k of['good','great','perfect']){const e=z.querySelector('.'+k),w=GRADES[k].w;e.style.left=((aimZ-w)*100)+'%';e.style.width=(w*200)+'%'}
+  {const v=$('vaim');for(const k of['good','great','perfect']){const e=v.querySelector('.'+k),w=GRADES[k].w;e.style.bottom=((aimZ-w)*100)+'%';e.style.height=(w*200)+'%'}}}
 function cast(){
   const d=Math.abs(aimPos()-aimZ);grade=d<=GRADES.perfect.w?'perfect':d<=GRADES.great.w?'great':d<=GRADES.good.w?'good':'miss';
   const G0=GRADES[grade],gEl=$('grade');gEl.textContent=G0.lab;gEl.style.color=G0.col;gEl.classList.remove('show');void gEl.offsetWidth;gEl.classList.add('show');
   sfx.cast();if(grade==='perfect'){buzz([20,30,20]);sfx.perfect()}
-  chumUsed=save.chumLeft>0;if(chumUsed){save.chumLeft--;store();renderSide()}
+  chumUsed=bait().chum===true;if(chumUsed){save.baits.chum=Math.max(0,save.baits.chum-1);try{throwChum()}catch(e){}if(save.baits.chum<=0){save.bait='krill';setTimeout(()=>toast('🟤 떡밥을 다 썼어요. 크릴로 바꿨어요',2000),400)}store();renderSide()}
   fish=pickFish(grade,chumUsed);{const sp=rollSpecial(grade,chumUsed);if(sp)fish=sp}fw=+(fish.min+(fish.max-fish.min)*Math.pow(Math.random(),fish.boss?1.4:spotSkew())).toFixed(2);
   if(xray){bx0=EYE.x+rnd(-.12,.12);bz0=lerp(XZ0,XZ1,aimPos());xrayCast=true;const o=xrayCatch();if(o){fish=o.f;fw=o.w}xHideTags()}
   const far=grade==='perfect'?1:grade==='great'?.7:grade==='good'?.4:.1;
@@ -1381,7 +1443,7 @@ const TAPMODE=()=>save.ctrl==='tap',TAP_ADD=.2,TAP_MAX=.45;
 function fitAct(){const a=$('act');a.style.fontSize='';let f=parseFloat(getComputedStyle(a).fontSize);while(a.scrollWidth>a.clientWidth&&f>14){f-=1;a.style.fontSize=f+'px'}}
 addEventListener('resize',()=>{try{fitAct()}catch(e){}});
 /* 휴대폰: 버튼 줄까지 한 화면에 들어오도록 바다 화면 높이를 실제 남는 공간에 맞춘다 */
-function fitStage(){const st=document.querySelector('.stage'),row=document.querySelector('.actrow'),wr=document.querySelector('.wrap');if(!st||!row||!wr)return;
+function fitStage(){if(document.body.classList.contains('fs')){const s0=document.querySelector('.stage');if(s0)s0.style.height='';return}const st=document.querySelector('.stage'),row=document.querySelector('.actrow'),wr=document.querySelector('.wrap');if(!st||!row||!wr)return;
   if(innerWidth>600){st.style.height='';return}
   const cur=st.getBoundingClientRect().height,bot=row.getBoundingClientRect().bottom+scrollY,pb=parseFloat(getComputedStyle(wr).paddingBottom)||0;
   const want=Math.max(240,Math.floor(cur+(innerHeight-(bot+pb))));if(Math.abs(want-cur)>1)st.style.height=want+'px'}
@@ -1466,7 +1528,9 @@ function hud(){
   {const xb=$('xrayBtn'),en=(st==='idle'||st==='result')&&save.items.xray>0&&!(xray&&!xrayCast);if(xb.disabled===en)xb.disabled=!en;xb.classList.toggle('armed',xray&&!xrayCast);$('xrayChip').hidden=!(xray&&!xrayCast)}
   {const ok=st==='idle'||st==='result';const tm=$('toMenu');if(tm.disabled===ok){tm.disabled=!ok;$('toShop').disabled=!ok}}
   const aimOn=st==='aim';$('aim').hidden=!aimOn;if(aimOn)$('mk').style.left=(aimPos()*100)+'%';
-  const lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중…':(TAPMODE()?'연타!':'꾹 눌러 감기')}[st];
+  {const v=$('vaim');const on=aimOn&&document.body.classList.contains('fs');if(v.hidden===on)v.hidden=!on;if(on){const p=aimPos()*100;v.querySelector('.vmk').style.bottom=p+'%';v.querySelector('.vfill').style.height=p+'%'}}
+  let lab={idle:'START',result:'다시 던지기',aim:'지금 던지기!',cast:'던지는 중…',wait:'기다리는 중…',bite:'챔질!',fight:holding?'감는 중…':(TAPMODE()?'연타!':'꾹 눌러 감기')}[st];
+  if(document.body.classList.contains('fs'))lab={idle:'던지기',result:'다시\n던지기',aim:'지금!',cast:'…',wait:'기다려요',bite:'챔질!',fight:holding?'감는 중':(TAPMODE()?'연타!':'꾹\n감기')}[st];
   if(act.textContent!==lab){act.textContent=lab;fitAct()}
   act.className=st==='result'?'':st;
   const h={idle:save.chumLeft>0?`떡밥 효과 중! 남은 ${save.chumLeft}회 — START를 눌러 캐스팅하세요`:'START를 눌러 캐스팅하세요',aim:'표시가 금색 칸에 올 때 누르면 귀한 고기가 와요!',cast:'휘익—',wait:'찌를 지켜보세요… 느낌표가 뜨면 챔질!',bite:'입질! 지금 챔질!',result:ok=>''}[st];
@@ -1482,7 +1546,8 @@ function hud(){
   $('trow').classList.toggle('off',!tOn);$('trow').classList.toggle('warn',tOn&&tens>70);
   $('tbar').firstElementChild.style.width=(tOn?Math.min(100,tens):0)+'%';$('tval').textContent=tOn?Math.round(tens)+'%':st==='fight'?'여유':'–';
   const cOn=st==='fight';$('crow').classList.toggle('off',!cOn);
-  $('cbar').firstElementChild.style.width=(cOn?(1-clock/LIMIT)*100:0)+'%';$('cval').textContent=cOn?Math.ceil(LIMIT-clock)+'초':'–';
+  $('cbar').firstElementChild.style.width=(cOn?(1-clock/LIMIT)*100:0)+'%';
+  {const ov=$('ov');ov.classList.toggle('on',cOn);if(cOn){ov.querySelector('.g i').style.width=g+'%';ov.querySelector('.rt').classList.toggle('off',!tOn);const vt=ov.querySelector('.t');vt.classList.toggle('warn',tOn&&tens>70);vt.querySelector('i').style.width=(tOn?Math.min(100,tens):0)+'%';ov.querySelector('.tm i').style.width=((1-clock/LIMIT)*100)+'%'}}$('cval').textContent=cOn?Math.ceil(LIMIT-clock)+'초':'–';
 }
 
 function press(){
@@ -1557,14 +1622,7 @@ function renderMenu(){
   $('coins').textContent=save.coins.toLocaleString('ko-KR');$('shopCoins').textContent=save.coins.toLocaleString('ko-KR');$('shopCoins2').textContent=save.coins.toLocaleString('ko-KR');
   $('chumCnt').textContent=save.items.chum+'개';$('xrayCnt').textContent=save.items.xray+'개';$('chumChip').hidden=save.chumLeft<=0;$('chumLeft').textContent=save.chumLeft;
   const can=save.coins>=CHUM.price;
-  $('items').innerHTML=`<div class="item"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#f3e6d3"/><path d="M18 26h28l-3 24H21z" fill="#8a5a2b"/><path d="M16 22h32v6H16z" fill="#6b431e"/><g fill="#c48a4a"><circle cx="26" cy="16" r="3"/><circle cx="34" cy="11" r="2.5"/><circle cx="41" cy="17" r="2"/><circle cx="30" cy="8" r="1.8"/></g></svg>
-    <b>떡밥 뿌리기</b><p>뿌리면 다음 <b style="font:inherit;color:#e2603f">${CHUM.casts}번</b> 캐스팅 동안 전설 어종(부시리·참다랑어)이 나올 확률이 <b style="font:inherit;color:#e2603f">${CHUM.legend}배</b>로 올라가요.</p>
-    <p>가격 ${CHUM.price}코인 · 보유 ${save.items.chum}개</p>
-    <button class="buy" type="button" id="buyChum" ${can?'':'disabled'}>${can?`${CHUM.price}코인으로 사기`:`코인이 부족해요 (${CHUM.price-save.coins}코인 더 필요)`}</button></div>`+
-    `<div class="item"><svg viewBox="0 0 64 64" aria-hidden="true" shape-rendering="crispEdges"><rect x="2" y="2" width="60" height="60" fill="#d7f1f6"/><rect x="6" y="24" width="52" height="4" fill="#1b1f2b"/><rect x="8" y="22" width="22" height="20" fill="#1b1f2b"/><rect x="34" y="22" width="22" height="20" fill="#1b1f2b"/><rect x="11" y="25" width="16" height="14" fill="#3fc6dc"/><rect x="37" y="25" width="16" height="14" fill="#3fc6dc"/><rect x="13" y="27" width="4" height="4" fill="#fff"/><rect x="39" y="27" width="4" height="4" fill="#fff"/><rect x="30" y="28" width="4" height="4" fill="#1b1f2b"/></svg>
-    <b>투시 안경</b><p>쓰는 순간 바닷속이 훤히 보여요. 물고기 이름과 무게를 보고 <b style="font:inherit;color:#1f8fa6">원하는 물고기 위로 던지면</b> 그 고기가 물어요. 1번 던지면 끝나고, 챔질 시간도 <b style="font:inherit;color:#1f8fa6">${XRAY.bite}배</b> 넉넉해져요.</p>
-    <p>가격 ${XRAY.price}코인 · 보유 ${save.items.xray}개</p>
-    <button class="buy" type="button" id="buyXray" ${save.coins>=XRAY.price?'':'disabled'}>${save.coins>=XRAY.price?`${XRAY.price}코인으로 사기`:`코인이 부족해요 (${XRAY.price-save.coins}코인 더 필요)`}</button></div>`;
+  $('items').innerHTML='';
   renderBaitShop();renderWX();renderQuest();renderSpot();renderAdShop();
   $('nickChip').textContent=nick();$('dexCount').textContent=`${Object.keys(save.dex).length}/${FISH.length}종`;$('shopPts').textContent=save.pts.toLocaleString('ko-KR');$('shopPts2').textContent=save.pts.toLocaleString('ko-KR');
   const ok=canLeave();$('toMenu').disabled=!ok;$('toShop').disabled=!ok;
